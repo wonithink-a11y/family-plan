@@ -1,26 +1,14 @@
 {
-  "name": "패밀리 플랜",
+  "name": "수행평가 패밀리플랜",
   "short_name": "패밀리플랜",
-  "description": "우리 가족 일정 & 수행평가 관리 앱",
-  "start_url": "/",
-  "scope": "/",
+  "description": "가족 수행평가 관리 앱",
+  "start_url": "/family-plan/",
+  "scope": "/family-plan/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#F5F4FF",
+  "background_color": "#5B7FFF",
   "theme_color": "#5B7FFF",
-  "lang": "ko",
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

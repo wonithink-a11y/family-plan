@@ -555,6 +555,40 @@ function startEventsSync(code){
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   가족코드 Firebase 백업/복원 (삼성 최적화 대응)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function getDeviceId(){
+  let id=localStorage.getItem('_did');
+  if(!id){id=Math.random().toString(36).slice(2,12);localStorage.setItem('_did',id);}
+  return id;
+}
+async function backupFamilyCode(code){
+  try{
+    const did=getDeviceId();
+    await db.collection('_device_codes').doc(did).set({
+      familyCode:code,
+      savedAt:new Date().toISOString()
+    });
+  }catch(e){console.warn('가족코드 백업 실패:',e);}
+}
+async function restoreFamilyCode(){
+  try{
+    const did=getDeviceId();
+    const snap=await db.collection('_device_codes').doc(did).get();
+    if(snap.exists){
+      const code=snap.data().familyCode;
+      if(code){
+        localStorage.setItem('fc',code);
+        S.familyCode=code;
+        console.log('가족코드 복원 완료:',code);
+        return code;
+      }
+    }
+  }catch(e){console.warn('가족코드 복원 실패:',e);}
+  return null;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    가족 코드 관리
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function setFamilyCode(code){
@@ -562,6 +596,7 @@ function setFamilyCode(code){
   if(c.length<2){alert('코드를 2자 이상 입력해주세요.');return;}
   localStorage.setItem('fc',c);
   S.familyCode=c;
+  backupFamilyCode(c); // Firebase에도 백업
   startSync(c);
 }
 function startWithCode(){
@@ -1502,7 +1537,7 @@ function buildBackupView(){
       <button class="bk-btn bk-danger" onclick="clearAll()"><span class="bk-ico">⚠️</span><div><div>전체 초기화</div><div class="bk-btn-desc">모든 데이터 삭제 (복구 불가)</div></div></button>
     </div>`:''}
   </div>
-  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.0 Firebase Sync Edition</p>
+  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.1 Auto-Restore Edition</p>
 </div>`;
 }
 
@@ -1980,8 +2015,20 @@ if(S.familyCode){
   // 저장된 가족 코드가 있으면 바로 Firestore 연결
   startSync(S.familyCode);
 } else {
-  // 처음 실행이면 웰컴 화면 표시
-  render();
+  // localStorage에 없으면 Firebase에서 복원 시도
+  document.getElementById('app').innerHTML=`
+    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#667eea,#764ba2);">
+      <div style="font-size:40px">👨‍👩‍👧‍👦</div>
+      <div style="color:#fff;font-weight:700;font-size:16px">데이터 복원 중...</div>
+      <div style="color:rgba(255,255,255,0.7);font-size:12px">잠시만 기다려주세요</div>
+    </div>`;
+  restoreFamilyCode().then(restored=>{
+    if(restored){
+      startSync(restored);
+    } else {
+      render(); // 복원 실패 시 웰컴 화면
+    }
+  });
 }
 
 setInterval(checkAlarms,60000);

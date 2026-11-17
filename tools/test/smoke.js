@@ -11,6 +11,8 @@ const URL = process.env.APP_URL || 'http://localhost:8123/index.html';
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 390, height: 850 }, acceptDownloads: true });
   await ctx.route('**/*gstatic.com/**', r => r.fulfill({ contentType: 'application/javascript', body: r.request().url().includes('firestore') ? stub : '' }));
+  // 날씨(Open-Meteo·기상청)는 실제 서버 대신 빈 응답: 외부 서버의 429 등이 콘솔 오류로 잡혀 테스트가 흔들리지 않게 한다
+  await ctx.route(/open-meteo\.com|apis\.data\.go\.kr/, r => r.fulfill({ contentType: 'application/json', body: '{}' }));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push('PAGEERR ' + e.message));

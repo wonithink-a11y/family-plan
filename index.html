@@ -465,6 +465,64 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 }
 @media (max-width:767px){.home-cols{column-count:1}}
 
+
+/* 가로 태블릿(1000px↑): 우리집 탭을 스크롤 없이 한 화면에 배치 (갤럭시 탭 S8+ 1138×712 기준) */
+@media (min-width:1000px) and (orientation:landscape){
+  .screen.home-fit{overflow:hidden;display:flex;flex-direction:column;padding:10px 18px calc(66px + var(--safe-bot))!important}
+  .screen.home-fit>*{max-width:1500px}
+  header .hd-row{margin-bottom:4px!important}
+  .home-fit .home-cols{column-count:auto;display:grid;flex:1;min-height:0;width:100%;gap:10px;
+    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1.75fr) minmax(0,1fr) minmax(0,.85fr) auto}
+  .home-fit .home-cols>*{margin:0!important;min-height:0;min-width:0}
+  .home-fit .sec,.home-fit .hero{overflow:auto;scrollbar-width:none}
+  .home-fit .sec::-webkit-scrollbar{display:none}
+  .home-fit .sec{padding:10px 14px;border-radius:16px;display:flex;flex-direction:column}
+  .home-fit .sec-h{margin-bottom:6px}
+  .home-fit .note{margin-top:4px;font-size:10px;line-height:1.4}
+  .home-fit .home-cols>:nth-child(1){grid-column:1;grid-row:1}          /* 날씨·브리핑 */
+  .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2 / span 2} /* 도장 */
+  .home-fit .home-cols>:nth-child(4){grid-column:2;grid-row:1 / span 3} /* 아침 루틴 */
+  .home-fit .home-cols>:nth-child(2){grid-column:3;grid-row:1}          /* 수행평가 */
+  .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2}          /* 준비물 */
+  .home-fit .home-cols>:nth-child(6){grid-column:3;grid-row:3}          /* 구입권 */
+  .home-fit .home-cols>:nth-child(7){display:none}                      /* 최근 도장(공간 부족) */
+  .home-fit .home-cols>:nth-child(8){grid-column:1 / span 2;grid-row:4}
+  .home-fit .home-cols>:nth-child(9){grid-column:3;grid-row:4}
+  .home-fit .ghost-btn{margin:0!important;padding:7px;font-size:12px}
+  .home-fit .hero{padding:14px 18px;border-radius:18px;display:flex;flex-direction:column;justify-content:center}
+  .home-fit .ring{width:92px;height:92px}.home-fit .ring::before{inset:8px}
+  .home-fit .ring-n{font-size:28px}.home-fit .hero-big{font-size:22px}.home-fit .hero-row{gap:16px}
+  .home-fit .pips{margin:10px 0}.home-fit .hero-btn{padding:10px;font-size:14px}
+  .home-fit .rt-row{padding:7px 2px;gap:10px}.home-fit .rt-txt{font-size:14px}.home-fit .rt-chk{width:22px;height:22px;font-size:12px}
+  .home-fit .prep-row{padding:6px 0}.home-fit .prep-t,.home-fit .ticket-t{font-size:13px}
+  .home-fit .ticket{margin-bottom:4px}.home-fit .ticket-b{padding:7px 12px}.home-fit .ticket-l{width:50px}
+  .home-fit .bf-act{margin-top:auto}
+  .home-fit .bf-wx{padding:8px 12px;gap:12px}.home-fit .bf-ic{font-size:30px}.home-fit .bf-t{font-size:24px}
+  .home-fit .bf-act button{padding:8px 2px;font-size:12px}.home-fit .bf-tips{margin-top:6px}
+  .home-fit .as-row{padding:5px 0;gap:10px}.home-fit .as-rt{font-size:14px}.home-fit .as-dd{min-width:40px;font-size:11px}
+  .home-fit .bf .note,.home-fit .home-cols>:nth-child(2) .note{display:none}
+  .home-fit .ghost-btn{padding:5px;font-size:12px}
+  header:has(+ .screen.home-fit) .hd-sub{display:none}
+  header:has(+ .screen.home-fit){padding-top:6px!important;padding-bottom:6px!important}
+  header:has(+ .screen.home-fit) .hd-ic{width:34px;height:34px}
+}
+@media (min-width:1000px) and (orientation:landscape) and (max-height:760px){
+  .nav-btn{padding:5px 0 3px!important}.nav-ico{font-size:20px!important}
+  .screen.home-fit{padding-bottom:calc(56px + var(--safe-bot))!important}
+}
+
+/* 벽걸이 가로 태블릿, 세로가 낮은 화면(갤럭시 탭 S8+ 등): 한 화면에 들어오도록 압축 */
+@media (min-width:1100px) and (max-height:760px){
+  .wall{padding-top:calc(10px + var(--shift,0px))!important;padding-bottom:10px!important}
+  .w-clock{font-size:64px!important}.w-top{margin-bottom:8px!important}
+  .w-wx{padding:8px 16px!important}.w-shared{margin-bottom:8px;padding:6px 14px}
+  .w-lane-h{margin-bottom:6px;font-size:24px}.w-lane-ic{width:38px;height:38px;font-size:22px}
+  .w-kid .w-rt{padding:5px 0;font-size:15px}.w-kid .w-chk{width:24px;height:24px;font-size:14px}
+  .w-kid .w-dd{padding:4px 0;font-size:14px}.w-kid .w-tools{margin-top:8px}
+  .w-kid .w-tool{padding:4px 8px!important;font-size:11px!important;white-space:nowrap}.w-kid .w-tool span{font-size:16px}
+  .w-kid .w-rt{padding:4px 0}.w-kid .w-tools{margin-top:4px}
+  .w-lane{padding-bottom:10px}
+}
 /* 벽걸이 화면 */
 .wall{min-height:100vh;box-sizing:border-box;color:#EEF1FF;font-family:inherit;
   background:radial-gradient(900px 560px at 12% -8%,#2B3180 0%,transparent 62%),radial-gradient(800px 520px at 108% 8%,#5A2F93 0%,transparent 58%),#0A0E22}
@@ -831,7 +889,7 @@ let S={
   syncStatus: 'connecting', // connecting | synced | offline | error
   syncError: null,
   items:[],
-  tab:'cal',overlay:null,activeId:null,form:null,
+  tab:'stamp',overlay:null,activeId:null,form:null,
   filter:'all',sortBy:'due',hideDone:false,
   calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),calDate:null,
   showDangerZone:false,fabOpen:false,events:[],evtOverlay:null,activeEvtId:null,evtForm:null,notif:typeof Notification!=='undefined'?Notification.permission:'denied',
@@ -1230,7 +1288,7 @@ function buildStampView(){
   const log=(S.stamps||[]).slice(0,10).map(s=>`<div class="log-row"><span>${esc(s.reason)||'칭찬 도장'}</span><span>${fmt(s.date)}</span></div>`).join('');
   return`
 <header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">루틴 · 도장 · 준비물</div><div class="hd-title">우리집</div></div><div class="hd-right"><button class="hd-ic" onclick="asBrief()" aria-label="브리핑">☀️</button><button class="hd-ic" onclick="asOpen('listen')" aria-label="말하기">🎤</button>${syncBadge()}</div></div></header>
-<div class="screen">
+<div class="screen home-fit">
   ${S.rewardErr?`<div class="welcome-err" style="margin:0 0 14px">${esc(S.rewardErr)}</div>`:''}
   <div class="home-cols">
   ${buildBriefCard()}
@@ -1311,7 +1369,7 @@ function buildWallView(){
 const AS_CFG_KEY='fp_assist_cfg';
 const AS_EXAM_ART='https://claude.ai/artifact/3WLAoQshgPRiSaFZXvAUR2'; // 아이가 쓰는 문제은행(AI 선생님 포함)
 const AS_EXAM_PUB='https://wonithink-a11y.github.io/exam/';
-const AS_CFG_DEF={name:'',voice:'Kore',ttsMode:'auto',autoBrief:true,briefTime:'07:40',weekdaysOnly:true,leave:'08:00',awakeMode:'window',awakeFrom:'07:40',awakeTo:'08:30',kmaKey:'',geminiKey:'',examUrl:'',asName:'루미',agent:true,wakeWord:false,liveModel:'',push:false,vapid:'',deviceLabel:'',wallLayout:'lanes',multiVoice:true};
+const AS_CFG_DEF={name:'',voice:'Kore',ttsMode:'auto',autoBrief:true,briefTime:'07:40',weekdaysOnly:true,leave:'08:00',awakeMode:'window',awakeFrom:'07:40',awakeTo:'08:30',kmaKey:'',geminiKey:'',examUrl:'',asName:'루미',speed:1.15,agent:true,wakeWord:false,liveModel:'',push:false,vapid:'',deviceLabel:'',wallLayout:'lanes',multiVoice:true};
 const AS_VOICES=[['Kore','Kore · 여성'],['Aoede','Aoede · 여성'],['Leda','Leda · 여성'],['Sulafat','Sulafat · 여성'],['Vindemiatrix','Vindemiatrix · 여성'],['Zephyr','Zephyr · 여성'],['Callirrhoe','Callirrhoe · 여성'],['Despina','Despina · 여성'],['Charon','Charon · 남성'],['Puck','Puck · 남성'],['Fenrir','Fenrir · 남성'],['Orus','Orus · 남성'],['Iapetus','Iapetus · 남성'],['Achird','Achird · 남성'],['Algenib','Algenib · 남성'],['Schedar','Schedar · 남성']];
 const WX_LAT=35.0226, WX_LON=126.7895; // 나주 빛가람동 (가든 앱과 같은 좌표)
 const AS_DOW='일월화수목금토';
@@ -1320,6 +1378,8 @@ function asCfg(){
   try{return Object.assign({},AS_CFG_DEF,JSON.parse(localStorage.getItem(AS_CFG_KEY)||'{}'));}
   catch(e){return Object.assign({},AS_CFG_DEF);}
 }
+// 말하는 속도 (0.8~1.6배). Gemini 소리는 재생 속도를 올리므로 속도를 높일수록 목소리 톤도 조금 올라간다
+function asSpeed(){const v=parseFloat(asCfg().speed);return isFinite(v)?Math.min(1.6,Math.max(0.8,v)):1.15;}
 function asSetCfg(p){ try{localStorage.setItem(AS_CFG_KEY,JSON.stringify(Object.assign(asCfg(),p)));}catch(e){} }
 // 가든 앱은 기상청 키를 JSON 문자열(따옴표 포함)로, Gemini 키는 그대로 저장한다
 function asLsKey(k){
@@ -1585,7 +1645,7 @@ function asPlayPcm(a,id){
       const pcm=a.pcm instanceof Int16Array?a.pcm:new Int16Array(a.pcm);
       const buf=_ac.createBuffer(1,pcm.length,a.rate||24000); const ch=buf.getChannelData(0);
       for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
-      const src=_ac.createBufferSource(); src.buffer=buf; src.connect(_ac.destination);
+      const src=_ac.createBufferSource(); src.buffer=buf; src.playbackRate.value=asSpeed(); src.connect(_ac.destination);
       src.onended=()=>{if(_curSrc===src)_curSrc=null;_playDone=null;res();};
       if(id!==_speakId){res();return;}
       _curSrc=src; _playDone=res; src.start();
@@ -1602,7 +1662,7 @@ function asSpeakDevice(text,id,pitch){
     let i=0;
     const next=()=>{
       if(id!==_speakId||i>=sents.length){res();return;}
-      const u=new SpeechSynthesisUtterance(sents[i++]); u.lang='ko-KR'; if(v)u.voice=v; u.rate=0.98; u.pitch=pitch||1.05; u.onend=next; u.onerror=next;
+      const u=new SpeechSynthesisUtterance(sents[i++]); u.lang='ko-KR'; if(v)u.voice=v; u.rate=Math.min(2,0.98*asSpeed()); u.pitch=pitch||1.05; u.onend=next; u.onerror=next;
       speechSynthesis.speak(u);
     };
     next();
@@ -1795,7 +1855,7 @@ function asShare(){
 }
 function asCollectSettings(){
   const v=id=>((document.getElementById(id)||{}).value||'').trim(); const c=id=>!!(document.getElementById(id)||{}).checked;
-  asSetCfg({multiVoice:c('as-s-multi'),name:v('as-s-name'),asName:v('as-s-asname')||'루미',agent:c('as-s-agent'),wakeWord:c('as-s-wake'),liveModel:v('as-s-live'),vapid:v('as-s-vapid'),deviceLabel:v('as-s-dev'),voice:v('as-s-voice')||'Kore',ttsMode:v('as-s-mode')||'auto',autoBrief:c('as-s-auto'),briefTime:v('as-s-btime')||'07:00',weekdaysOnly:c('as-s-wk'),leave:v('as-s-leave')||'08:00',awakeMode:v('as-s-awake')||'window',awakeFrom:v('as-s-afrom')||'07:40',awakeTo:v('as-s-ato')||'08:30',kmaKey:v('as-s-kma'),geminiKey:v('as-s-gem'),examUrl:v('as-s-exam')});
+  asSetCfg({multiVoice:c('as-s-multi'),name:v('as-s-name'),asName:v('as-s-asname')||'루미',agent:c('as-s-agent'),wakeWord:c('as-s-wake'),liveModel:v('as-s-live'),vapid:v('as-s-vapid'),deviceLabel:v('as-s-dev'),voice:v('as-s-voice')||'Kore',speed:parseFloat(v('as-s-speed'))||1.15,ttsMode:v('as-s-mode')||'auto',autoBrief:c('as-s-auto'),briefTime:v('as-s-btime')||'07:00',weekdaysOnly:c('as-s-wk'),leave:v('as-s-leave')||'08:00',awakeMode:v('as-s-awake')||'window',awakeFrom:v('as-s-afrom')||'07:40',awakeTo:v('as-s-ato')||'08:30',kmaKey:v('as-s-kma'),geminiKey:v('as-s-gem'),examUrl:v('as-s-exam')});
 }
 function asSaveSettings(){
   asCollectSettings(); mbSave();
@@ -1829,6 +1889,7 @@ ${members().map(m=>`<div class="as-mb"><span class="as-mb-ic" style="background:
 <label class="as-ck" style="margin-top:8px!important"><input type="checkbox" id="as-s-multi"${cfg.multiVoice!==false?' checked':''}> 브리핑·일정을 구성원마다 다른 목소리로 읽기</label>
 <label>아이 이름 (브리핑 호칭, 선택)</label><input id="as-s-name" value="${esc(cfg.name)}" placeholder="예: 서연">
 <label>음성 방식</label><select id="as-s-mode"><option value="auto"${cfg.ttsMode==='auto'?' selected':''}>자동 (Gemini 목소리 → 안 되면 기기 음성)</option><option value="device"${cfg.ttsMode==='device'?' selected':''}>기기 음성만 (키·사용량 안 씀)</option></select>
+<label>말하는 속도 <small>(느리면 올려 보세요)</small></label><select id="as-s-speed">${[0.8,0.9,1,1.1,1.15,1.25,1.4,1.6].map(x=>`<option value="${x}"${Math.abs(asSpeed()-x)<0.001?' selected':''}>${x===1?'보통 (1.0배)':x+'배'}</option>`).join('')}</select>
 <label>목소리</label><select id="as-s-voice">${AS_VOICES.map(v=>`<option value="${v[0]}"${cfg.voice===v[0]?' selected':''}>${v[1]}</option>`).join('')}</select>
 <button class="as-ghost" onclick="asTestVoice()">🔊 저장하고 미리 듣기</button>
 <label>아침 브리핑 자동 재생 (벽걸이 화면)</label>
@@ -2450,8 +2511,8 @@ function lvPlay(b64){
   if(!_ac)return; if(_ac.state==='suspended')_ac.resume();
   const pcm=lvB64ToI16(b64); if(!pcm.length)return;
   const buf=_ac.createBuffer(1,pcm.length,24000), ch=buf.getChannelData(0); for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
-  const src=_ac.createBufferSource(); src.buffer=buf; src.connect(_ac.destination);
-  const t=Math.max(_ac.currentTime+0.03,LV.playT); src.start(t); LV.playT=t+buf.duration; LV.srcs.push(src);
+  const sp=asSpeed(); const src=_ac.createBufferSource(); src.buffer=buf; src.playbackRate.value=sp; src.connect(_ac.destination);
+  const t=Math.max(_ac.currentTime+0.03,LV.playT); src.start(t); LV.playT=t+buf.duration/sp; LV.srcs.push(src);
   const L=asLiveState(); L.speaking=true;
   src.onended=()=>{LV.srcs=LV.srcs.filter(x=>x!==src); if(!LV.srcs.length){L.speaking=false;asLiveStat();}};
   asLiveStat();
@@ -4539,7 +4600,7 @@ function buildBackupView(){
       <button class="bk-btn bk-danger" onclick="clearAll()"><span class="bk-ico">⚠️</span><div><div>전체 초기화</div><div class="bk-btn-desc">모든 데이터 삭제 (복구 불가)</div></div></button>
     </div>`:''}
   </div>
-  <p style="text-align:center;font-size:calc(11px*var(--fs));color:#CCC;margin-top:6px">v3.7 Family-Hub Edition</p>
+  <p style="text-align:center;font-size:calc(11px*var(--fs));color:#CCC;margin-top:6px">v3.8 Family-Hub Edition</p>
 </div>`;
 }
 

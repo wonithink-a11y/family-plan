@@ -103,6 +103,14 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     ok(!bad.length,`“${txt}” → ${JSON.stringify(r)}${bad.length?'  (기대와 다름: '+bad.map(k=>k+'='+exp[k]).join(', ')+')':''}`);
   }
 
+  console.log('\n[2b] 말하는 속도 설정');
+  const spd=await page.evaluate(()=>{const r={};const orig=localStorage.getItem('fp_assist_cfg');const c0=JSON.parse(orig||'{}');delete c0.speed;localStorage.setItem('fp_assist_cfg',JSON.stringify(c0));r.def=asSpeed();asSetCfg({speed:1.4});r.set=asSpeed();asSetCfg({speed:9});r.max=asSpeed();asSetCfg({speed:0.1});r.min=asSpeed();asSetCfg({speed:'x'});r.bad=asSpeed();if(orig===null)localStorage.removeItem('fp_assist_cfg');else localStorage.setItem('fp_assist_cfg',orig);return r;});
+  ok(spd.def===1.15,'기본 속도 1.15배: '+spd.def);
+  ok(spd.set===1.4,'설정한 속도를 그대로 사용: '+spd.set);
+  ok(spd.max===1.6&&spd.min===0.8,'범위 0.8~1.6으로 제한: '+spd.min+'~'+spd.max);
+  ok(spd.bad===1.15,'잘못된 값이면 기본값: '+spd.bad);
+  ok(await page.evaluate(()=>S.tab==='stamp'),'첫 화면이 우리집 탭');
+
   console.log('\n[3] 기상청 응답 해석·옷차림');
   await page.evaluate(()=>{localStorage.removeItem('fp_wx');S.wx=null;});
   await page.evaluate(()=>fetchWeather(true)); await page.waitForTimeout(400);

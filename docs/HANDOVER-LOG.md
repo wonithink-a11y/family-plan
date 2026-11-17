@@ -189,3 +189,18 @@
 - 브리핑: `asBriefSegs()` 구간별 화자(루미 Kore → 딸 → 아빠 → 엄마 → 루미). 루미 대화에서 "아빠 일정 알려줘"는 아빠 목소리, "아빠 내일 3시 회의 등록"은 확인 후 등록.
 - 한계: 목소리는 Gemini 프리셋(실제 가족 목소리 복제 아님), Live 대화는 단일 목소리, 우리집 탭은 3칸 미적용, 푸시는 꺼둔 상태(미배포). 실서비스(Gemini 함수호출/Live/FCM)·실기기는 미검증.
 - 테스트: `dev/members-test.js` 추가, assist/lumi/smoke 통과.
+
+## 보안·프로젝트 분리·병합·한 화면 배치·말하는 속도 (2026-11-17, PR #2~#4 + 이번 PR)
+- **서비스워커**: 캐시 우선 + 고정 이름 때문에 설치된 앱이 옛 index.html에 머물던 문제 → navigate 요청은 network-first, 정적 자원은 cache-first. 캐시 `v7`. FCM용 `firebase.initializeApp`(sw.js)도 새 프로젝트 값으로 교체(옛 값이 남아 있던 것을 병합 때 발견).
+- **기기 ID(`_did`)**: localStorage만 쓰면 삭제 시 ID도 사라져 복원이 안 됐다 → 쿠키(10년)에 이중 저장, 신규는 `crypto.getRandomValues` 24자.
+- **보안 조사**: 옛 프로젝트 규칙이 비로그인 읽기·목록 조회를 허용(`families`, `_device_codes` 열람 가능)하는 것을 읽기 전용 요청으로 확인. 같은 프로젝트(`rosegarden-4937c`)를 SRF 관리시스템(`wonithink-a11y/srf`, `srf_data` 컬렉션, 인증 없음, 여러 명 사용)이 쓰고 있어서 규칙을 바꾸면 SRF가 멈춘다 → **family-plan 전용 프로젝트 `family-plan-11d44` 신설**. SRF는 건드리지 않았다(SRF 보안은 별개 과제).
+- **익명 인증**: `firebase-auth-compat` + `signInAnonymously()`. 시작·백업·복원은 `authReady` 이후. 로그인 실패해도 앱은 시작(오프라인 대응). 규칙은 `request.auth != null`.
+- **규칙** (`firestore.rules`): `_device_codes`는 문서 get/쓰기만(목록·삭제 금지), `families/{code}` 루트 금지, `families/{code}/{sub}/{doc=**}` 는 익명 로그인 + 500KB 미만(`images`, `config`는 제외하고 따로 형식 검증), 그 밖의 경로는 전부 거부. 실제 새 프로젝트에 요청해 6가지 경우를 검증하고 시험 문서는 삭제.
+- **병합**: `feature/stamp-coupon`(우리집 탭 등)과 `claude/serene-thompson-mu5lk4`(성적 분석·반복 일정·다크모드·이미지 동기화)가 둘 다 `edd7b23`에서 갈라져 main에 없었다 → 차례로 병합. 충돌 해결 가정: 구성원 이름 충돌(`S.members` vs 우리집 설정)은 우리집 쪽을 `S.mbCfg`로 분리, 일정 담당자 선택은 아빠/엄마/딸 유지, 가족코드 검사 8자로 통일, 중복 `setEvtPerson`은 우리집 쪽만 남김.
+- **가족 코드**: 새 코드는 `checkCode`로 8~20자·반복문자·약한 코드 거부(기존 저장 코드는 시작·복원 시 검사하지 않음). 짧은 코드를 쓰는 가족은 설정 → 가족 코드 변경(데이터 복사 포함).
+- **테스트 스텁**: `dev/firestore-stub.js`에 익명 로그인 스텁, `window.__seed`, `metadata`를 추가하고 `tools/test/firestore-stub.js`를 같은 파일로 통일(예전 스텁은 `orderBy`, `docChanges` 등이 없어 우리집 쪽 구독을 못 돌렸다).
+- **기상청**: 공공데이터포털(`apis.data.go.kr/1360000/VilageFcstInfoService_2.0`) Encoding 키를 우리집 탭 → ⚙ 설정에 입력. 키 없음·만료·오류면 자동으로 Open-Meteo(화면에 사유 표시). 활용기간 2년(승인 2026-11-17 → 2028-11-17).
+- **첫 화면**: `S.tab` 초기값 `'stamp'`(우리집).
+- **우리집 한 화면(갤럭시 탭 S8+ 1138×712)**: `@media (min-width:1000px) and (orientation:landscape)`에서 `.screen.home-fit`를 3열 그리드(날씨·도장 / 루틴 / 수행평가·준비물·구입권)로. 최근 도장은 숨김, 설정·PIN 버튼은 맨 아래 한 줄, 카드 안에서만 스크롤. 헤더 보조문구·하단 메뉴를 낮은 화면에서 압축(`header:has(+ .screen.home-fit)`). 벽걸이는 높이 760px 이하에서 간격·글자를 줄임(640px에서는 딸 칸 도구 버튼 줄이 가려짐). `.screen`의 `padding-bottom ... !important`(기존)를 `!important`로 덮어야 한다.
+- **말하는 속도**: `asSpeed()`(0.8~1.6, 기본 1.15, 설정 `speed`). Gemini TTS는 `playbackRate`, Live는 `playbackRate` + 재생 시각 계산을 `duration/speed`로, 기기 음성은 `utterance.rate`에 곱함.
+- **검증 상태**: `dev/` 4개 테스트와 `tools/test/smoke.js` 통과(가짜 Firestore + 헤드리스 Chrome). 실제 Firebase 앱 동작(로그인·동기화), 규칙의 앱 내 동작, 실기기 화면·말하는 속도·날씨 카드 높이는 미검증.

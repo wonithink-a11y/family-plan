@@ -43,6 +43,7 @@ const MOCK=`
       let b='';new Uint8Array(buf).forEach(x=>b+=String.fromCharCode(x));
       window.__ttsBody=JSON.parse(opt.body); window.__ttsUrl=url; (window.__ttsLog=window.__ttsLog||[]).push({url,body:window.__ttsBody});
       const is38=url.includes('/interactions');
+      if(is38&&window.__tts429>0){window.__tts429--;return J({error:{code:429,status:'RESOURCE_EXHAUSTED',details:[{'@type':'type.googleapis.com/google.rpc.RetryInfo',retryDelay:'1s'}]}},429);}
       if(is38&&window.__tts38fail)return J({error:{message:'nf'}},404);
       if(is38)return J({steps:[{type:'model_output',content:[{type:'audio',data:btoa(b)}]}]});
       return J({candidates:[{content:{parts:[{inlineData:{mimeType:'audio/wav',data:btoa(b)}}]}}]});
@@ -223,6 +224,20 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(mt.saved==='Orus'&&mt.sent[0]==='Orus','아빠 목소리를 바꾸면 그 목소리 이름(Orus)으로 요청함: '+mt.sent.join(','));
   ok(/Orus/.test(mt.toast||'')&&/v\d+\.\d+/.test(mt.toast||''),'미리듣기 때 요청한 목소리·엔진·앱 버전을 알려 줌: '+mt.toast);
   await page.evaluate(()=>{asBack();});
+
+  console.log('\n[7d] 끝 잡음(WAV 뒤 조각)·한도(429) 재시도');
+  const decN=await page.evaluate(()=>{const n=100,buf=new ArrayBuffer(44+n*2+16),dv=new DataView(buf);const w=(o,s)=>[...s].forEach((c,i)=>dv.setUint8(o+i,c.charCodeAt(0)));
+    w(0,'RIFF');dv.setUint32(4,buf.byteLength-8,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,24000,true);dv.setUint32(28,48000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);
+    w(36,'data');dv.setUint32(40,n*2,true);for(let i=0;i<n;i++)dv.setInt16(44+i*2,1000,true);
+    w(44+n*2,'LIST');dv.setUint32(48+n*2,8,true);for(let i=0;i<8;i++)dv.setUint8(52+n*2+i,0x7f);   // 소리가 아닌 메타데이터
+    let b='';new Uint8Array(buf).forEach(x=>b+=String.fromCharCode(x));return asDecodeAudio(btoa(b),'audio/wav').pcm.length;});
+  ok(decN===100,'WAV의 data 조각만 소리로 읽음(뒤 LIST 조각은 무시): '+decN+'샘플');
+  const rt=await page.evaluate(async()=>{window.__AS_RETRY_MS=30;window.__tts429=1;window.__ttsLog=[];window.__tts38fail=false;localStorage.setItem('fp_tts_model','gemini-3.8-flash-tts');
+    const a=await asTtsFetch('한도 재시도 테스트 '+Date.now(),'Kore');return{ok:!!(a&&a.pcm&&a.pcm.length),calls:window.__ttsLog.length};});
+  ok(rt.ok&&rt.calls===2,'429가 나도 알려 준 시간 뒤에 한 번 더 시도해서 성공: 요청 '+rt.calls+'번');
+  const q=await page.evaluate(async()=>{window.__ttsLog=[];let act=0,max=0;const of=window.fetch;window.fetch=async(u,o)=>{if(String(u).includes('generativelanguage')){act++;max=Math.max(max,act);await new Promise(x=>setTimeout(x,40));const r=await of(u,o);act--;return r;}return of(u,o);};
+    await Promise.all([1,2,3].map(i=>asTtsFetch('동시 요청 테스트 '+i+Date.now(),'Kore')));window.fetch=of;return max;});
+  ok(q===1,'음성 요청은 동시에 여러 개 보내지 않고 한 줄로 보냄(최대 동시 '+q+'개)');
 
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);

@@ -258,12 +258,15 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     const orb=document.querySelector('.orb');r.orb=!!orb&&orb.getAttribute('aria-label').includes(asName());
     r.dots=document.querySelectorAll('.st-dot').length;r.dotsOn=document.querySelectorAll('.st-dot.on').length;r.cnt=((S.reward&&S.reward.stampCount)||0)%STAMPS_PER_COUPON;
     r.stampBtn=!!document.querySelector('.st-btn');r.hero=!!document.querySelector('.hero');
-    r.tickets=document.querySelectorAll('.st-card .ticket').length>=1;return r;});
+    r.noTicket=document.querySelectorAll('.st-card .ticket').length===0&&!/사용하기/.test(document.querySelector('.st-card').textContent);
+    document.querySelector('.st-open').click();await new Promise(x=>setTimeout(x,150));
+    r.sheet=S.overlay==='coupons'&&document.querySelectorAll('#ov .ticket').length>=1&&/사용하기/.test(document.getElementById('ov').textContent);closeOverlay();await new Promise(x=>setTimeout(x,400));r.closed=S.overlay===null;return r;});
   ok(hm.time&&hm.tick&&hm.date,'위쪽에 큰 시계(HH:MM)와 날짜가 있고 글자만 갈아 끼움');
   ok(hm.now&&hm.day,'날씨 카드에 지금(현재 기온·상태)과 오늘(최저·최고·강수·등교 시간 기온)이 같이 나옴');
   ok(hm.orb,'루미 음성 구슬 버튼이 있음(말하기 시작)');
   ok(hm.dots===10&&hm.dotsOn===hm.cnt,'도장 동그라미 10개 중 '+hm.cnt+'개가 채워짐: '+hm.dotsOn+'/'+hm.dots);
-  ok(hm.stampBtn&&hm.tickets&&!hm.hero,'도장 찍기 버튼과 구입권(사용하기)이 도장 카드 안에 있고 예전 큰 도장 카드는 없음');
+  ok(hm.stampBtn&&hm.noTicket&&!hm.hero,'도장 카드에는 도장 찍기 버튼만 있고 구입권 사용하기는 보이지 않음');
+  ok(hm.sheet&&hm.closed,'도장 동그라미를 누르면 구입권 시트(사용하기)가 열리고 닫힘');
 
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);

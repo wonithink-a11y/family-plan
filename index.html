@@ -492,7 +492,10 @@ header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-
 .lm-s{font-size:13px;color:#5B6396;margin-top:2px}
 .lm-act{display:flex;gap:8px;margin-top:10px}
 .lm-act button{min-height:44px;flex:1;border-radius:14px;border:1px solid var(--border);background:transparent;font-size:13px;font-weight:700;color:var(--text)}
-.st-dots{display:flex;gap:6px}
+.st-open{display:block;width:100%;padding:0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.st-open:active{opacity:.85}
+.st-open .sec-h{margin-bottom:6px}
+.st-dots{display:flex;gap:6px;align-items:center;min-height:44px}
 .st-dot{flex:1;min-width:0;max-width:28px;aspect-ratio:1;border-radius:50%;border:1.5px dashed #7A84B5;box-sizing:border-box}
 .st-dot.on{border:0;background:var(--p)}
 .st-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
@@ -1323,6 +1326,7 @@ function routineProgress(){
   return{items,done,n,total:items.length,all:items.length>0&&n===items.length};
 }
 
+function couponTicket(c){return `<div class="ticket${c.usedAt?' used':''}"><div class="ticket-l"><b>${c.no}</b><small>TICKET</small></div><div class="ticket-b"><div class="ticket-i"><div class="ticket-t">${esc(c.title)}</div><div class="ticket-s">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':`<button class="use-btn" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div></div>`;}
 function buildStampView(){
   const r=S.reward||{};
   const total=r.stampCount||0;
@@ -1330,8 +1334,6 @@ function buildStampView(){
   const rp=routineProgress();
   const rtRows=rp.items.map(it=>`<div class="rt-row${rp.done[it.id]?' on':''}" onclick="toggleRoutine('${esc(it.id)}')"><div class="rt-chk">${rp.done[it.id]?'✓':''}</div><div class="rt-txt">${esc(it.text)}</div></div>`).join('');
   const open=(S.coupons||[]).filter(c=>!c.usedAt);
-  const used=(S.coupons||[]).filter(c=>c.usedAt);
-  const ticket=c=>`<div class="ticket${c.usedAt?' used':''}"><div class="ticket-l"><b>${c.no}</b><small>TICKET</small></div><div class="ticket-b"><div class="ticket-i"><div class="ticket-t">${esc(c.title)}</div><div class="ticket-s">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':`<button class="use-btn" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div></div>`;
   const today=todayStr();
   const preps=(S.preps||[]).filter(p=>p.date>=today||!p.done).sort((a,b)=>(a.done-b.done)||a.date.localeCompare(b.date)).slice(0,12);
   const prepRow=p=>{const d=getDays(p.date);const act=d!==null&&d>=0&&!p.done;return`<div class="prep-row${p.done?' done':''}"><div class="prep-dd" style="background:${act?ddColor(d,'#5B7FFF'):'#C5C9DD'}">${act?ddLabel(d):p.done?'완료':'지남'}</div><div class="prep-i"><div class="prep-t">${esc(p.text)}</div><div class="prep-s">${fmt(p.date)}</div></div><button class="mini-btn" style="background:#E3F7EE;color:#0F9D6B" onclick="togglePrep('${esc(p.id)}')">${p.done?'되돌리기':'챙김'}</button><button class="mini-btn" style="background:#F3F4FA;color:#9AA0BD" onclick="deletePrep('${esc(p.id)}')">삭제</button></div>`;};
@@ -1356,7 +1358,7 @@ ${buildClockHeader()}
     ${preps.length?preps.map(prepRow).join(''):'<div class="no-data">필요한 준비물을 날짜와 함께 요청해 보세요</div>'}
     <div class="note">새 요청은 다른 가족 기기에서 앱이 열려 있을 때 알림으로 보여요</div>
   </div>
-  ${buildStampCard(cnt,total,open,used,ticket)}
+  ${buildStampCard(cnt,total,open)}
   <div class="sec">
     <div class="sec-h"><div class="sec-t">최근 도장</div></div>
     ${log||'<div class="no-data">아직 찍은 도장이 없어요</div>'}
@@ -2882,15 +2884,24 @@ function buildLumiCard(){
 </div>`;
 }
 // 도장 카드: 동그라미가 하나씩 채워지고, 책 구입권이 있으면 바로 아래에서 쓴다 (C안의 도장 줄)
-function buildStampCard(cnt,total,open,used,ticket){
+function buildStampCard(cnt,total,open){
   const dots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<i class="st-dot${i<cnt?' on':''}"></i>`).join('');
   return`<div class="sec st-card">
-  <div class="sec-h"><div class="sec-t">칭찬 도장</div><span class="sec-pill">책 구입권 ${open.length}장</span></div>
-  <div class="st-dots" role="img" aria-label="도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개">${dots}</div>
+  <button class="st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 책 구입권 ${open.length}장. 눌러서 구입권 보기">
+    <span class="sec-h"><span class="sec-t">칭찬 도장</span><span class="sec-pill">책 구입권 ${open.length}장</span></span>
+    <span class="st-dots" aria-hidden="true">${dots}</span>
+  </button>
   <div class="st-row"><div class="st-txt"><b>${cnt} / ${STAMPS_PER_COUPON}</b> · 누적 ${total}개</div><button class="st-btn" onclick="stampFlow()">도장 찍기</button></div>
-  ${open.map(ticket).join('')}
-  ${used.length?`<div class="note" style="margin:8px 0 4px;font-weight:700">사용한 구입권</div>${used.slice(0,3).map(ticket).join('')}`:''}
 </div>`;
+}
+// 책 구입권은 도장 동그라미를 눌렀을 때만 보인다 (사용하기는 부모 PIN 확인)
+function openCoupons(){ setState({overlay:'coupons'}); }
+function buildCouponSheet(){
+  const open=(S.coupons||[]).filter(c=>!c.usedAt), used=(S.coupons||[]).filter(c=>c.usedAt);
+  return`<div class="drag-handle"></div><div class="form-title" style="font-size:16px">${COUPON_TITLE}</div>
+${open.length?open.map(couponTicket).join(''):`<div class="no-data">도장 ${STAMPS_PER_COUPON}개를 모으면 구입권이 생겨요</div>`}
+${used.length?`<div class="note" style="margin:12px 0 8px;font-weight:700">사용한 구입권</div>${used.slice(0,5).map(couponTicket).join('')}`:''}
+<div class="form-btns"><button class="cancel-btn" onclick="closeOverlay()">닫기</button></div>`;
 }
 // 우리집 위쪽 시계 (C안의 큰 시계). 1분마다 글자만 갈아 끼운다
 function buildClockHeader(){
@@ -3791,7 +3802,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.8';
+const APP_VER='v4.9';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -4932,6 +4943,7 @@ function render(){
   if(S.overlay==='detail'){const item=S.items.find(i=>i.id===S.activeId);if(item)ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildDetailSheet(item)}</div></div>`;}
   else if(S.overlay==='form')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildFormSheet()}</div></div>`;
   else if(S.overlay==='txt-attach')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()"><div class="drag-handle"></div><div class="form-title" style="font-size:calc(16px*var(--fs))">📝 텍스트 메모 추가</div><textarea class="f-input" id="txt-area" placeholder="참고 내용, 필기 메모 등..." style="min-height:120px;resize:vertical"></textarea><div class="form-btns" style="margin-top:12px"><button class="cancel-btn" onclick="closeOverlay()">취소</button><button class="save-btn" style="background:var(--p)" onclick="saveTxtAttach()">추가하기</button></div></div></div>`;
+  else if(S.overlay==='coupons')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildCouponSheet()}</div></div>`;
   else if(S.overlay==='prep')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildPrepSheet()}</div></div>`;
   else if(S.overlay==='img-view')ov=`<div class="img-viewer" onclick="closeImgView()"><img src="${S.imgViewSrc}" alt="첨부 이미지"></div>`;
   const navDef=[

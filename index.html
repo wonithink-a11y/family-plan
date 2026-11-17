@@ -389,6 +389,25 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
 .gd-grade-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-right:4px}
 
+/* 칭찬 도장 */
+.stamp-board{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 8px}
+.stamp-slot{aspect-ratio:1;border-radius:50%;border:2.5px dashed #D5DAF5;display:flex;align-items:center;justify-content:center;font-size:24px;color:#CBD0EE;background:#FAFAFF}
+.stamp-slot.on{border:2.5px solid #FF6B8A;background:#FFF0F3;color:#FF6B8A;animation:stampIn .35s ease-out}
+@keyframes stampIn{0%{transform:scale(1.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.stamp-main-btn{width:100%;background:var(--p);color:#fff;border-radius:14px;padding:13px;font-size:15px;font-weight:800;margin-top:6px}
+.stamp-remain{font-size:12px;color:var(--muted);text-align:center;font-weight:700}
+.cp-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cp-row:last-child{border-bottom:none}
+.cp-ico{font-size:26px}
+.cp-info{flex:1;min-width:0}
+.cp-title{font-size:13px;font-weight:800;color:var(--text)}
+.cp-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.cp-use{background:#FFF0F3;color:#FF6B8A;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:800;flex-shrink:0}
+.cp-row.used{opacity:.45}
+.stamp-log-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;font-size:12px;border-bottom:1px solid var(--border)}
+.stamp-log-row:last-child{border-bottom:none}
+.stamp-toast{position:fixed;left:50%;top:38%;transform:translateX(-50%);z-index:999;background:#fff;border-radius:20px;padding:22px 28px;box-shadow:0 10px 40px rgba(0,0,0,.25);font-size:17px;font-weight:900;text-align:center;line-height:1.6;white-space:pre-line;animation:stampIn .35s ease-out;pointer-events:none}
+
 </style>
 </head>
 <body>
@@ -479,6 +498,7 @@ let S={
   showBanner:true,deferredPrompt:null,
   attachTargetId:null,imgViewSrc:null,txtAttachTargetId:null,
   trend:[],
+  reward:{stampCount:0,couponsIssued:0,pinHash:null},stamps:[],coupons:[],stampMsg:null,
 };
 let unsubFS=null; // Firestore 구독 해제 함수
 
@@ -519,6 +539,7 @@ function startSync(code){
   S.syncStatus='connecting';
   render();
   startEventsSync(code);
+  startRewardSync(code);
   unsubFS=db.collection('families').doc(code).collection('items')
     .onSnapshot(
       snap=>{
@@ -540,6 +561,166 @@ function startSync(code){
     );
 }
 
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   칭찬 도장 · 책 구입권
+   families/{code}/meta/reward  : {stampCount, couponsIssued, pinHash}
+   families/{code}/stamps/{id}  : {id, date, reason, ts}
+   families/{code}/coupons/{id} : {id, no, title, issuedAt, usedAt}
+   도장 +1 은 트랜잭션으로 처리해, 두 기기에서 동시에 찍어도
+   구입권이 중복 발급되지 않도록 한다 (구입권 id = cp{발급순번}).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const STAMPS_PER_COUPON=5;
+const COUPON_TITLE='책 구입권';
+let unsubReward=[];
+let _pinUntil=0; // 부모 PIN 인증 유효 시각 (5분)
+
+function rewardBase(){ return db.collection('families').doc(S.familyCode); }
+function rewardRef(){ return rewardBase().collection('meta').doc('reward'); }
+function stampsCol(){ return rewardBase().collection('stamps'); }
+function couponsCol(){ return rewardBase().collection('coupons'); }
+
+function startRewardSync(code){
+  unsubReward.forEach(u=>u()); unsubReward=[];
+  const base=db.collection('families').doc(code);
+  const onErr=e=>{
+    S.rewardErr=e&&e.code==='permission-denied'?'Firestore 규칙에서 meta·stamps·coupons 컬렉션 접근을 허용해 주세요.':null;
+    if(S.tab==='stamp')render();
+  };
+  const refresh=()=>{ if(S.tab==='stamp')render(); };
+  unsubReward.push(base.collection('meta').doc('reward').onSnapshot(s=>{
+    S.reward=Object.assign({stampCount:0,couponsIssued:0,pinHash:null},s.exists?s.data():{});
+    S.rewardErr=null; refresh();
+  },onErr));
+  unsubReward.push(base.collection('stamps').orderBy('ts','desc').limit(30).onSnapshot(s=>{
+    S.stamps=s.docs.map(d=>d.data()); refresh();
+  },onErr));
+  unsubReward.push(base.collection('coupons').onSnapshot(s=>{
+    S.coupons=s.docs.map(d=>d.data()).sort((a,b)=>b.issuedAt-a.issuedAt); refresh();
+  },onErr));
+}
+
+async function sha256Hex(text){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('fp:'+S.familyCode+':'+text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// 부모 PIN 확인. 아이가 스스로 도장을 찍지 못하게 하는 용도 (가족 코드를 아는 사람에겐 완전한 보안이 아님)
+async function parentAuth(){
+  if(Date.now()<_pinUntil)return true;
+  const r=S.reward||{};
+  if(!r.pinHash){
+    const p1=prompt('부모 PIN(숫자 4자리)을 처음 설정해요.\n도장 찍기와 구입권 사용에 필요해요.');
+    if(p1===null)return false;
+    if(!/^\d{4}$/.test(p1)){alert('숫자 4자리로 입력해 주세요.');return false;}
+    const p2=prompt('PIN을 한 번 더 입력해 주세요.');
+    if(p2!==p1){alert('PIN이 서로 달라요. 다시 시도해 주세요.');return false;}
+    try{ await rewardRef().set({pinHash:await sha256Hex(p1)},{merge:true}); }
+    catch(e){ alert('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); return false; }
+    _pinUntil=Date.now()+5*60*1000;
+    return true;
+  }
+  const p=prompt('부모 PIN을 입력해 주세요.');
+  if(p===null)return false;
+  if(await sha256Hex(p)!==r.pinHash){alert('PIN이 맞지 않아요.');return false;}
+  _pinUntil=Date.now()+5*60*1000;
+  return true;
+}
+
+async function changePin(){
+  _pinUntil=0;
+  if(!(await parentAuth()))return;
+  const p1=prompt('새 PIN(숫자 4자리)을 입력해 주세요.');
+  if(p1===null)return;
+  if(!/^\d{4}$/.test(p1)){alert('숫자 4자리로 입력해 주세요.');return;}
+  try{ await rewardRef().set({pinHash:await sha256Hex(p1)},{merge:true}); alert('PIN을 바꿨어요.'); }
+  catch(e){ alert('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+}
+
+// 도장 +1. 5의 배수가 되면 구입권을 자동 발급하고 true 를 돌려준다.
+async function addStamp(reason){
+  const rRef=rewardRef();
+  const id=Date.now().toString(36)+uid();
+  let issued=false;
+  await db.runTransaction(async tx=>{
+    issued=false;
+    const snap=await tx.get(rRef);
+    const r=snap.exists?snap.data():{};
+    const stampCount=(r.stampCount||0)+1;
+    let couponsIssued=r.couponsIssued||0;
+    tx.set(stampsCol().doc(id),{id,date:todayStr(),reason:reason||'',ts:Date.now()});
+    if(stampCount%STAMPS_PER_COUPON===0){
+      couponsIssued++;
+      const cid='cp'+couponsIssued;
+      tx.set(couponsCol().doc(cid),{id:cid,no:couponsIssued,title:COUPON_TITLE,issuedAt:Date.now(),usedAt:null});
+      issued=true;
+    }
+    tx.set(rRef,{stampCount,couponsIssued},{merge:true});
+  });
+  return issued;
+}
+
+function flashStamp(msg){
+  S.stampMsg=msg; render();
+  setTimeout(()=>{S.stampMsg=null;render();},2300);
+}
+
+async function stampFlow(){
+  if(!(await parentAuth()))return;
+  const reason=prompt('칭찬 이유를 적어 주세요 (예: 아침 준비 스스로 했어요)');
+  if(reason===null)return;
+  try{
+    const issued=await addStamp(reason.trim());
+    flashStamp(issued?'🎉 도장 '+STAMPS_PER_COUPON+'개 완성!\n'+COUPON_TITLE+'이 생겼어요':'🏅 칭찬 도장 +1');
+  }catch(e){
+    alert('도장을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message));
+  }
+}
+
+async function useCoupon(id){
+  if(!(await parentAuth()))return;
+  if(!confirm('이 '+COUPON_TITLE+'을 사용 처리할까요?'))return;
+  try{ await couponsCol().doc(id).update({usedAt:Date.now()}); }
+  catch(e){ alert('저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+}
+
+function fmtTs(ts){
+  const d=new Date(ts);
+  return (d.getMonth()+1)+'월 '+d.getDate()+'일';
+}
+
+function buildStampView(){
+  const r=S.reward||{};
+  const total=r.stampCount||0;
+  const cnt=total%STAMPS_PER_COUPON;
+  const remain=STAMPS_PER_COUPON-cnt;
+  const slots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<div class="stamp-slot${i<cnt?' on':''}">${i<cnt?'🏅':i+1}</div>`).join('');
+  const open=S.coupons.filter(c=>!c.usedAt);
+  const used=S.coupons.filter(c=>c.usedAt);
+  const cpRow=c=>`<div class="cp-row${c.usedAt?' used':''}"><div class="cp-ico">🎟️</div><div class="cp-info"><div class="cp-title">${esc(c.title)} #${c.no}</div><div class="cp-sub">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':`<button class="cp-use" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div>`;
+  const log=S.stamps.slice(0,10).map(s=>`<div class="stamp-log-row"><span>🏅 ${esc(s.reason)||'칭찬 도장'}</span><span style="color:var(--muted);flex-shrink:0">${fmt(s.date)}</span></div>`).join('');
+  return`
+<header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">🏅 칭찬</div><div class="hd-title">칭찬 도장</div></div><div class="hd-right">${syncBadge()}</div></div></header>
+<div class="screen">
+  ${S.rewardErr?`<div class="welcome-err" style="margin:0 0 14px">${esc(S.rewardErr)}</div>`:''}
+  <div class="stat-section">
+    <div class="stat-section-title">🏅 도장 ${STAMPS_PER_COUPON}개 = ${COUPON_TITLE}</div>
+    <div class="stamp-board">${slots}</div>
+    <div class="stamp-remain">${COUPON_TITLE}까지 ${remain}개 남았어요 · 지금까지 도장 ${total}개</div>
+    <button class="stamp-main-btn" onclick="stampFlow()">🏅 칭찬 도장 찍기</button>
+  </div>
+  <div class="stat-section">
+    <div class="stat-section-title">🎟️ 내 ${COUPON_TITLE}</div>
+    ${open.length?open.map(cpRow).join(''):'<div class="no-data">아직 사용할 수 있는 구입권이 없어요</div>'}
+    ${used.length?`<div style="font-size:11px;color:var(--muted);font-weight:700;margin:12px 0 2px">사용한 구입권</div>${used.slice(0,5).map(cpRow).join('')}`:''}
+  </div>
+  <div class="stat-section">
+    <div class="stat-section-title">📝 최근 도장</div>
+    ${log||'<div class="no-data">아직 찍은 도장이 없어요</div>'}
+  </div>
+  <button class="cancel-btn" style="width:100%;margin-bottom:14px" onclick="changePin()">🔑 부모 PIN 변경</button>
+</div>`;
+}
 
 let unsubEvents = null;
 function evtColRef(){ return db.collection('families').doc(S.familyCode).collection('events'); }
@@ -1662,6 +1843,7 @@ function render(){
   else if(S.tab==='cal')main=buildCalView();
   else if(S.tab==='events')main=buildEventsView();
   else if(S.tab==='stats')main=buildStatsView();
+  else if(S.tab==='stamp')main=buildStampView();
   else if(S.tab==='guide')main=buildGuideView();
   else if(S.tab==='backup')main=buildBackupView();
   let ov='';
@@ -1674,11 +1856,12 @@ function render(){
   <button class="nav-btn${S.tab==='list'?' active':''}" onclick="setTab('list')"><span class="nav-ico">📋</span>수행평가</button>
   <button class="nav-btn${S.tab==='events'?' active':''}" onclick="setTab('events')"><svg class="nav-svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#FF9500" fill-opacity=".18" stroke="#FF9500" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#FF9500" fill-opacity=".38"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><rect x="6" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="14" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="10" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".32"/></svg>일정</button>
   <button class="nav-btn${S.tab==='stats'?' active':''}" onclick="setTab('stats')"><span class="nav-ico">📊</span>통계</button>
+  <button class="nav-btn${S.tab==='stamp'?' active':''}" onclick="setTab('stamp')"><span class="nav-ico">🏅</span>도장</button>
   <button class="nav-btn${S.tab==='guide'?' active':''}" onclick="setTab('guide')"><span class="nav-ico">📚</span>가이드</button>
   <button class="nav-btn${S.tab==='backup'?' active':''}" onclick="setTab('backup')"><span class="nav-ico">⚙️</span>설정</button>
 </nav>`;
   const banner=S.showBanner&&!isPWA()?`<div class="install-banner" onclick="setState({showBanner:false})"><span>🌹 홈 화면에 추가하면 앱처럼 사용할 수 있어요!</span><span>✕</span></div>`:'';
-  document.getElementById('app').innerHTML=banner+`<div style="display:flex;flex-direction:column;height:${S.showBanner&&!isPWA()?'calc(100vh - 38px)':'100vh'}">${main}${nav}</div>${ov}`;
+  document.getElementById('app').innerHTML=banner+`<div style="display:flex;flex-direction:column;height:${S.showBanner&&!isPWA()?'calc(100vh - 38px)':'100vh'}">${main}${nav}</div>${ov}${S.stampMsg?`<div class="stamp-toast">${esc(S.stampMsg)}</div>`:''}`;
   const sc=document.querySelector('.screen');if(sc)sc.scrollTop=scrollTop;
   if(S.overlay){requestAnimationFrame(()=>requestAnimationFrame(()=>{const ov=document.getElementById('ov');if(ov)ov.classList.add('open');}));}
   }catch(e){document.getElementById('app').innerHTML='<div style="padding:20px;color:red;font-size:13px;background:#fff;min-height:100vh"><b>render 오류:</b><br>'+e.message+'<br><br>'+e.stack+'</div>';}

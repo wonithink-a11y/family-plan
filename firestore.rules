@@ -16,10 +16,12 @@ service cloud.firestore {
     match /families/{code} {
       allow read, write: if false;
 
-      // 수행평가·일정·우리집 탭(루틴/도장/구입권/준비물/푸시 기기)
-      match /{sub}/{doc} {
-        allow read, write: if request.auth != null
-          && sub in ['items','events','meta','routine','stamps','coupons','preps','devices'];
+      // 일반 하위 컬렉션(items, events, meta, routine, stamps, coupons, preps, devices, 앞으로 추가될 것 포함):
+      // 익명 로그인 + 문서 크기 제한. images/config 는 아래에서 형식을 따로 검증하므로 여기서 제외한다.
+      match /{sub}/{doc=**} {
+        allow read, delete: if request.auth != null && sub != 'images' && sub != 'config';
+        allow create, update: if request.auth != null && sub != 'images' && sub != 'config'
+          && request.resource.size() < 500000;
       }
 
       // 첨부 이미지 원본 (JPEG dataURL, 수행평가 문서에는 썸네일만 저장)

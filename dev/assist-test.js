@@ -215,6 +215,15 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(conf.mode==='result'&&conf.added===1,'"응"이라고 답하면 버튼 없이 등록됨: mode='+conf.mode+' 추가='+conf.added);
   ok(conf.noAdded===0&&conf.noMode!=='draft','"아니"라고 답하면 등록하지 않고 닫음: 추가='+conf.noAdded+' mode='+conf.noMode);
 
+  console.log('\n[7c] 구성원 목소리 미리듣기 → 요청한 목소리 확인 알림');
+  const mt=await page.evaluate(async()=>{asBack();asOpen('settings');await new Promise(x=>setTimeout(x,150));
+    document.getElementById('as-m-voice-dad').value='Orus';window.__ttsLog=[];asTestMember('dad');await new Promise(x=>setTimeout(x,700));
+    const t=document.getElementById('as-toast');const sent=(window.__ttsLog||[]).map(x=>x.body.generation_config?x.body.generation_config.speech_config[0].voice:'');
+    return{toast:t&&t.textContent,sent,saved:S.mbCfg&&S.mbCfg.list[0].voice};});
+  ok(mt.saved==='Orus'&&mt.sent[0]==='Orus','아빠 목소리를 바꾸면 그 목소리 이름(Orus)으로 요청함: '+mt.sent.join(','));
+  ok(/Orus/.test(mt.toast||'')&&/v\d+\.\d+/.test(mt.toast||''),'미리듣기 때 요청한 목소리·엔진·앱 버전을 알려 줌: '+mt.toast);
+  await page.evaluate(()=>{asBack();});
+
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);
   await page.evaluate(()=>asSavePrep()); await page.waitForTimeout(400);

@@ -1114,7 +1114,7 @@ function buildWallView(){
   const now=new Date();
   const DOW=['일','월','화','수','목','금','토'];
   const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0');
-  const night=now.getHours()>=22||now.getHours()<6;
+  const night=now.getHours()>=22||now.getHours()<6||!asInWindow(now); // 켜짐 시간대 밖이면 어둡게
   const shift=(now.getMinutes()%6)*2; // 번인 방지: 몇 분마다 화면을 살짝 옮김
   const rp=routineProgress();
   const r=S.reward||{}; const cnt=(r.stampCount||0)%STAMPS_PER_COUPON;
@@ -1150,7 +1150,7 @@ function buildWallView(){
 const AS_CFG_KEY='fp_assist_cfg';
 const AS_EXAM_ART='https://claude.ai/artifact/3WLAoQshgPRiSaFZXvAUR2'; // 아이가 쓰는 문제은행(AI 선생님 포함)
 const AS_EXAM_PUB='https://wonithink-a11y.github.io/exam/';
-const AS_CFG_DEF={name:'',voice:'Kore',ttsMode:'auto',autoBrief:true,briefTime:'07:00',weekdaysOnly:true,leave:'08:00',kmaKey:'',geminiKey:'',examUrl:''};
+const AS_CFG_DEF={name:'',voice:'Kore',ttsMode:'auto',autoBrief:true,briefTime:'07:40',weekdaysOnly:true,leave:'08:00',awakeMode:'window',awakeFrom:'07:40',awakeTo:'08:30',kmaKey:'',geminiKey:'',examUrl:''};
 const AS_VOICES=[['Kore','Kore · 또렷하고 단정'],['Aoede','Aoede · 산뜻'],['Leda','Leda · 젊고 발랄'],['Sulafat','Sulafat · 따뜻'],['Achird','Achird · 친근'],['Vindemiatrix','Vindemiatrix · 부드러움']];
 const WX_LAT=35.0226, WX_LON=126.7895; // 나주 빛가람동 (가든 앱과 같은 좌표)
 const AS_DOW='일월화수목금토';
@@ -1644,8 +1644,8 @@ function asShare(){
 }
 function asSaveSettings(){
   const v=id=>((document.getElementById(id)||{}).value||'').trim(); const c=id=>!!(document.getElementById(id)||{}).checked;
-  asSetCfg({name:v('as-s-name'),voice:v('as-s-voice')||'Kore',ttsMode:v('as-s-mode')||'auto',autoBrief:c('as-s-auto'),briefTime:v('as-s-btime')||'07:00',weekdaysOnly:c('as-s-wk'),leave:v('as-s-leave')||'08:00',kmaKey:v('as-s-kma'),geminiKey:v('as-s-gem'),examUrl:v('as-s-exam')});
-  try{localStorage.removeItem('fp_wx');}catch(e){} S.wx=null; fetchWeather(true);
+  asSetCfg({name:v('as-s-name'),voice:v('as-s-voice')||'Kore',ttsMode:v('as-s-mode')||'auto',autoBrief:c('as-s-auto'),briefTime:v('as-s-btime')||'07:00',weekdaysOnly:c('as-s-wk'),leave:v('as-s-leave')||'08:00',awakeMode:v('as-s-awake')||'window',awakeFrom:v('as-s-afrom')||'07:40',awakeTo:v('as-s-ato')||'08:30',kmaKey:v('as-s-kma'),geminiKey:v('as-s-gem'),examUrl:v('as-s-exam')});
+  try{localStorage.removeItem('fp_wx');}catch(e){} S.wx=null; fetchWeather(true); asWake();
   A.mode='main';A.notice='설정을 저장했어요.';asRender();rewardRefresh();
 }
 function asTestVoice(){
@@ -1668,6 +1668,9 @@ function asRender(){
 <label>아침 브리핑 자동 재생 (벽걸이 화면)</label>
 <div class="as-inl"><label class="as-ck"><input type="checkbox" id="as-s-auto"${cfg.autoBrief?' checked':''}> 켜기</label><input type="time" id="as-s-btime" value="${esc(cfg.briefTime)}"><label class="as-ck"><input type="checkbox" id="as-s-wk"${cfg.weekdaysOnly?' checked':''}> 평일만</label></div>
 <label>등교 시각 (벽걸이 화면 카운트다운)</label><input type="time" id="as-s-leave" value="${esc(cfg.leave)}">
+<label>벽걸이 화면 켜짐 유지</label>
+<div class="as-inl"><select id="as-s-awake" style="width:auto"><option value="window"${cfg.awakeMode!=='always'?' selected':''}>시간대만</option><option value="always"${cfg.awakeMode==='always'?' selected':''}>항상</option></select><input type="time" id="as-s-afrom" value="${esc(cfg.awakeFrom)}"><span>~</span><input type="time" id="as-s-ato" value="${esc(cfg.awakeTo)}"></div>
+<div class="as-note" style="margin-top:4px">꺼진 화면을 앱이 직접 켤 수는 없어요. 태블릿의 예약(루틴) 기능과 함께 쓰세요 — HANDOVER.md 참고.</div>
 <label>기상청 API 키 <small>(${own('kmaKey','kma_api_key')})</small></label><input id="as-s-kma" value="${esc(cfg.kmaKey)}" placeholder="비워 두면 가든 앱 키 사용" autocomplete="off">
 <label>Gemini API 키 <small>(${own('geminiKey','gemini_api_key')})</small></label><input id="as-s-gem" type="password" value="${esc(cfg.geminiKey)}" placeholder="비워 두면 가든 앱 키 사용" autocomplete="off">
 <label>문제은행 주소</label><input id="as-s-exam" value="${esc(cfg.examUrl)}" placeholder="${esc(AS_EXAM_ART)}">
@@ -1743,7 +1746,29 @@ function buildWallWeather(){
   return`<div class="w-wx"><div class="w-wx-ic">${w.now.icon}</div><div><div class="w-wx-t">${w.now.temp}°<small>${esc(w.now.label)}</small></div><div class="w-wx-s">${esc(wxLine(w))}</div><div class="w-wx-tip">🧥 ${esc(o)}${um?' · <b>☂️ 우산 챙기세요</b>':''}</div></div></div>`;
 }
 
-/* ── 7. 부팅: 날씨 갱신, 벽걸이 자동 브리핑 ── */
+/* ── 7. 벽걸이 화면 켜짐 유지 시간대 (기본 07:40~08:30) ──
+   Screen Wake Lock 은 "화면이 켜져 있는 동안 꺼지지 않게" 할 뿐, 꺼진 화면을 켜지는 못한다.
+   시간대 밖에서는 잠금을 풀어 기기가 자체 설정대로 꺼지게 하고, 화면이 켜져 있으면 어둡게 보여 준다. */
+let _wl=null;
+const asHm=v=>{const p=(v||'0:0').split(':').map(Number);return p[0]*60+(p[1]||0);};
+function asInWindow(now){
+  const c=asCfg(); if(c.awakeMode==='always')return true;
+  const m=now.getHours()*60+now.getMinutes(), f=asHm(c.awakeFrom), t=asHm(c.awakeTo);
+  return f<=t?(m>=f&&m<t):(m>=f||m<t);
+}
+async function asWake(now){
+  if(!KIOSK||!('wakeLock' in navigator))return;
+  const want=asInWindow(now||new Date());
+  try{
+    if(want&&!_wl&&document.visibilityState==='visible'){
+      const l=await navigator.wakeLock.request('screen'); _wl=l;
+      if(l.addEventListener)l.addEventListener('release',()=>{if(_wl===l)_wl=null;});
+    }else if(!want&&_wl){const l=_wl;_wl=null;await l.release();}
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(KIOSK&&document.visibilityState==='visible'){_wl=null;asWake();}});
+
+/* ── 8. 부팅: 날씨 갱신, 벽걸이 자동 브리핑 ── */
 function asAutoBrief(){
   if(!KIOSK||!S.familyCode)return; const cfg=asCfg(); if(!cfg.autoBrief)return;
   const now=new Date(); if(cfg.weekdaysOnly&&(now.getDay()===0||now.getDay()===6))return;
@@ -1758,7 +1783,8 @@ function asAutoBrief(){
 function asBoot(){
   fetchWeather(false);
   setInterval(()=>fetchWeather(false),600000);   // 10분마다 확인(30분 안이면 캐시 사용)
-  setInterval(asAutoBrief,30000);
+  asWake();
+  setInterval(()=>{asAutoBrief();asWake();},30000);
 }
 
 function evtDdayBadge(ev){
@@ -3253,12 +3279,6 @@ setInterval(()=>{
   if(S.routineDate&&S.routineDate!==todayStr())watchRoutineDay();
   if(KIOSK)render();
 },30000);
-if(KIOSK){
-  const keepAwake=async()=>{try{if('wakeLock' in navigator)await navigator.wakeLock.request('screen');}catch(e){}};
-  keepAwake();
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAwake();});
-}
-
 if(S.familyCode){
   // 저장된 가족 코드가 있으면 바로 Firestore 연결
   startSync(S.familyCode);

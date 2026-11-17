@@ -58,6 +58,7 @@ const MOCK=`
   // 기기 음성 가짜
   window.SpeechSynthesisUtterance=function(t){this.text=t;};
   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[],cancel(){},speak(u){window.__spoken.push(u.text);setTimeout(()=>u.onend&&u.onend(),5);}}});
+  window.__wl=0; Object.defineProperty(navigator,'wakeLock',{value:{request:async()=>{window.__wl++;return{release:async()=>{window.__wl--;},addEventListener(){}};}}});
   window.prompt=()=>'1234';window.confirm=()=>true;
 })();`;
 
@@ -175,6 +176,24 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await page.evaluate(()=>{asClose();});
 
   await ctx.close();
+
+  console.log('\n[12] 벽걸이 화면 켜짐 시간대 (07:40~08:30)');
+  {
+    const c=await browser.newContext({viewport:{width:1280,height:800}}); await c.addInitScript(MOCK);
+    const p=await c.newPage(); p.on('pageerror',e=>errs.push('wake: '+e.message));
+    await p.goto('file://'+path.join(tmp,'index.html')+'?view=wall'); await p.waitForTimeout(800);
+    const st=async(h,m)=>{await p.evaluate(([h,m])=>asWake(new Date(2026,10,17,h,m)),[h,m]);return p.evaluate(()=>window.__wl);};
+    const w=await p.evaluate(()=>[asInWindow(new Date(2026,10,17,7,39)),asInWindow(new Date(2026,10,17,7,40)),asInWindow(new Date(2026,10,17,8,29)),asInWindow(new Date(2026,10,17,8,30))]);
+    ok(w.join()==='false,true,true,false','07:39 꺼짐 / 07:40 켜짐 / 08:29 켜짐 / 08:30 꺼짐: '+w);
+    await p.evaluate(()=>{window.__wl=0;_wl=null;});
+    ok(await st(7,50)===1,'07:50 화면 켜짐 잠금을 잡음');
+    ok(await st(7,55)===1,'이미 잡았으면 중복으로 잡지 않음');
+    ok(await st(9,0)===0,'09:00 잠금을 풀어 기기가 꺼지게 둠');
+    await p.evaluate(()=>asSetCfg({awakeMode:'always'}));
+    ok(await st(15,0)===1,'"항상" 모드는 시간과 무관하게 유지');
+    await p.evaluate(()=>asSetCfg({awakeMode:'window'}));
+    await c.close();
+  }
 
   // 벽걸이·폰 스크린샷
   async function shot(url,vp,name,fn){

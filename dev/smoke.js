@@ -29,7 +29,7 @@ fs.writeFileSync(path.join(tmp,'index.html'),html);
   await open(base+'?view=wall',TABLET,'wall_tablet');
   await open(base+'?view=wall',{width:390,height:1100},'wall_phone');
   await open(base,{width:390,height:844},'routine',async p=>{
-    await p.evaluate(async()=>{await toggleRoutine('d3');await toggleRoutine('d4');await toggleRoutine('d4');await toggleRoutine('d4');});
+    await p.evaluate(async()=>{await toggleRoutine('d4');await toggleRoutine('d5');await toggleRoutine('d6');await toggleRoutine('d6');await toggleRoutine('d6');});
     const r=await p.evaluate(()=>({stampCount:window.__store['families/TEST/meta/reward'].stampCount,rtStamps:Object.keys(window.__store).filter(k=>k.includes('/stamps/rt_')).length}));
     console.log('루틴 완료 결과(기대: stampCount 8, rtStamps 1):',JSON.stringify(r));
   });

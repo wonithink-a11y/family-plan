@@ -6,6 +6,7 @@
   const seed={
     'families/TEST/items/a':{id:'a',subject:'수학',subjectColor:{name:'수학',bg:'#F0F4FF',accent:'#5B7FFF',tag:'#D6E0FF'},dueDate:plus(3),priority:2,tasks:[{id:'t1',text:'x',done:false}],earnedScore:null,maxScore:100,attachments:[],alarmEnabled:false},
     'families/TEST/items/b':{id:'b',subject:'국어',subjectColor:{name:'국어',bg:'#FFF0F3',accent:'#FF6B8A',tag:'#FFD6DF'},dueDate:plus(9),priority:2,tasks:[{id:'t2',text:'x',done:false}],earnedScore:null,maxScore:100,attachments:[],alarmEnabled:false},
+    'families/TEST/items/c':{id:'c',subject:'영어',subjectColor:{name:'영어',bg:'#F0FFF4',accent:'#34A853',tag:'#C8F0D4'},dueDate:T,priority:3,tasks:[{id:'t3',text:'영어 에세이 쓰기',done:false},{id:'t4',text:'발표 연습',done:true}],earnedScore:null,maxScore:20,attachments:[],alarmEnabled:false},
     'families/TEST/events/e1':{id:'e1',title:'가족 외식',startDate:plus(1),endDate:plus(1),allDay:true,category:'가족',color:'#FF9500'},
     'families/TEST/events/e2':{id:'e2',title:'체험학습',startDate:plus(6),endDate:plus(6),allDay:true,category:'학교',color:'#34A853'},
     'families/TEST/meta/reward':{stampCount:7,couponsIssued:1,pinHash:'x'},
@@ -14,7 +15,7 @@
     'families/TEST/stamps/s2':{id:'s2',date:plus(-1),reason:'동생을 도와줬어요',ts:Date.now()-86400000},
     'families/TEST/preps/p1':{id:'p1',date:plus(1),text:'리코더, 색연필 12색',ts:Date.now()-5000,by:'x',done:false},
     'families/TEST/preps/p2':{id:'p2',date:plus(4),text:'체육복',ts:Date.now()-4000,by:'x',done:false},
-    ['families/TEST/routine/'+T]:{date:T,done:{d0:true,d1:true,d2:true},stamped:false},
+    ['families/TEST/routine/'+T]:{date:T,done:{d0:true,d1:true,d2:true,d3:true},stamped:false},
   };
   Object.assign(store,JSON.parse(JSON.stringify(seed)));
   const fire=()=>listeners.slice().forEach(l=>l());

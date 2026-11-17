@@ -204,3 +204,12 @@
 - **우리집 한 화면(갤럭시 탭 S8+ 1138×712)**: `@media (min-width:1000px) and (orientation:landscape)`에서 `.screen.home-fit`를 3열 그리드(날씨·도장 / 루틴 / 수행평가·준비물·구입권)로. 최근 도장은 숨김, 설정·PIN 버튼은 맨 아래 한 줄, 카드 안에서만 스크롤. 헤더 보조문구·하단 메뉴를 낮은 화면에서 압축(`header:has(+ .screen.home-fit)`). 벽걸이는 높이 760px 이하에서 간격·글자를 줄임(640px에서는 딸 칸 도구 버튼 줄이 가려짐). `.screen`의 `padding-bottom ... !important`(기존)를 `!important`로 덮어야 한다.
 - **말하는 속도**: `asSpeed()`(0.8~1.6, 기본 1.15, 설정 `speed`). Gemini TTS는 `playbackRate`, Live는 `playbackRate` + 재생 시각 계산을 `duration/speed`로, 기기 음성은 `utterance.rate`에 곱함.
 - **검증 상태**: `dev/` 4개 테스트와 `tools/test/smoke.js` 통과(가짜 Firestore + 헤드리스 Chrome). 실제 Firebase 앱 동작(로그인·동기화), 규칙의 앱 내 동작, 실기기 화면·말하는 속도·날씨 카드 높이는 미검증.
+
+## 메뉴 5개 통합 + 가로 태블릿 왼쪽 메뉴 + 버전 표시 (2026-11-17, v3.9~v4.0)
+- **버전 표시**: `APP_VER` 상수(현재 v4.0)를 `syncBadge()`가 동기화 배지 옆에 작은 글씨로 출력하고, 설정 하단도 같은 상수를 쓴다. 버전을 올릴 때는 `APP_VER`, `sw.js` 캐시 이름을 함께 올린다.
+- **5탭 통합(A안)**: 하단 7개(달력·수행평가·일정·통계·우리집·가이드·설정) → 우리집(`stamp`) / 일정(`events`: 하위 `evSub` 'cal'|'list') / 수행평가(`list`: 하위 `lsSub` 'list'|'stats') / 가이드 / 설정(`backup`). 각 화면 builder는 그대로 두고 `render()`가 `subSeg()`로 header 바로 아래에 전환 막대(`.tabseg`)를 끼워 넣는다. 통계 안의 진행/성적(`S.statsView`)은 그대로.
+- **옛 탭 이름 호환**: `setTab('cal')` → 일정+달력, `setTab('stats')` → 수행평가+통계. 다른 탭에서 일정/수행평가로 들어오면 기본 하위 화면(달력/목록)으로 시작하고, 이미 그 탭에 있으면 유지한다.
+- **설정 통합**: 우리집 아래의 "음성·AI·날씨 설정", "부모 PIN 변경" 버튼을 없애고 설정 탭의 새 섹션 "🎤 음성 · AI · 날씨 · 보안"으로 이동(`asOpen('settings')`, `changePin()`). 우리집 한 화면 그리드는 3행으로 정리.
+- **왼쪽 메뉴(C안)**: `@media (min-width:1000px) and (orientation:landscape)`에서 `.bot-nav`를 왼쪽 84px 레일로, `.app-wrap`에 `margin-left:84px`. `.screen` 아래 여백(기존 `!important` 100px)과 FAB·FAB 메뉴 위치도 같은 조건에서 조정. 벽걸이(`?view=wall`)는 메뉴가 없어 영향 없음.
+- **테스트**: `dev/assist-test.js`에 메뉴 5개·옛 탭 호환·전환 막대·설정 이동 검사 추가. `dev/members-test.js`의 "1280x800 한 화면에 잘림 없이 들어감"은 가끔 실패하는(타이밍·날씨 로딩에 따라 달라지는) 항목이라 반복 실행으로 확인한다.
+- **미검증**: 실기기의 왼쪽 메뉴 사용감, 폰 하단 메뉴 5개 배치, 일정·수행평가 하위 전환 막대 위치(헤더의 월 표시 바로 아래).

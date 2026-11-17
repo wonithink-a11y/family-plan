@@ -123,6 +123,18 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(tabs.home,'우리집 탭에서는 설정·PIN 버튼을 뺌');
   ok(await page.evaluate(()=>{const b=document.querySelector('.app-ver');return !!b&&b.textContent===APP_VER&&/^v\d+\.\d+$/.test(APP_VER);}),'헤더 오른쪽 위에 버전 표시');
 
+  console.log('\n[2c] 말 멈추기 버튼');
+  const stp=await page.evaluate(()=>{const r={};
+    A.speaking=true;asRefreshSpeakBtn();const b=document.getElementById('as-stopfab');r.show=!!b&&getComputedStyle(b).display!=='none';
+    const id0=_speakId;b.click();r.after=A.speaking;r.id=_speakId>id0;r.hide=getComputedStyle(document.getElementById('as-stopfab')).display==='none';
+    LV.mute=false;asLiveState().speaking=true;asSpeakFloat();r.live=getComputedStyle(document.getElementById('as-stopfab')).display!=='none';
+    lvStopSpeech();r.mute=LV.mute;r.liveHide=getComputedStyle(document.getElementById('as-stopfab')).display==='none';
+    const n0=LV.srcs.length;lvPlay(btoa(String.fromCharCode(1,0,2,0)));r.dropped=LV.srcs.length===n0;LV.mute=false;asLiveState().speaking=false;asSpeakFloat();return r;});
+  ok(stp.show,'말하는 중이면 떠 있는 멈추기 버튼이 보임');
+  ok(stp.after===false&&stp.id&&stp.hide,'누르면 말이 멈추고(A.speaking=false, 재생 번호 증가) 버튼이 사라짐');
+  ok(stp.live,'실시간 대화가 말하는 중에도 버튼이 보임');
+  ok(stp.mute&&stp.liveHide&&stp.dropped,'실시간 대화: 멈추면 남은 소리를 버리고 버튼이 사라짐');
+
   console.log('\n[3] 기상청 응답 해석·옷차림');
   await page.evaluate(()=>{localStorage.removeItem('fp_wx');S.wx=null;});
   await page.evaluate(()=>fetchWeather(true)); await page.waitForTimeout(400);

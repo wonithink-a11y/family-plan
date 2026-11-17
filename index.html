@@ -537,6 +537,12 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .install-banner{margin-left:84px}
 }
 
+/* 말 멈추기 (떠 있는 버튼) */
+.as-stopfab{position:fixed;left:50%;bottom:calc(84px + var(--safe-bot));transform:translateX(-50%);z-index:96;display:none;align-items:center;gap:6px;
+  background:linear-gradient(135deg,#FF5E7E,#FF8A5B);color:#fff;border-radius:30px;padding:12px 22px;font-size:15px;font-weight:800;
+  box-shadow:0 10px 30px rgba(255,94,126,.45);animation:asPulse2 1.6s infinite}
+.as-stopfab.kiosk{bottom:70px}
+@media (min-width:1000px) and (orientation:landscape){.as-stopfab{bottom:24px;left:calc(50% + 42px)}.as-stopfab.kiosk{left:50%;bottom:70px}}
 /* 벽걸이 화면 */
 .wall{min-height:100vh;box-sizing:border-box;color:#EEF1FF;font-family:inherit;
   background:radial-gradient(900px 560px at 12% -8%,#2B3180 0%,transparent 62%),radial-gradient(800px 520px at 108% 8%,#5A2F93 0%,transparent 58%),#0A0E22}
@@ -1792,7 +1798,17 @@ function asListen(){
   try{r.start();}catch(e){A.err='음성 인식을 시작하지 못했어요.';A.listening=false;asRender();}
 }
 function asSetText(t){const el=document.getElementById('as-text');if(el&&document.activeElement!==el)el.value=t;}
+// 말하는 동안 화면 어디서든 보이는 '말 멈추기' 버튼 (우리집 브리핑, 벽걸이 🔊, 루미 대화, 실시간 대화 모두)
+function asIsSpeaking(){return !!A.speaking||(typeof LV!=='undefined'&&!LV.mute&&!!asLiveState().speaking);}
+function asStopAll(){asStopSpeak(); if(typeof lvStopSpeech==='function')lvStopSpeech(); asSpeakFloat();}
+function asSpeakFloat(){
+  let el=document.getElementById('as-stopfab');
+  if(!el){el=document.createElement('button');el.id='as-stopfab';el.className='as-stopfab';el.textContent='⏹ 말 멈추기';el.onclick=asStopAll;document.body.appendChild(el);}
+  el.classList.toggle('kiosk',!!KIOSK);
+  el.style.display=asIsSpeaking()?'flex':'none';
+}
 function asRefreshSpeakBtn(){
+  asSpeakFloat();
   const b=document.getElementById('as-speak'); if(!b)return;
   b.textContent=A.speaking?'⏹ 멈추기':'🔊 다시 듣기'; b.onclick=A.speaking?asStopSpeak:asReplay;
   const n=document.getElementById('as-ttsnote'); if(n)n.textContent=A.ttsNote||'';
@@ -2469,7 +2485,7 @@ ${A.err?`<div class="as-err">${esc(A.err)}</div>`:''}
    - 키가 주소의 쿼리(?key=)로 전달되는 방식이라 이 기기에서만, 가족끼리 쓰는 용도로 둔다 (HANDOVER 참고).
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const LV_MODELS=['gemini-3.8-live','gemini-3.1-flash-live-preview','gemini-2.5-flash-native-audio-preview-12-2025'];
-const LV={ws:null,stream:null,mctx:null,node:null,msrc:null,buf:[],playT:0,srcs:[],ok:false,closing:false,setupDone:null};
+const LV={mute:false,ws:null,stream:null,mctx:null,node:null,msrc:null,buf:[],playT:0,srcs:[],ok:false,closing:false,setupDone:null};
 const asLiveState=()=>A.live||(A.live={status:'idle',lines:[],curU:'',curM:'',newU:true,err:'',model:'',speaking:false});
 
 function lvAttempts(){
@@ -2521,7 +2537,7 @@ function lvSend(o){try{if(LV.ws&&LV.ws.readyState===1&&LV.ok)LV.ws.send(JSON.str
 
 /* 답 소리 재생 (24kHz PCM, 끊김 없이 이어 붙임) */
 function lvPlay(b64){
-  if(!_ac)return; if(_ac.state==='suspended')_ac.resume();
+  if(LV.mute||!_ac)return; if(_ac.state==='suspended')_ac.resume();
   const pcm=lvB64ToI16(b64); if(!pcm.length)return;
   const buf=_ac.createBuffer(1,pcm.length,24000), ch=buf.getChannelData(0); for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
   const sp=asSpeed(); const src=_ac.createBufferSource(); src.buffer=buf; src.playbackRate.value=sp; src.connect(_ac.destination);
@@ -2530,6 +2546,8 @@ function lvPlay(b64){
   src.onended=()=>{LV.srcs=LV.srcs.filter(x=>x!==src); if(!LV.srcs.length){L.speaking=false;asLiveStat();}};
   asLiveStat();
 }
+// 사용자가 '말 멈추기'를 누르면 지금 재생 중인 소리를 끊고, 같은 답의 남은 소리는 새 말이 시작될 때까지 버린다
+function lvStopSpeech(){LV.mute=true;lvFlush();}
 function lvFlush(){LV.srcs.forEach(s=>{try{s.onended=null;s.stop();}catch(e){}});LV.srcs=[];LV.playT=0;asLiveState().speaking=false;asLiveStat();}
 
 /* 서버 메시지 */
@@ -2540,10 +2558,11 @@ async function lvOnMsg(ev){
   if(m.setupComplete!==undefined){LV.ok=true;if(LV.setupDone){LV.setupDone();LV.setupDone=null;}return;}
   const sc=m.serverContent;
   if(sc){
-    if(sc.interrupted)lvFlush();
+    if(sc.interrupted){LV.mute=false;lvFlush();}
     const parts=(sc.modelTurn&&sc.modelTurn.parts)||[];
     parts.forEach(p=>{const d=p.inlineData||p.inline_data; if(d&&d.data)lvPlay(d.data);});
     if(sc.inputTranscription&&sc.inputTranscription.text){
+      LV.mute=false;
       if(L.newU){L.curU='';L.newU=false;}
       L.curU+=sc.inputTranscription.text; A.lastUser=L.curU.trim(); asLiveRender();
     }
@@ -2552,6 +2571,7 @@ async function lvOnMsg(ev){
       L.curM+=sc.outputTranscription.text; asLiveRender();
     }
     if(sc.turnComplete){
+      LV.mute=false;
       if(L.curU.trim()){L.lines.push({r:'u',t:L.curU.trim()});L.curU='';}
       if(L.curM.trim()){L.lines.push({r:'a',t:L.curM.trim()});L.curM='';}
       L.newU=true; A.turn++; if(L.lines.length>20)L.lines.splice(0,L.lines.length-20); asLiveRender();
@@ -2617,7 +2637,7 @@ function lvTeardown(){
 }
 function asLiveStop(){lvTeardown();if(A.live)A.live.status='idle';A.mode='chat';asEnterChat();}
 function asLiveEnded(why){const L=asLiveState();lvTeardown();L.status='ended';L.err=why;if(A.open&&A.mode==='live')asRender();}
-function asLiveStat(){const el=document.getElementById('lv-orb'); if(el){const L=asLiveState();el.className='lv-orb'+(L.speaking?' sp':'')+(L.status==='live'&&!L.speaking?' li':'');}}
+function asLiveStat(){asSpeakFloat();const el=document.getElementById('lv-orb'); if(el){const L=asLiveState();el.className='lv-orb'+(L.speaking?' sp':'')+(L.status==='live'&&!L.speaking?' li':'');}}
 function asLiveRender(){if(A.open&&A.mode==='live'){asRender();const b=document.getElementById('lv-lines');if(b)b.scrollTop=b.scrollHeight;}}
 function asLiveBody(){
   const L=asLiveState(), nm=asName();
@@ -3626,7 +3646,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.0';
+const APP_VER='v4.1';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

@@ -213,3 +213,9 @@
 - **왼쪽 메뉴(C안)**: `@media (min-width:1000px) and (orientation:landscape)`에서 `.bot-nav`를 왼쪽 84px 레일로, `.app-wrap`에 `margin-left:84px`. `.screen` 아래 여백(기존 `!important` 100px)과 FAB·FAB 메뉴 위치도 같은 조건에서 조정. 벽걸이(`?view=wall`)는 메뉴가 없어 영향 없음.
 - **테스트**: `dev/assist-test.js`에 메뉴 5개·옛 탭 호환·전환 막대·설정 이동 검사 추가. `dev/members-test.js`의 "1280x800 한 화면에 잘림 없이 들어감"은 가끔 실패하는(타이밍·날씨 로딩에 따라 달라지는) 항목이라 반복 실행으로 확인한다.
 - **미검증**: 실기기의 왼쪽 메뉴 사용감, 폰 하단 메뉴 5개 배치, 일정·수행평가 하위 전환 막대 위치(헤더의 월 표시 바로 아래).
+
+## 말 멈추기 버튼 (v4.1)
+- 기존: 멈추기(`asStopSpeak`)는 결과 시트의 `#as-speak` 버튼과 대화의 마이크 버튼에만 있어서, 우리집 브리핑·벽걸이 🔊·실시간 대화 중에는 멈출 방법이 없었다.
+- 추가: `#as-stopfab`(`body`에 붙는 떠 있는 버튼 "⏹ 말 멈추기")를 `asSpeakFloat()`가 관리. `A.speaking`(Gemini/기기 음성) 또는 실시간 대화 재생 중(`asLiveState().speaking && !LV.mute`)일 때만 보이고, `asRefreshSpeakBtn()`·`asLiveStat()`에서 갱신. 누르면 `asStopAll()` = `asStopSpeak()` + `lvStopSpeech()`.
+- 실시간 대화: `LV.mute`를 켜서 재생 중인 소리를 끊고 같은 답의 남은 소리(`lvPlay`)는 버린다. 사용자가 다시 말하기 시작(`inputTranscription`)하거나 `interrupted`/`turnComplete`가 오면 해제. 서버 쪽 생성은 막지 않는다(로컬 재생만 중단).
+- 위치: 폰은 하단 메뉴 위 가운데, 가로 태블릿은 왼쪽 메뉴를 피해 아래 가운데, 벽걸이는 아래 70px. 테스트: `dev/assist-test.js [2c]`. 실기기 미검증.

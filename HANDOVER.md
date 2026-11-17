@@ -5,7 +5,7 @@
 ## 1. 지금 어디까지 왔나
 - 저장소: `wonithink-a11y/family-plan` (공개). 운영 주소 `https://wonithink-a11y.github.io/family-plan/`
 - **`main`에 모든 작업이 병합돼 있다** (우리집 탭·벽걸이·루미, 성적 분석·반복 일정·다크모드·이미지 동기화, 보안 작업). `feature/stamp-coupon`, `claude/serene-thompson-mu5lk4` 브랜치는 병합이 끝났다. 새 작업은 기능 브랜치에서 하고 PR로 병합한다.
-- 서비스워커 캐시 `family-plan-v9`, 앱 버전 v4.0. **Firebase 프로젝트는 family-plan 전용 `family-plan-11d44`** (SRF 관리시스템이 쓰는 `rosegarden-4937c`와 분리됨. 이 프로젝트의 규칙을 바꿔도 SRF에 영향이 없다).
+- 서비스워커 캐시 `family-plan-v10`, 앱 버전 v4.1. **Firebase 프로젝트는 family-plan 전용 `family-plan-11d44`** (SRF 관리시스템이 쓰는 `rosegarden-4937c`와 분리됨. 이 프로젝트의 규칙을 바꿔도 SRF에 영향이 없다).
 - 로그인은 Firebase **익명 인증**이고 Firestore 규칙은 `request.auth != null`을 요구한다. 가족 코드는 새로 만들 때 8자 이상(기존 저장 코드는 유지).
 - 주소로 처음 열면 **우리집 탭**이 첫 화면이다.
 - **메뉴는 5개**: 우리집 / 일정(달력·일정 목록 전환) / 수행평가(목록·통계·성적 전환) / 가이드 / 설정. 가로 태블릿(1000px↑)에서는 하단 대신 **왼쪽 세로 메뉴**, 폰·세로 화면은 하단 메뉴. 음성·AI·날씨 설정(기상청·Gemini 키, 말하는 속도)과 부모 PIN 변경은 **설정 탭**으로 모았다(우리집에서는 뺐다).

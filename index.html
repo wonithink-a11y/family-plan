@@ -472,7 +472,7 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .screen.home-fit>*{max-width:1500px}
   header .hd-row{margin-bottom:4px!important}
   .home-fit .home-cols{column-count:auto;display:grid;flex:1;min-height:0;width:100%;gap:10px;
-    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1.75fr) minmax(0,1fr) minmax(0,.85fr) auto}
+    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1.75fr) minmax(0,1fr) minmax(0,.85fr)}
   .home-fit .home-cols>*{margin:0!important;min-height:0;min-width:0}
   .home-fit .sec,.home-fit .hero{overflow:auto;scrollbar-width:none}
   .home-fit .sec::-webkit-scrollbar{display:none}
@@ -486,8 +486,6 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2}          /* 준비물 */
   .home-fit .home-cols>:nth-child(6){grid-column:3;grid-row:3}          /* 구입권 */
   .home-fit .home-cols>:nth-child(7){display:none}                      /* 최근 도장(공간 부족) */
-  .home-fit .home-cols>:nth-child(8){grid-column:1 / span 2;grid-row:4}
-  .home-fit .home-cols>:nth-child(9){grid-column:3;grid-row:4}
   .home-fit .ghost-btn{margin:0!important;padding:7px;font-size:12px}
   .home-fit .hero{padding:14px 18px;border-radius:18px;display:flex;flex-direction:column;justify-content:center}
   .home-fit .ring{width:92px;height:92px}.home-fit .ring::before{inset:8px}
@@ -506,10 +504,6 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   header:has(+ .screen.home-fit){padding-top:6px!important;padding-bottom:6px!important}
   header:has(+ .screen.home-fit) .hd-ic{width:34px;height:34px}
 }
-@media (min-width:1000px) and (orientation:landscape) and (max-height:760px){
-  .nav-btn{padding:5px 0 3px!important}.nav-ico{font-size:20px!important}
-  .screen.home-fit{padding-bottom:calc(56px + var(--safe-bot))!important}
-}
 
 /* 벽걸이 가로 태블릿, 세로가 낮은 화면(갤럭시 탭 S8+ 등): 한 화면에 들어오도록 압축 */
 @media (min-width:1100px) and (max-height:760px){
@@ -523,6 +517,26 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .w-kid .w-rt{padding:4px 0}.w-kid .w-tools{margin-top:4px}
   .w-lane{padding-bottom:10px}
 }
+
+/* 하위 화면 전환 막대 (일정: 달력/목록, 수행평가: 목록/통계·성적) */
+.tabseg{padding:8px 14px;background:var(--card,#fff);flex-shrink:0}
+.tabseg .seg button{padding:8px 4px}
+@media (min-width:768px){.tabseg{padding:8px 36px}.tabseg .seg{max-width:420px}}
+
+/* 가로 태블릿(1000px↑): 하단 메뉴 대신 왼쪽 세로 메뉴(레일) → 세로 공간 확보 */
+@media (min-width:1000px) and (orientation:landscape){
+  .app-wrap{margin-left:84px}
+  .bot-nav{top:0;bottom:0;right:auto;left:0;width:84px;flex-direction:column;justify-content:flex-start;gap:4px;padding:14px 0 0;
+    box-shadow:1px 0 0 rgba(0,0,0,.08)}
+  .nav-btn{flex:none!important;width:100%;padding:13px 0 11px!important;font-size:12px!important}
+  .nav-ico{font-size:24px!important}
+  .screen{padding-bottom:28px!important}
+  .screen.home-fit{padding-bottom:14px!important}
+  .fab{bottom:calc(24px + var(--safe-bot))!important}
+  .fab-menu{bottom:calc(88px + var(--safe-bot))!important}
+  .install-banner{margin-left:84px}
+}
+
 /* 벽걸이 화면 */
 .wall{min-height:100vh;box-sizing:border-box;color:#EEF1FF;font-family:inherit;
   background:radial-gradient(900px 560px at 12% -8%,#2B3180 0%,transparent 62%),radial-gradient(800px 520px at 108% 8%,#5A2F93 0%,transparent 58%),#0A0E22}
@@ -890,7 +904,7 @@ let S={
   syncStatus: 'connecting', // connecting | synced | offline | error
   syncError: null,
   items:[],
-  tab:'stamp',overlay:null,activeId:null,form:null,
+  tab:'stamp',evSub:'cal',lsSub:'list',overlay:null,activeId:null,form:null,
   filter:'all',sortBy:'due',hideDone:false,
   calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),calDate:null,
   showDangerZone:false,fabOpen:false,events:[],evtOverlay:null,activeEvtId:null,evtForm:null,notif:typeof Notification!=='undefined'?Notification.permission:'denied',
@@ -1323,8 +1337,6 @@ function buildStampView(){
     <div class="sec-h"><div class="sec-t">최근 도장</div></div>
     ${log||'<div class="no-data">아직 찍은 도장이 없어요</div>'}
   </div>
-  <button class="ghost-btn" style="margin:0 0 14px" onclick="asOpen('settings')">🎤 음성 · AI · 날씨 설정</button>
-  <button class="ghost-btn" style="margin:0 0 14px" onclick="changePin()">부모 PIN 변경</button>
   </div>
 </div>`;
 }
@@ -3614,7 +3626,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v3.9';
+const APP_VER='v4.0';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -4545,6 +4557,11 @@ function buildBackupView(){
     </button>
   </div>
   <div class="bk-section">
+    <div class="bk-title">🎤 음성 · AI · 날씨 · 보안</div>
+    <button class="bk-btn" onclick="asOpen('settings')"><span class="bk-ico">🎤</span><div><div>음성 · AI · 날씨 설정</div><div class="bk-btn-desc">기상청·Gemini 키, 말하는 속도, 목소리, 벽걸이 시간 (이 기기에 저장)</div></div></button>
+    <button class="bk-btn" onclick="changePin()"><span class="bk-ico">🔒</span><div><div>부모 PIN 변경</div><div class="bk-btn-desc">칭찬 도장·루틴 편집을 아이 혼자 못 하게 하는 가벼운 잠금</div></div></button>
+  </div>
+  <div class="bk-section">
     <div class="bk-title">👤 구성원 관리</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
       ${S.members.length===0?'<div style="font-size:calc(12px*var(--fs));color:var(--muted)">등록된 구성원이 없어요. 추가하면 수행평가·일정에 담당자를 지정하고 구성원별로 모아볼 수 있어요.</div>':S.members.map(m=>`<span class="evt-person" style="background:${m.color};font-size:calc(13px*var(--fs));padding:5px 6px 5px 12px;display:inline-flex;align-items:center;gap:6px">${esc(m.name)}<span data-name="${esc(m.name)}" onclick="removeMember(this.dataset.name)" style="background:rgba(0,0,0,.25);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:calc(10px*var(--fs));cursor:pointer">✕</span></span>`).join('')}
@@ -4741,10 +4758,8 @@ function render(){
   if(KIOSK){document.getElementById('app').innerHTML=buildWallView();return;}
   const scrollTop=document.querySelector('.screen')?.scrollTop||0;
   let main='';
-  if(S.tab==='list')main=buildListView();
-  else if(S.tab==='cal')main=buildCalView();
-  else if(S.tab==='events')main=buildEventsView();
-  else if(S.tab==='stats')main=buildStatsView();
+  if(S.tab==='list')main=subSeg(S.lsSub,'setLsSub',[['list','📋 목록'],['stats','📊 통계·성적']])(S.lsSub==='stats'?buildStatsView():buildListView());
+  else if(S.tab==='events')main=subSeg(S.evSub,'setEvSub',[['cal','🗓 달력'],['list','🗒 일정 목록']])(S.evSub==='list'?buildEventsView():buildCalView());
   else if(S.tab==='stamp')main=buildStampView();
   else if(S.tab==='guide')main=buildGuideView();
   else if(S.tab==='backup')main=buildBackupView();
@@ -4754,17 +4769,15 @@ function render(){
   else if(S.overlay==='txt-attach')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()"><div class="drag-handle"></div><div class="form-title" style="font-size:calc(16px*var(--fs))">📝 텍스트 메모 추가</div><textarea class="f-input" id="txt-area" placeholder="참고 내용, 필기 메모 등..." style="min-height:120px;resize:vertical"></textarea><div class="form-btns" style="margin-top:12px"><button class="cancel-btn" onclick="closeOverlay()">취소</button><button class="save-btn" style="background:var(--p)" onclick="saveTxtAttach()">추가하기</button></div></div></div>`;
   else if(S.overlay==='prep')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildPrepSheet()}</div></div>`;
   else if(S.overlay==='img-view')ov=`<div class="img-viewer" onclick="closeImgView()"><img src="${S.imgViewSrc}" alt="첨부 이미지"></div>`;
-  const nav=`<nav class="bot-nav">
-  <button class="nav-btn${S.tab==='cal'?' active':''}" onclick="setTab('cal')"><svg class="nav-svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#5B7FFF" fill-opacity=".18" stroke="#5B7FFF" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#5B7FFF" fill-opacity=".35"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><circle cx="7.5" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="12" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="16.5" cy="16.5" r="1.4" fill="#5B7FFF"/></svg>달력</button>
-  <button class="nav-btn${S.tab==='list'?' active':''}" onclick="setTab('list')"><span class="nav-ico">📋</span>수행평가</button>
-  <button class="nav-btn${S.tab==='events'?' active':''}" onclick="setTab('events')"><svg class="nav-svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#FF9500" fill-opacity=".18" stroke="#FF9500" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#FF9500" fill-opacity=".38"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><rect x="6" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="14" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="10" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".32"/></svg>일정</button>
-  <button class="nav-btn${S.tab==='stats'?' active':''}" onclick="setTab('stats')"><span class="nav-ico">📊</span>통계</button>
-  <button class="nav-btn${S.tab==='stamp'?' active':''}" onclick="setTab('stamp')"><span class="nav-ico" style="position:relative">🏠${pendingPreps().length?'<i class="nav-dot"></i>':''}</span>우리집</button>
-  <button class="nav-btn${S.tab==='guide'?' active':''}" onclick="setTab('guide')"><span class="nav-ico">📚</span>가이드</button>
-  <button class="nav-btn${S.tab==='backup'?' active':''}" onclick="setTab('backup')"><span class="nav-ico">⚙️</span>설정</button>
-</nav>`;
+  const navDef=[
+    ['stamp',`<span class="nav-ico" style="position:relative">🏠${pendingPreps().length?'<i class="nav-dot"></i>':''}</span>`,'우리집'],
+    ['events',`<svg class="nav-svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#5B7FFF" fill-opacity=".18" stroke="#5B7FFF" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#5B7FFF" fill-opacity=".35"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><circle cx="7.5" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="12" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="16.5" cy="16.5" r="1.4" fill="#5B7FFF"/></svg>`,'일정'],
+    ['list','<span class="nav-ico">📋</span>','수행평가'],
+    ['guide','<span class="nav-ico">📚</span>','가이드'],
+    ['backup','<span class="nav-ico">⚙️</span>','설정']];
+  const nav=`<nav class="bot-nav">${navDef.map(n=>`<button class="nav-btn${S.tab===n[0]?' active':''}" onclick="setTab('${n[0]}')">${n[1]}${n[2]}</button>`).join('')}</nav>`;
   const banner=S.showBanner&&!isPWA()?`<div class="install-banner" onclick="setState({showBanner:false})"><span>🌹 홈 화면에 추가하면 앱처럼 사용할 수 있어요!</span><span>✕</span></div>`:'';
-  document.getElementById('app').innerHTML=banner+`<div style="display:flex;flex-direction:column;height:${S.showBanner&&!isPWA()?'calc(100vh - 38px)':'100vh'}">${main}${nav}</div>${ov}${S.stampMsg?`<div class="stamp-toast">${esc(S.stampMsg)}</div>`:''}`;
+  document.getElementById('app').innerHTML=banner+`<div class="app-wrap" style="display:flex;flex-direction:column;height:${S.showBanner&&!isPWA()?'calc(100vh - 38px)':'100vh'}">${main}${nav}</div>${ov}${S.stampMsg?`<div class="stamp-toast">${esc(S.stampMsg)}</div>`:''}`;
   const sc=document.querySelector('.screen');if(sc)sc.scrollTop=scrollTop;
   if(S.overlay){requestAnimationFrame(()=>requestAnimationFrame(()=>{const ov=document.getElementById('ov');if(ov)ov.classList.add('open');}));}
   }catch(e){document.getElementById('app').innerHTML='<div style="padding:20px;color:red;font-size:calc(13px*var(--fs));background:#fff;min-height:100vh"><b>render 오류:</b><br>'+e.message+'<br><br>'+e.stack+'</div>';}
@@ -4773,7 +4786,23 @@ function render(){
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    탭/달력 액션
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function setTab(t){setState({tab:t,overlay:null,activeId:null,form:null})}
+// 5탭: 우리집(stamp) / 일정(events: 달력·목록) / 수행평가(list: 목록·통계) / 가이드 / 설정.
+// 옛 탭 이름 'cal' → 일정의 달력, 'stats' → 수행평가의 통계 로 연결한다.
+function setTab(t){
+  const p={overlay:null,activeId:null,form:null};
+  if(t==='cal'){t='events';p.evSub='cal';}
+  else if(t==='stats'){t='list';p.lsSub='stats';}
+  else if(t==='events'&&S.tab!=='events')p.evSub='cal';   // 다른 탭에서 들어오면 기본 화면(달력)
+  else if(t==='list'&&S.tab!=='list')p.lsSub='list';      // 기본 화면(목록)
+  p.tab=t; setState(p);
+}
+function setEvSub(v){setState({evSub:v,overlay:null,activeId:null,form:null})}
+function setLsSub(v){setState({lsSub:v,overlay:null,activeId:null,form:null})}
+// 하위 화면 전환 막대: 각 화면의 header 바로 아래에 끼워 넣는다
+function subSeg(cur,fn,opts){
+  const bar=`<div class="tabseg"><div class="seg">${opts.map(o=>`<button class="${cur===o[0]?'sel':''}" onclick="${fn}('${o[0]}')">${o[1]}</button>`).join('')}</div></div>`;
+  return h=>h.replace('</header>','</header>'+bar);
+}
 
 let _calTX=0;
 function calTouchStart(e){_calTX=e.touches[0].clientX;}

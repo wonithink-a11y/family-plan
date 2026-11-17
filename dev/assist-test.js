@@ -110,6 +110,17 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(spd.max===1.6&&spd.min===0.8,'범위 0.8~1.6으로 제한: '+spd.min+'~'+spd.max);
   ok(spd.bad===1.15,'잘못된 값이면 기본값: '+spd.bad);
   ok(await page.evaluate(()=>S.tab==='stamp'),'첫 화면이 우리집 탭');
+  const tabs=await page.evaluate(()=>{const r={};r.nav=[...document.querySelectorAll('.bot-nav .nav-btn')].map(b=>b.textContent.trim());
+    setTab('cal');r.cal=[S.tab,S.evSub,document.querySelectorAll('.tabseg .seg button').length];
+    setTab('stats');r.stats=[S.tab,S.lsSub];setLsSub('list');r.ls=S.lsSub;setTab('events');setEvSub('list');r.evl=[S.tab,S.evSub];
+    setTab('backup');const A=()=>document.getElementById('app').innerHTML;r.set=A().includes("asOpen('settings')")&&A().includes('changePin()');
+    setTab('stamp');r.home=A().includes('부모 PIN 변경')===false;return r;});
+  ok(tabs.nav.length===5&&/우리집$/.test(tabs.nav[0]),'하단/왼쪽 메뉴 5개, 첫 번째가 우리집: '+tabs.nav.join(','));
+  ok(tabs.cal[0]==='events'&&tabs.cal[1]==='cal'&&tabs.cal[2]===2,'옛 탭 cal → 일정 탭의 달력(전환 막대 2개)');
+  ok(tabs.stats[0]==='list'&&tabs.stats[1]==='stats','옛 탭 stats → 수행평가 탭의 통계');
+  ok(tabs.evl[0]==='events'&&tabs.evl[1]==='list','일정 탭에서 목록으로 전환');
+  ok(tabs.set,'설정 탭에 음성·AI·날씨 설정과 부모 PIN 변경이 있음');
+  ok(tabs.home,'우리집 탭에서는 설정·PIN 버튼을 뺌');
   ok(await page.evaluate(()=>{const b=document.querySelector('.app-ver');return !!b&&b.textContent===APP_VER&&/^v\d+\.\d+$/.test(APP_VER);}),'헤더 오른쪽 위에 버전 표시');
 
   console.log('\n[3] 기상청 응답 해석·옷차림');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-plan-v1';
+const CACHE_NAME = 'family-plan-v2';
 const BASE = '/family-plan';
 const urlsToCache = [BASE+'/', BASE+'/index.html', BASE+'/manifest.json'];
 
@@ -12,6 +12,16 @@ self.addEventListener('activate', e => {
   ));
   self.clients.claim();
 });
+// network-first: 최신 index.html 우선, 오프라인이면 캐시 사용
 self.addEventListener('fetch', e => {
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request).then(res => {
+      if (res.ok && new URL(e.request.url).origin === location.origin) {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
+  );
 });

@@ -1672,18 +1672,19 @@ function asFindAudio(data){
   return null;
 }
 // Gemini 음성은 무료 구간에서 분당 요청 수 한도가 낮다. 요청을 한 줄로 세우고(동시에 여러 개 보내지 않음),
-// 한도(429)에 걸리면 서버가 알려 준 시간(RetryInfo.retryDelay)만큼 기다렸다가 다시 시도한다. 그래도 안 되면 기기 음성으로 대신한다.
-let _ttsQ=Promise.resolve();
+// 한도(429)에 걸리면 기다리지 않고 바로 기기 음성으로 대신 읽는다. 서버가 알려 준 시간(RetryInfo.retryDelay) 동안은
+// Gemini 요청을 보내지 않고(쿨다운) 기기 음성을 쓰다가, 시간이 지나면 다시 Gemini 목소리로 돌아간다.
+let _ttsQ=Promise.resolve(), _ttsCool=0;
 function asTtsRetryDelay(body){
   try{const d=((body&&body.error&&body.error.details)||[]).find(x=>x&&x.retryDelay); if(d){const m=/([\d.]+)s/.exec(d.retryDelay); if(m)return Math.ceil(+m[1]);}}catch(e){}
   return 0;
 }
-const asSleep=ms=>new Promise(r=>setTimeout(r,ms));
 function asTtsFetch(text,voice){
   const run=()=>asTtsFetch1(text,voice);
   const p=_ttsQ.then(run,run); _ttsQ=p.catch(()=>{}); return p;
 }
 async function asTtsFetch1(text,voice){
+  if(Date.now()<_ttsCool){const sec=Math.ceil((_ttsCool-Date.now())/1000); throw new Error('Gemini 음성 사용량 한도라 약 '+sec+'초 동안 기기 음성으로 읽어요');}
   const key='v2|'+voice+'|'+asHash(text); const hit=await asIdbGet(key); if(hit){A.ttsInfo=(hit.model||'저장된 소리')+' · '+voice;return hit;}
   const k=geminiKey(); let lastErr='TTS 모델을 찾지 못했어요';
   for(const c of asTtsChain(text,voice)){
@@ -1691,13 +1692,10 @@ async function asTtsFetch1(text,voice){
     try{res=await asFetch(c.url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}
     catch(e){throw new Error('네트워크 오류');}
     if(res.status===401||res.status===403)throw new Error('Gemini 키 권한 오류('+res.status+')');
-    if(res.status===429){   // 한도: 알려 준 시간(최대 30초) 기다렸다가 같은 요청을 한 번 더
+    if(res.status===429){   // 한도: 기다리지 않고 기기 음성으로 대신, 알려 준 시간 동안은 Gemini 요청을 쉰다
       let body=null; try{body=await res.json();}catch(e){}
-      const wait=Math.min(30,asTtsRetryDelay(body)||(window.__AS_RETRY||8)); A.ttsNote='Gemini 음성 사용량 한도라 '+wait+'초 기다린 뒤 다시 시도해요'; asRefreshSpeakBtn();
-      await asSleep((window.__AS_RETRY_MS!==undefined?window.__AS_RETRY_MS:wait*1000));
-      try{res=await asFetch(c.url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}catch(e){throw new Error('네트워크 오류');}
-      A.ttsNote='';
-      if(res.status===429)throw new Error('Gemini 음성 사용량 한도(무료 구간은 분당 요청 수가 적어요)');
+      const wait=Math.min(60,asTtsRetryDelay(body)||20); _ttsCool=Date.now()+wait*1000;
+      throw new Error('Gemini 음성 사용량 한도라 약 '+wait+'초 동안 기기 음성으로 읽어요 (무료 구간은 분당 요청 수가 적어요)');
     }
     if(!res.ok){lastErr=c.model+' 응답 '+res.status;continue;}
     const data=await res.json();
@@ -3746,7 +3744,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.6';
+const APP_VER='v4.7';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

@@ -389,24 +389,116 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
 .gd-grade-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-right:4px}
 
-/* 칭찬 도장 */
-.stamp-board{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 8px}
-.stamp-slot{aspect-ratio:1;border-radius:50%;border:2.5px dashed #D5DAF5;display:flex;align-items:center;justify-content:center;font-size:24px;color:#CBD0EE;background:#FAFAFF}
-.stamp-slot.on{border:2.5px solid #FF6B8A;background:#FFF0F3;color:#FF6B8A;animation:stampIn .35s ease-out}
-@keyframes stampIn{0%{transform:scale(1.6);opacity:0}100%{transform:scale(1);opacity:1}}
-.stamp-main-btn{width:100%;background:var(--p);color:#fff;border-radius:14px;padding:13px;font-size:15px;font-weight:800;margin-top:6px}
-.stamp-remain{font-size:12px;color:var(--muted);text-align:center;font-weight:700}
-.cp-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
-.cp-row:last-child{border-bottom:none}
-.cp-ico{font-size:26px}
-.cp-info{flex:1;min-width:0}
-.cp-title{font-size:13px;font-weight:800;color:var(--text)}
-.cp-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.cp-use{background:#FFF0F3;color:#FF6B8A;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:800;flex-shrink:0}
-.cp-row.used{opacity:.45}
-.stamp-log-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;font-size:12px;border-bottom:1px solid var(--border)}
-.stamp-log-row:last-child{border-bottom:none}
-.stamp-toast{position:fixed;left:50%;top:38%;transform:translateX(-50%);z-index:999;background:#fff;border-radius:20px;padding:22px 28px;box-shadow:0 10px 40px rgba(0,0,0,.25);font-size:17px;font-weight:900;text-align:center;line-height:1.6;white-space:pre-line;animation:stampIn .35s ease-out;pointer-events:none}
+/* 우리집 탭 · 벽걸이 화면 (루틴 · 도장 · 준비물) */
+.nav-dot{position:absolute;top:-2px;right:-5px;width:8px;height:8px;border-radius:50%;background:#FF5252;box-shadow:0 0 0 2px #fff}
+.hero{position:relative;overflow:hidden;border-radius:24px;padding:20px;margin-bottom:14px;color:#fff;
+  background:radial-gradient(420px 220px at 105% -20%,rgba(167,139,250,.55),transparent 60%),linear-gradient(135deg,#1B2149 0%,#2D2A6E 55%,#43308F 100%);
+  box-shadow:0 14px 34px rgba(45,42,110,.35)}
+.hero-row{display:flex;align-items:center;gap:18px}
+.ring{--p:0;position:relative;width:104px;height:104px;border-radius:50%;flex-shrink:0;
+  background:conic-gradient(#9DB4FF calc(var(--p)*1%),rgba(255,255,255,.14) 0)}
+.ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:#262866}
+.ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-n{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.ring-n small{font-size:14px;font-weight:600;opacity:.6}
+.hero-k{font-size:11px;letter-spacing:1.4px;font-weight:700;color:#B7C3FF;margin-bottom:6px}
+.hero-big{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
+.hero-sub{font-size:12px;color:#B7C3FF;margin-top:6px;line-height:1.5}
+.pips{display:flex;gap:6px;margin:16px 0 14px}
+.pip{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.16)}
+.pip.on{background:linear-gradient(90deg,#9DB4FF,#C4B5FD);box-shadow:0 0 12px rgba(157,180,255,.6)}
+.hero-btn{width:100%;border-radius:14px;padding:13px;font-size:15px;font-weight:800;color:#1B2149;
+  background:linear-gradient(135deg,#fff,#E4E9FF);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.hero-btn:active{transform:scale(.98)}
+.sec{background:#fff;border:1px solid #ECEEF8;border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 2px 14px rgba(40,50,120,.05)}
+.sec-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sec-t{font-size:12px;font-weight:800;letter-spacing:1.2px;color:#6B7399}
+.sec-pill{font-size:11px;font-weight:800;color:#5B7FFF;background:#EEF1FF;border-radius:20px;padding:4px 10px}
+.sec-pill.ok{color:#0F9D6B;background:#E3F7EE}
+.sec-btn{font-size:12px;font-weight:800;color:#5B7FFF;background:#EEF1FF;border-radius:10px;padding:7px 12px}
+.ghost-btn{width:100%;margin-top:12px;border:1px solid #E4E7F5;border-radius:12px;padding:11px;font-size:13px;font-weight:700;color:#6B7399;background:#fff}
+.rt-prog{height:5px;border-radius:5px;background:#EEF0FA;margin-bottom:6px;overflow:hidden}
+.rt-prog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#5B7FFF,#34D399);transition:width .35s}
+.rt-row{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid #F1F2FA;cursor:pointer}
+.rt-row:last-of-type{border-bottom:none}
+.rt-chk{width:24px;height:24px;border-radius:8px;border:2px solid #CDD3EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;transition:all .2s}
+.rt-row.on .rt-chk{background:linear-gradient(135deg,#34D399,#10B981);border-color:transparent;box-shadow:0 4px 10px rgba(16,185,129,.35)}
+.rt-txt{font-size:14px;font-weight:600;color:var(--text)}
+.rt-row.on .rt-txt{color:#9AA0BD;text-decoration:line-through}
+.note{font-size:11px;color:#9AA0BD;margin-top:10px;line-height:1.6}
+.ticket{display:flex;align-items:stretch;border:1px solid #ECEEF8;border-radius:14px;overflow:hidden;margin-bottom:8px;background:#fff}
+.ticket.used{opacity:.45}
+.ticket-l{width:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:800;
+  background:linear-gradient(160deg,#FFC94D,#FF8F3F);border-right:2px dashed rgba(255,255,255,.7)}
+.ticket.used .ticket-l{background:#BFC4DB}
+.ticket-l b{font-size:20px;line-height:1}.ticket-l small{font-size:9px;letter-spacing:1px;opacity:.9;margin-top:3px}
+.ticket-b{flex:1;min-width:0;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.ticket-i{flex:1;min-width:0}
+.ticket-t{font-size:14px;font-weight:800;color:var(--text)}
+.ticket-s{font-size:11px;color:#9AA0BD;margin-top:3px}
+.use-btn{font-size:12px;font-weight:800;color:#fff;background:linear-gradient(135deg,#5B7FFF,#7C5CFF);border-radius:10px;padding:8px 13px;flex-shrink:0}
+.prep-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F1F2FA}
+.prep-row:last-of-type{border-bottom:none}
+.prep-row.done{opacity:.45}
+.prep-dd{min-width:44px;text-align:center;font-size:11px;font-weight:800;color:#fff;border-radius:8px;padding:5px 0;flex-shrink:0}
+.prep-i{flex:1;min-width:0}
+.prep-t{font-size:14px;font-weight:700;color:var(--text)}
+.prep-s{font-size:11px;color:#9AA0BD;margin-top:2px}
+.mini-btn{font-size:12px;font-weight:800;border-radius:9px;padding:7px 10px;flex-shrink:0}
+.log-row{display:flex;justify-content:space-between;gap:8px;padding:9px 0;font-size:13px;border-bottom:1px solid #F1F2FA;color:var(--text)}
+.log-row:last-child{border-bottom:none}
+.log-row span:last-child{color:#9AA0BD;font-size:12px;flex-shrink:0}
+.stamp-toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:999;border-radius:22px;padding:24px 30px;
+  color:#fff;font-size:17px;font-weight:800;text-align:center;line-height:1.7;white-space:pre-line;pointer-events:none;
+  background:linear-gradient(135deg,rgba(27,33,73,.96),rgba(67,48,143,.96));border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 18px 50px rgba(20,20,60,.5);animation:toastIn .4s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes toastIn{0%{transform:translate(-50%,-50%) scale(.7);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+
+/* 태블릿(768px 이상) 기본 레이아웃 — 폰은 확인용 1열 */
+@media (min-width:768px){
+  .screen{padding:22px 36px calc(88px + var(--safe-bot))}
+  .screen>*{max-width:1120px;margin-left:auto;margin-right:auto}
+  header>*{max-width:1120px;margin-left:auto;margin-right:auto}
+  .nav-btn{font-size:12px;padding:10px 0 8px}
+  .nav-ico{font-size:24px}
+  .home-cols{column-count:2;column-gap:20px}
+  .home-cols>*{break-inside:avoid}
+  .hero{padding:26px}
+  .ring{width:128px;height:128px}.ring::before{inset:11px}
+  .ring-n{font-size:38px}.hero-big{font-size:30px}.hero-row{gap:24px}
+  .sec{padding:20px}
+  .rt-row{padding:14px 2px}.rt-txt{font-size:16px}.rt-chk{width:28px;height:28px}
+  .prep-t,.ticket-t{font-size:15px}
+}
+@media (max-width:767px){.home-cols{column-count:1}}
+
+/* 벽걸이 화면 */
+.wall{min-height:100vh;box-sizing:border-box;color:#EEF1FF;font-family:inherit;
+  background:radial-gradient(900px 560px at 12% -8%,#2B3180 0%,transparent 62%),radial-gradient(800px 520px at 108% 8%,#5A2F93 0%,transparent 58%),#0A0E22}
+.wall.night{filter:brightness(.55)}
+.w-top{display:flex;align-items:flex-end;gap:22px;margin-bottom:22px;flex-wrap:wrap}
+.w-clock{font-size:clamp(64px,11vw,132px);font-weight:200;letter-spacing:-3px;line-height:.9;font-variant-numeric:tabular-nums}
+.w-date{font-size:clamp(18px,2.4vw,28px);font-weight:600;color:#A9B4E6;padding-bottom:8px}
+.w-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.w-grid{grid-template-columns:1fr}}
+.w-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:26px;padding:22px 24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.w-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;letter-spacing:2px;color:#8F9BD8;margin-bottom:14px}
+.w-h span{letter-spacing:0;font-size:14px;color:#C9D2FF;font-weight:700}
+.w-rt{display:flex;align-items:center;gap:16px;padding:13px 0;font-size:clamp(18px,2.2vw,26px);font-weight:600;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)}
+.w-rt:last-of-type{border-bottom:none}
+.w-chk{width:36px;height:36px;border-radius:12px;border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#06281C;flex-shrink:0;transition:all .25s}
+.w-rt.on .w-chk{background:linear-gradient(135deg,#6EE7B7,#34D399);border-color:transparent;box-shadow:0 0 22px rgba(52,211,153,.55)}
+.w-rt.on{color:rgba(238,241,255,.45)}
+.w-done{margin-top:12px;font-size:16px;font-weight:700;color:#6EE7B7}
+.w-dd{display:flex;align-items:center;gap:14px;padding:11px 0;font-size:clamp(16px,2vw,22px);font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)}
+.w-dd:last-of-type{border-bottom:none}
+.w-dd-b{min-width:62px;text-align:center;font-size:14px;font-weight:800;color:#fff;border-radius:10px;padding:6px 0;flex-shrink:0}
+.w-stamps{display:flex;gap:12px;margin:6px 0 14px}
+.w-stamp{flex:1;aspect-ratio:1;max-width:64px;border-radius:50%;border:2px dashed rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#1B1650}
+.w-stamp.on{border:none;background:linear-gradient(135deg,#9DB4FF,#C4B5FD);box-shadow:0 0 24px rgba(157,180,255,.55)}
+.w-sub{font-size:15px;color:#A9B4E6;font-weight:600}
+.w-empty{color:rgba(238,241,255,.4);font-size:16px;padding:10px 0}
+.w-exit{position:fixed;right:14px;bottom:12px;font-size:18px;color:rgba(255,255,255,.18);text-decoration:none}
 
 </style>
 </head>
@@ -499,6 +591,7 @@ let S={
   attachTargetId:null,imgViewSrc:null,txtAttachTargetId:null,
   trend:[],
   reward:{stampCount:0,couponsIssued:0,pinHash:null},stamps:[],coupons:[],stampMsg:null,
+  routineItems:null,routineDay:{done:{},stamped:false},routineDate:null,preps:[],rewardErr:null,
 };
 let unsubFS=null; // Firestore 구독 해제 함수
 
@@ -563,41 +656,90 @@ function startSync(code){
 
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   칭찬 도장 · 책 구입권
-   families/{code}/meta/reward  : {stampCount, couponsIssued, pinHash}
-   families/{code}/stamps/{id}  : {id, date, reason, ts}
-   families/{code}/coupons/{id} : {id, no, title, issuedAt, usedAt}
+   우리집: 아침 루틴 · 칭찬 도장 · 책 구입권 · 준비물 요청
+   families/{code}/meta/reward   : {stampCount, couponsIssued, pinHash}
+   families/{code}/meta/routine  : {items:[{id,text}]}
+   families/{code}/routine/{날짜}: {date, done:{항목id:true}, stamped}
+   families/{code}/stamps/{id}   : {id, date, reason, ts}
+   families/{code}/coupons/{id}  : {id, no, title, issuedAt, usedAt}
+   families/{code}/preps/{id}    : {id, date, text, ts, by, done}
    도장 +1 은 트랜잭션으로 처리해, 두 기기에서 동시에 찍어도
-   구입권이 중복 발급되지 않도록 한다 (구입권 id = cp{발급순번}).
+   구입권이 중복 발급되지 않도록 한다 (구입권 id = cp{발급순번},
+   루틴 도장 id = rt_{날짜} 라서 하루 한 번만 찍힌다).
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const STAMPS_PER_COUPON=5;
 const COUPON_TITLE='책 구입권';
+const DEFAULT_ROUTINE=['일어나서 이불 정리','세수·양치','옷 입기','아침 먹기','가방·준비물 확인'];
+const KIOSK=new URLSearchParams(location.search).get('view')==='wall'; // 벽걸이 화면
 let unsubReward=[];
-let _pinUntil=0; // 부모 PIN 인증 유효 시각 (5분)
+let unsubRoutineDay=null;
+let _pinUntil=0;        // 부모 PIN 인증 유효 시각 (5분)
+let _prepsLoaded=false; // 첫 로딩 때는 새 요청 알림을 띄우지 않음
 
+function newId(){ return Date.now().toString(36)+uid(); }
 function rewardBase(){ return db.collection('families').doc(S.familyCode); }
 function rewardRef(){ return rewardBase().collection('meta').doc('reward'); }
+function routineRef(){ return rewardBase().collection('meta').doc('routine'); }
+function routineDayRef(d){ return rewardBase().collection('routine').doc(d); }
 function stampsCol(){ return rewardBase().collection('stamps'); }
 function couponsCol(){ return rewardBase().collection('coupons'); }
+function prepsCol(){ return rewardBase().collection('preps'); }
+function defaultRoutineItems(){ return DEFAULT_ROUTINE.map((t,i)=>({id:'d'+i,text:t})); }
+
+function rewardRefresh(){
+  if(KIOSK||(S.tab==='stamp'&&S.overlay!=='prep'))render(); // 입력 시트가 열려 있으면 다시 그리지 않음
+}
+function onRewardErr(e){
+  S.rewardErr=e&&e.code==='permission-denied'?'Firestore 규칙에서 meta·routine·stamps·coupons·preps 컬렉션 접근을 허용해 주세요.':null;
+  rewardRefresh();
+}
+
+function watchRoutineDay(){
+  if(unsubRoutineDay){unsubRoutineDay();unsubRoutineDay=null;}
+  if(!S.familyCode)return;
+  const d=todayStr();
+  S.routineDate=d; S.routineDay={done:{},stamped:false};
+  unsubRoutineDay=routineDayRef(d).onSnapshot(s=>{
+    S.routineDay=Object.assign({done:{},stamped:false},s.exists?s.data():{});
+    rewardRefresh();
+  },onRewardErr);
+}
 
 function startRewardSync(code){
   unsubReward.forEach(u=>u()); unsubReward=[];
+  _prepsLoaded=false;
   const base=db.collection('families').doc(code);
-  const onErr=e=>{
-    S.rewardErr=e&&e.code==='permission-denied'?'Firestore 규칙에서 meta·stamps·coupons 컬렉션 접근을 허용해 주세요.':null;
-    if(S.tab==='stamp')render();
-  };
-  const refresh=()=>{ if(S.tab==='stamp')render(); };
   unsubReward.push(base.collection('meta').doc('reward').onSnapshot(s=>{
     S.reward=Object.assign({stampCount:0,couponsIssued:0,pinHash:null},s.exists?s.data():{});
-    S.rewardErr=null; refresh();
-  },onErr));
+    S.rewardErr=null; rewardRefresh();
+  },onRewardErr));
+  unsubReward.push(base.collection('meta').doc('routine').onSnapshot(s=>{
+    const items=s.exists&&s.data()&&Array.isArray(s.data().items)?s.data().items:[];
+    S.routineItems=items.length?items:defaultRoutineItems();
+    rewardRefresh();
+  },onRewardErr));
   unsubReward.push(base.collection('stamps').orderBy('ts','desc').limit(30).onSnapshot(s=>{
-    S.stamps=s.docs.map(d=>d.data()); refresh();
-  },onErr));
+    S.stamps=s.docs.map(d=>d.data()); rewardRefresh();
+  },onRewardErr));
   unsubReward.push(base.collection('coupons').onSnapshot(s=>{
-    S.coupons=s.docs.map(d=>d.data()).sort((a,b)=>b.issuedAt-a.issuedAt); refresh();
-  },onErr));
+    S.coupons=s.docs.map(d=>d.data()).sort((a,b)=>b.issuedAt-a.issuedAt); rewardRefresh();
+  },onRewardErr));
+  unsubReward.push(base.collection('preps').orderBy('date').onSnapshot(s=>{
+    if(_prepsLoaded&&!s.metadata.fromCache){
+      s.docChanges().forEach(ch=>{
+        const p=ch.doc.data();
+        if(ch.type==='added'&&p.by!==getDeviceId()&&Date.now()-(p.ts||0)<60000)notifyPrep(p);
+      });
+    }
+    _prepsLoaded=true;
+    S.preps=s.docs.map(d=>d.data()); rewardRefresh();
+  },onRewardErr));
+  watchRoutineDay();
+}
+
+function notifyPrep(p){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  try{ new Notification('🎒 새 준비물 요청',{body:fmt(p.date)+' · '+p.text}); }catch(e){}
 }
 
 async function sha256Hex(text){
@@ -610,7 +752,7 @@ async function parentAuth(){
   if(Date.now()<_pinUntil)return true;
   const r=S.reward||{};
   if(!r.pinHash){
-    const p1=prompt('부모 PIN(숫자 4자리)을 처음 설정해요.\n도장 찍기와 구입권 사용에 필요해요.');
+    const p1=prompt('부모 PIN(숫자 4자리)을 처음 설정해요.\n도장 찍기, 구입권 사용, 루틴 편집에 필요해요.');
     if(p1===null)return false;
     if(!/^\d{4}$/.test(p1)){alert('숫자 4자리로 입력해 주세요.');return false;}
     const p2=prompt('PIN을 한 번 더 입력해 주세요.');
@@ -637,25 +779,28 @@ async function changePin(){
   catch(e){ alert('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
 }
 
-// 도장 +1. 5의 배수가 되면 구입권을 자동 발급하고 true 를 돌려준다.
+// 트랜잭션 안에서 도장 +1 (구입권 자동 발급 포함). 구입권을 만들었으면 true.
+function applyStamp(tx,r,stampId,reason){
+  const stampCount=(r.stampCount||0)+1;
+  let couponsIssued=r.couponsIssued||0;
+  let issued=false;
+  tx.set(stampsCol().doc(stampId),{id:stampId,date:todayStr(),reason:reason||'',ts:Date.now()});
+  if(stampCount%STAMPS_PER_COUPON===0){
+    couponsIssued++;
+    const cid='cp'+couponsIssued;
+    tx.set(couponsCol().doc(cid),{id:cid,no:couponsIssued,title:COUPON_TITLE,issuedAt:Date.now(),usedAt:null});
+    issued=true;
+  }
+  tx.set(rewardRef(),{stampCount,couponsIssued},{merge:true});
+  return issued;
+}
+
 async function addStamp(reason){
-  const rRef=rewardRef();
-  const id=Date.now().toString(36)+uid();
   let issued=false;
   await db.runTransaction(async tx=>{
     issued=false;
-    const snap=await tx.get(rRef);
-    const r=snap.exists?snap.data():{};
-    const stampCount=(r.stampCount||0)+1;
-    let couponsIssued=r.couponsIssued||0;
-    tx.set(stampsCol().doc(id),{id,date:todayStr(),reason:reason||'',ts:Date.now()});
-    if(stampCount%STAMPS_PER_COUPON===0){
-      couponsIssued++;
-      const cid='cp'+couponsIssued;
-      tx.set(couponsCol().doc(cid),{id:cid,no:couponsIssued,title:COUPON_TITLE,issuedAt:Date.now(),usedAt:null});
-      issued=true;
-    }
-    tx.set(rRef,{stampCount,couponsIssued},{merge:true});
+    const snap=await tx.get(rewardRef());
+    issued=applyStamp(tx,snap.exists?snap.data():{},newId(),reason);
   });
   return issued;
 }
@@ -664,14 +809,17 @@ function flashStamp(msg){
   S.stampMsg=msg; render();
   setTimeout(()=>{S.stampMsg=null;render();},2300);
 }
+function stampMsgFor(issued,prefix){
+  return issued?'🎉 도장 '+STAMPS_PER_COUPON+'개 완성!\n'+COUPON_TITLE+'이 생겼어요':prefix;
+}
 
 async function stampFlow(){
   if(!(await parentAuth()))return;
-  const reason=prompt('칭찬 이유를 적어 주세요 (예: 아침 준비 스스로 했어요)');
+  const reason=prompt('칭찬 이유를 적어 주세요 (예: 동생을 도와줬어요)');
   if(reason===null)return;
   try{
     const issued=await addStamp(reason.trim());
-    flashStamp(issued?'🎉 도장 '+STAMPS_PER_COUPON+'개 완성!\n'+COUPON_TITLE+'이 생겼어요':'🏅 칭찬 도장 +1');
+    flashStamp(stampMsgFor(issued,'🏅 칭찬 도장 +1'));
   }catch(e){
     alert('도장을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message));
   }
@@ -684,9 +832,117 @@ async function useCoupon(id){
   catch(e){ alert('저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
 }
 
+// 아침 루틴 체크. 전부 체크하면 오늘 첫 완료에 한해 도장 +1 (체크를 풀어도 도장은 유지)
+async function toggleRoutine(itemId){
+  const date=todayStr();
+  const dRef=routineDayRef(date);
+  const items=S.routineItems||defaultRoutineItems();
+  let res={stamped:false,issued:false};
+  try{
+    await db.runTransaction(async tx=>{
+      res={stamped:false,issued:false};
+      const dSnap=await tx.get(dRef);
+      const rSnap=await tx.get(rewardRef());
+      const day=Object.assign({done:{},stamped:false},dSnap.exists?dSnap.data():{});
+      const done=Object.assign({},day.done);
+      if(done[itemId])delete done[itemId]; else done[itemId]=true;
+      let stamped=!!day.stamped;
+      const all=items.length>0&&items.every(it=>done[it.id]);
+      if(all&&!stamped){
+        res.issued=applyStamp(tx,rSnap.exists?rSnap.data():{},'rt_'+date,'아침 루틴 완료');
+        res.stamped=true; stamped=true;
+      }
+      tx.set(dRef,{date,done,stamped});
+    });
+    if(res.stamped)flashStamp(stampMsgFor(res.issued,'🎉 루틴 완료!\n칭찬 도장 +1'));
+  }catch(e){
+    alert('저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message));
+  }
+}
+
+async function editRoutine(){
+  if(!(await parentAuth()))return;
+  const old=S.routineItems||defaultRoutineItems();
+  const v=prompt('아침 루틴 항목을 쉼표(,)로 구분해 적어 주세요 (최대 10개)',old.map(i=>i.text).join(', '));
+  if(v===null)return;
+  const texts=v.split(',').map(t=>t.trim().slice(0,20)).filter(Boolean).slice(0,10);
+  if(!texts.length){alert('항목을 한 개 이상 적어 주세요.');return;}
+  const used=new Set();
+  const items=texts.map((t,i)=>{
+    const m=old.find(o=>o.text===t&&!used.has(o.id));
+    const id=m?m.id:newId()+i;
+    used.add(id);
+    return{id,text:t};
+  });
+  try{ await routineRef().set({items}); }
+  catch(e){ alert('저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+}
+
+function tomorrowStr(){
+  const d=new Date(); d.setDate(d.getDate()+1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function openPrep(){ setState({overlay:'prep'}); }
+function buildPrepSheet(){
+  return`<div class="drag-handle"></div><div class="form-title" style="font-size:16px">🎒 준비물 요청</div>
+<div class="f-label">필요한 날짜</div>
+<input type="date" class="f-input" id="prep-date" value="${tomorrowStr()}">
+<div class="f-label">준비물</div>
+<input class="f-input" id="prep-text" maxlength="60" placeholder="예: 리코더, 색연필 12색">
+<div class="form-btns"><button class="cancel-btn" onclick="closeOverlay()">취소</button><button class="save-btn" style="background:var(--p)" onclick="savePrep()">요청하기</button></div>`;
+}
+async function savePrep(){
+  const date=(document.getElementById('prep-date')||{}).value;
+  const text=((document.getElementById('prep-text')||{}).value||'').trim();
+  if(!date||!text){alert('날짜와 준비물을 입력해 주세요.');return;}
+  const id=newId();
+  try{
+    await prepsCol().doc(id).set({id,date,text:text.slice(0,60),ts:Date.now(),by:getDeviceId(),done:false});
+    closeOverlay();
+  }catch(e){ alert('요청을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message)); }
+}
+async function togglePrep(id){
+  const p=(S.preps||[]).find(x=>x.id===id); if(!p)return;
+  try{ await prepsCol().doc(id).update({done:!p.done}); }catch(e){}
+}
+async function deletePrep(id){
+  if(!confirm('이 준비물 요청을 삭제할까요?'))return;
+  try{ await prepsCol().doc(id).delete(); }catch(e){}
+}
+function pendingPreps(){
+  const today=todayStr();
+  return (S.preps||[]).filter(p=>!p.done&&p.date>=today);
+}
+
 function fmtTs(ts){
   const d=new Date(ts);
   return (d.getMonth()+1)+'월 '+d.getDate()+'일';
+}
+function ddLabel(d){ return d<=0?'오늘':'D-'+d; }
+function ddColor(d,base){ return d<=2?'#FF5252':d<=5?'#FF9800':(base||'#5B7FFF'); }
+
+// 수행평가 + 가족 일정을 디데이 순으로 정리 (마감 지난 것·완료한 수행평가 제외)
+function ddayList(){
+  const today=todayStr(); const out=[];
+  (S.items||[]).forEach(i=>{
+    if(!i.dueDate)return;
+    if(i.tasks&&i.tasks.length>0&&i.tasks.every(t=>t.done))return;
+    const d=getDays(i.dueDate);
+    if(d!==null&&d>=0)out.push({d,title:i.subject+' 수행평가',color:getColor(i.subject).accent});
+  });
+  (S.events||[]).forEach(e=>{
+    const sd=e.startDate||e.date; const ed=e.endDate||sd;
+    if(!sd||ed<today)return;
+    out.push({d:Math.max(0,getDays(sd)),title:e.title,color:e.color||evtCatInfo(e.category||'일반')[2]});
+  });
+  return out.sort((a,b)=>a.d-b.d);
+}
+
+function routineProgress(){
+  const items=S.routineItems||defaultRoutineItems();
+  const done=(S.routineDay&&S.routineDay.done)||{};
+  const n=items.filter(i=>done[i.id]).length;
+  return{items,done,n,total:items.length,all:items.length>0&&n===items.length};
 }
 
 function buildStampView(){
@@ -694,32 +950,88 @@ function buildStampView(){
   const total=r.stampCount||0;
   const cnt=total%STAMPS_PER_COUPON;
   const remain=STAMPS_PER_COUPON-cnt;
-  const slots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<div class="stamp-slot${i<cnt?' on':''}">${i<cnt?'🏅':i+1}</div>`).join('');
-  const open=S.coupons.filter(c=>!c.usedAt);
-  const used=S.coupons.filter(c=>c.usedAt);
-  const cpRow=c=>`<div class="cp-row${c.usedAt?' used':''}"><div class="cp-ico">🎟️</div><div class="cp-info"><div class="cp-title">${esc(c.title)} #${c.no}</div><div class="cp-sub">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':`<button class="cp-use" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div>`;
-  const log=S.stamps.slice(0,10).map(s=>`<div class="stamp-log-row"><span>🏅 ${esc(s.reason)||'칭찬 도장'}</span><span style="color:var(--muted);flex-shrink:0">${fmt(s.date)}</span></div>`).join('');
+  const pips=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<div class="pip${i<cnt?' on':''}"></div>`).join('');
+  const rp=routineProgress();
+  const rtRows=rp.items.map(it=>`<div class="rt-row${rp.done[it.id]?' on':''}" onclick="toggleRoutine('${esc(it.id)}')"><div class="rt-chk">${rp.done[it.id]?'✓':''}</div><div class="rt-txt">${esc(it.text)}</div></div>`).join('');
+  const open=(S.coupons||[]).filter(c=>!c.usedAt);
+  const used=(S.coupons||[]).filter(c=>c.usedAt);
+  const ticket=c=>`<div class="ticket${c.usedAt?' used':''}"><div class="ticket-l"><b>${c.no}</b><small>TICKET</small></div><div class="ticket-b"><div class="ticket-i"><div class="ticket-t">${esc(c.title)}</div><div class="ticket-s">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':`<button class="use-btn" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div></div>`;
+  const today=todayStr();
+  const preps=(S.preps||[]).filter(p=>p.date>=today||!p.done).sort((a,b)=>(a.done-b.done)||a.date.localeCompare(b.date)).slice(0,12);
+  const prepRow=p=>{const d=getDays(p.date);const act=d!==null&&d>=0&&!p.done;return`<div class="prep-row${p.done?' done':''}"><div class="prep-dd" style="background:${act?ddColor(d,'#5B7FFF'):'#C5C9DD'}">${act?ddLabel(d):p.done?'완료':'지남'}</div><div class="prep-i"><div class="prep-t">${esc(p.text)}</div><div class="prep-s">${fmt(p.date)}</div></div><button class="mini-btn" style="background:#E3F7EE;color:#0F9D6B" onclick="togglePrep('${esc(p.id)}')">${p.done?'되돌리기':'챙김'}</button><button class="mini-btn" style="background:#F3F4FA;color:#9AA0BD" onclick="deletePrep('${esc(p.id)}')">삭제</button></div>`;};
+  const log=(S.stamps||[]).slice(0,10).map(s=>`<div class="log-row"><span>${esc(s.reason)||'칭찬 도장'}</span><span>${fmt(s.date)}</span></div>`).join('');
   return`
-<header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">🏅 칭찬</div><div class="hd-title">칭찬 도장</div></div><div class="hd-right">${syncBadge()}</div></div></header>
+<header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">루틴 · 도장 · 준비물</div><div class="hd-title">우리집</div></div><div class="hd-right">${syncBadge()}</div></div></header>
 <div class="screen">
   ${S.rewardErr?`<div class="welcome-err" style="margin:0 0 14px">${esc(S.rewardErr)}</div>`:''}
-  <div class="stat-section">
-    <div class="stat-section-title">🏅 도장 ${STAMPS_PER_COUPON}개 = ${COUPON_TITLE}</div>
-    <div class="stamp-board">${slots}</div>
-    <div class="stamp-remain">${COUPON_TITLE}까지 ${remain}개 남았어요 · 지금까지 도장 ${total}개</div>
-    <button class="stamp-main-btn" onclick="stampFlow()">🏅 칭찬 도장 찍기</button>
+  <div class="home-cols">
+  <div class="hero">
+    <div class="hero-row">
+      <div class="ring" style="--p:${Math.round(cnt/STAMPS_PER_COUPON*100)}"><div class="ring-in"><div class="ring-n">${cnt}<small>/${STAMPS_PER_COUPON}</small></div></div></div>
+      <div><div class="hero-k">REWARD</div><div class="hero-big">${COUPON_TITLE}까지<br>${remain}개 남았어요</div><div class="hero-sub">누적 도장 ${total}개 · 보유 구입권 ${open.length}장</div></div>
+    </div>
+    <div class="pips">${pips}</div>
+    <button class="hero-btn" onclick="stampFlow()">칭찬 도장 찍기</button>
   </div>
-  <div class="stat-section">
-    <div class="stat-section-title">🎟️ 내 ${COUPON_TITLE}</div>
-    ${open.length?open.map(cpRow).join(''):'<div class="no-data">아직 사용할 수 있는 구입권이 없어요</div>'}
-    ${used.length?`<div style="font-size:11px;color:var(--muted);font-weight:700;margin:12px 0 2px">사용한 구입권</div>${used.slice(0,5).map(cpRow).join('')}`:''}
+  <div class="sec">
+    <div class="sec-h"><div class="sec-t">오늘 아침 루틴</div><span class="sec-pill${rp.all?' ok':''}">${rp.n}/${rp.total}${rp.all?' 완료':''}</span></div>
+    <div class="rt-prog"><div class="rt-prog-fill" style="width:${rp.total?Math.round(rp.n/rp.total*100):0}%"></div></div>
+    ${rtRows}
+    <div class="note">모두 체크하면 칭찬 도장이 자동으로 +1 돼요 (하루 한 번)</div>
+    <button class="ghost-btn" onclick="editRoutine()">루틴 항목 편집</button>
   </div>
-  <div class="stat-section">
-    <div class="stat-section-title">📝 최근 도장</div>
+  <div class="sec">
+    <div class="sec-h"><div class="sec-t">준비물 요청</div><button class="sec-btn" onclick="openPrep()">＋ 요청하기</button></div>
+    ${preps.length?preps.map(prepRow).join(''):'<div class="no-data">필요한 준비물을 날짜와 함께 요청해 보세요</div>'}
+    <div class="note">새 요청은 다른 가족 기기에서 앱이 열려 있을 때 알림으로 보여요</div>
+  </div>
+  <div class="sec">
+    <div class="sec-h"><div class="sec-t">${COUPON_TITLE}</div><span class="sec-pill">${open.length}장 보유</span></div>
+    ${open.length?open.map(ticket).join(''):'<div class="no-data">도장 '+STAMPS_PER_COUPON+'개를 모으면 구입권이 생겨요</div>'}
+    ${used.length?`<div class="note" style="margin:12px 0 8px;font-weight:700">사용한 구입권</div>${used.slice(0,5).map(ticket).join('')}`:''}
+  </div>
+  <div class="sec">
+    <div class="sec-h"><div class="sec-t">최근 도장</div></div>
     ${log||'<div class="no-data">아직 찍은 도장이 없어요</div>'}
   </div>
-  <button class="cancel-btn" style="width:100%;margin-bottom:14px" onclick="changePin()">🔑 부모 PIN 변경</button>
+  <button class="ghost-btn" style="margin:0 0 14px" onclick="changePin()">부모 PIN 변경</button>
+  </div>
 </div>`;
+}
+
+// 벽걸이 태블릿용 한 화면 (?view=wall). 루틴은 화면을 눌러 바로 체크할 수 있다.
+function buildWallView(){
+  const now=new Date();
+  const DOW=['일','월','화','수','목','금','토'];
+  const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0');
+  const night=now.getHours()>=22||now.getHours()<6;
+  const shift=(now.getMinutes()%6)*2; // 번인 방지: 몇 분마다 화면을 살짝 옮김
+  const rp=routineProgress();
+  const r=S.reward||{}; const cnt=(r.stampCount||0)%STAMPS_PER_COUPON;
+  const openCp=(S.coupons||[]).filter(c=>!c.usedAt).length;
+  const dd=ddayList().slice(0,6);
+  const preps=pendingPreps().slice(0,5);
+  const rtRows=rp.items.map(it=>`<div class="w-rt${rp.done[it.id]?' on':''}" onclick="toggleRoutine('${esc(it.id)}')"><div class="w-chk">${rp.done[it.id]?'✓':''}</div><div>${esc(it.text)}</div></div>`).join('');
+  const slots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<div class="w-stamp${i<cnt?' on':''}">${i<cnt?'✓':''}</div>`).join('');
+  const ddRow=(d,color,title)=>`<div class="w-dd"><span class="w-dd-b" style="background:${ddColor(d,color)}">${ddLabel(d)}</span><span>${esc(title)}</span></div>`;
+  return`<div class="wall${night?' night':''}" style="padding:${24+shift}px ${28+shift}px">
+  <div class="w-top"><div class="w-clock">${hh}:${mm}</div><div class="w-date">${now.getMonth()+1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일</div></div>
+  <div class="w-grid">
+    <div class="w-card"><div class="w-h">아침 루틴 <span>${rp.n} / ${rp.total}</span></div>${rtRows}${rp.all?'<div class="w-done">오늘 루틴 완료! 도장이 +1 됐어요</div>':''}</div>
+    <div class="w-card"><div class="w-h">다가오는 일정</div>${dd.length?dd.map(x=>ddRow(x.d,x.color,x.title)).join(''):'<div class="w-empty">예정된 일정이 없어요</div>'}</div>
+    <div class="w-card"><div class="w-h">칭찬 도장 <span>${COUPON_TITLE} ${openCp}장</span></div><div class="w-stamps">${slots}</div><div class="w-sub">${COUPON_TITLE}까지 ${STAMPS_PER_COUPON-cnt}개 남았어요</div></div>
+    <div class="w-card"><div class="w-h">챙길 준비물</div>${preps.length?preps.map(p=>ddRow(getDays(p.date),'#5B7FFF',p.text)).join(''):'<div class="w-empty">요청된 준비물이 없어요</div>'}</div>
+  </div>
+  <a class="w-exit" href="${esc(location.pathname)}">⚙</a>
+</div>${S.stampMsg?`<div class="stamp-toast">${esc(S.stampMsg)}</div>`:''}`;
+}
+
+function evtDdayBadge(ev){
+  const sd=ev.startDate||ev.date; const ed=ev.endDate||sd;
+  if(!sd||ed<todayStr())return'';
+  const d=getDays(sd);
+  const t=d<0?'진행 중':ddLabel(d);
+  return`<span style="font-size:10px;font-weight:800;color:#fff;background:${ddColor(Math.max(0,d),'#8A93B8')};border-radius:10px;padding:2px 8px;margin-left:6px;flex-shrink:0">${t}</span>`;
 }
 
 let unsubEvents = null;
@@ -1198,7 +1510,7 @@ function buildEventsView(){
       <div class="evt-accent" style="background:${ev.color||ci[2]}"></div>
       <div class="evt-top">
         <div class="evt-title">${esc(ev.title)}</div>
-        <span class="evt-cat" style="background:${ev.color||ci[2]}22;color:${ev.color||ci[2]}">${ci[0]} ${ev.category||'일반'}</span>
+        <span class="evt-cat" style="background:${ev.color||ci[2]}22;color:${ev.color||ci[2]}">${ci[0]} ${ev.category||'일반'}</span>${evtDdayBadge(ev)}
       </div>
       <div class="evt-meta">
         <span>📅 ${fmtDateRange(ev)}${ev.allDay&&!(ev.startDate!==ev.endDate&&ev.endDate)?' (종일)':`${ev.startTime?' · '+ev.startTime:''}${ev.endTime?'~'+ev.endTime:''}`}</span>
@@ -1698,6 +2010,10 @@ function buildBackupView(){
     </button>
   </div>
   <div class="bk-section">
+    <div class="bk-title">🖥️ 벽걸이 화면</div>
+    <button class="bk-btn" onclick="location.href=location.pathname+'?view=wall'"><span class="bk-ico">📺</span><div><div>벽걸이 화면 열기</div><div class="bk-btn-desc">태블릿을 벽에 걸어두는 한 화면 보기 (루틴은 눌러서 체크)</div></div></button>
+  </div>
+  <div class="bk-section">
     <div class="bk-title">💾 데이터 백업</div>
     <button class="bk-btn" onclick="exportJSON()"><span class="bk-ico">📤</span><div><div>JSON으로 내보내기</div><div class="bk-btn-desc">전체 데이터를 파일로 저장</div></div></button>
     <button class="bk-btn" onclick="document.getElementById('import-file').click()"><span class="bk-ico">📥</span><div><div>JSON 불러오기</div><div class="bk-btn-desc">저장된 파일로 복원 (Firestore에 업로드됨)</div></div></button>
@@ -1837,6 +2153,7 @@ function render(){
   try{
   // 가족 코드 없으면 웰컴 화면
   if(!S.familyCode){document.getElementById('app').innerHTML=buildWelcome();return;}
+  if(KIOSK){document.getElementById('app').innerHTML=buildWallView();return;}
   const scrollTop=document.querySelector('.screen')?.scrollTop||0;
   let main='';
   if(S.tab==='list')main=buildListView();
@@ -1850,13 +2167,14 @@ function render(){
   if(S.overlay==='detail'){const item=S.items.find(i=>i.id===S.activeId);if(item)ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildDetailSheet(item)}</div></div>`;}
   else if(S.overlay==='form')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildFormSheet()}</div></div>`;
   else if(S.overlay==='txt-attach')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()"><div class="drag-handle"></div><div class="form-title" style="font-size:16px">📝 텍스트 메모 추가</div><textarea class="f-input" id="txt-area" placeholder="참고 내용, 필기 메모 등..." style="min-height:120px;resize:vertical"></textarea><div class="form-btns" style="margin-top:12px"><button class="cancel-btn" onclick="closeOverlay()">취소</button><button class="save-btn" style="background:var(--p)" onclick="saveTxtAttach()">추가하기</button></div></div></div>`;
+  else if(S.overlay==='prep')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildPrepSheet()}</div></div>`;
   else if(S.overlay==='img-view')ov=`<div class="img-viewer" onclick="closeOverlay()"><img src="${S.imgViewSrc}" alt="첨부 이미지"></div>`;
   const nav=`<nav class="bot-nav">
   <button class="nav-btn${S.tab==='cal'?' active':''}" onclick="setTab('cal')"><svg class="nav-svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#5B7FFF" fill-opacity=".18" stroke="#5B7FFF" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#5B7FFF" fill-opacity=".35"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><circle cx="7.5" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="12" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="16.5" cy="16.5" r="1.4" fill="#5B7FFF"/></svg>달력</button>
   <button class="nav-btn${S.tab==='list'?' active':''}" onclick="setTab('list')"><span class="nav-ico">📋</span>수행평가</button>
   <button class="nav-btn${S.tab==='events'?' active':''}" onclick="setTab('events')"><svg class="nav-svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#FF9500" fill-opacity=".18" stroke="#FF9500" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#FF9500" fill-opacity=".38"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><rect x="6" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="14" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="10" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".32"/></svg>일정</button>
   <button class="nav-btn${S.tab==='stats'?' active':''}" onclick="setTab('stats')"><span class="nav-ico">📊</span>통계</button>
-  <button class="nav-btn${S.tab==='stamp'?' active':''}" onclick="setTab('stamp')"><span class="nav-ico">🏅</span>도장</button>
+  <button class="nav-btn${S.tab==='stamp'?' active':''}" onclick="setTab('stamp')"><span class="nav-ico" style="position:relative">🏠${pendingPreps().length?'<i class="nav-dot"></i>':''}</span>우리집</button>
   <button class="nav-btn${S.tab==='guide'?' active':''}" onclick="setTab('guide')"><span class="nav-ico">📚</span>가이드</button>
   <button class="nav-btn${S.tab==='backup'?' active':''}" onclick="setTab('backup')"><span class="nav-ico">⚙️</span>설정</button>
 </nav>`;
@@ -2193,6 +2511,18 @@ window.addEventListener('popstate', () => {
   }
 });
 
+
+// 자정이 지나면 오늘 루틴 구독을 새 날짜로 교체, 벽걸이 화면은 시계를 갱신
+setInterval(()=>{
+  if(!S.familyCode)return;
+  if(S.routineDate&&S.routineDate!==todayStr())watchRoutineDay();
+  if(KIOSK)render();
+},30000);
+if(KIOSK){
+  const keepAwake=async()=>{try{if('wakeLock' in navigator)await navigator.wakeLock.request('screen');}catch(e){}};
+  keepAwake();
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAwake();});
+}
 
 if(S.familyCode){
   // 저장된 가족 코드가 있으면 바로 Firestore 연결

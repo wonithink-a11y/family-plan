@@ -5,10 +5,10 @@
 ## 1. 지금 어디까지 왔나
 - 저장소: `wonithink-a11y/family-plan` (공개). 운영 주소 `https://wonithink-a11y.github.io/family-plan/`
 - **`main`에 모든 작업이 병합돼 있다** (우리집 탭·벽걸이·루미, 성적 분석·반복 일정·다크모드·이미지 동기화, 보안 작업). `feature/stamp-coupon`, `claude/serene-thompson-mu5lk4` 브랜치는 병합이 끝났다. 새 작업은 기능 브랜치에서 하고 PR로 병합한다.
-- 서비스워커 캐시 `family-plan-v21`, 앱 버전 v4.13. **Firebase 프로젝트는 family-plan 전용 `family-plan-11d44`** (SRF 관리시스템이 쓰는 `rosegarden-4937c`와 분리됨. 이 프로젝트의 규칙을 바꿔도 SRF에 영향이 없다).
+- 서비스워커 캐시 `family-plan-v22`, 앱 버전 v4.14. **Firebase 프로젝트는 family-plan 전용 `family-plan-11d44`** (SRF 관리시스템이 쓰는 `rosegarden-4937c`와 분리됨. 이 프로젝트의 규칙을 바꿔도 SRF에 영향이 없다).
 - 로그인은 Firebase **익명 인증**이고 Firestore 규칙은 `request.auth != null`을 요구한다. 가족 코드는 새로 만들 때 8자 이상(기존 저장 코드는 유지).
 - 주소로 처음 열면 **우리집 탭**이 첫 화면이다.
-- **디자인 방향: 앱 전체를 A안(벤토 다크 글라스) 하나로 통일**(허남원님 결정). C안의 큰 시계·음성 구슬·도장 동그라미는 부품으로 쓰고, 벽걸이는 큰 글자·3칸 배치만 다르다. 시안 캔버스 `https://claude.ai/artifact/EbABNSiwVAvJRs5TDNyMjN`, 규칙은 `.claude/skills/family-plan-design/SKILL.md`. **적용 완료: 우리집, 일정(달력·목록), 수행평가(목록·통계). 미적용: 설정, 가이드, 벽걸이, 루미 시트·음성 화면(다음 작업)**.
+- **디자인 방향: 앱 전체를 A안(벤토 다크 글라스) 하나로 통일**(허남원님 결정). C안의 큰 시계·음성 구슬·도장 동그라미는 부품으로 쓰고, 벽걸이는 큰 글자·3칸 배치만 다르다. 시안 캔버스 `https://claude.ai/artifact/EbABNSiwVAvJRs5TDNyMjN`, 규칙은 `.claude/skills/family-plan-design/SKILL.md`. **적용 완료: 우리집, 일정(달력·목록), 수행평가(목록·통계), 설정, 가이드. 미적용: 벽걸이, 루미 시트·음성 화면, 웰컴 화면(진행 중)**.
 - **메뉴는 5개**: 우리집 / 일정(달력·일정 목록 전환) / 수행평가(목록·통계·성적 전환) / 가이드 / 설정. 가로 태블릿(1000px↑)에서는 하단 대신 **왼쪽 세로 메뉴**, 폰·세로 화면은 하단 메뉴. 음성·AI·날씨 설정(기상청·Gemini 키, 말하는 속도)과 부모 PIN 변경은 **설정 탭**으로 모았다(우리집에서는 뺐다).
 
 ### 구현 완료 (가짜 서버·메모리 Firestore 테스트 통과)

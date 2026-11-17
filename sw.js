@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-plan-v21';
+const CACHE_NAME = 'family-plan-v22';
 const BASE = '/family-plan';
 const SCOPE = self.registration.scope; // 예: https://user.github.io/family-plan/
 const urlsToCache = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png']

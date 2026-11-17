@@ -292,6 +292,19 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(st.cols==='skip'||st.cols==='2','가로 태블릿에서 목록이 2열: '+st.cols);
   ok(st.cal&&st.stats,'달력 카드와 통계 화면도 같은 스타일');
 
+  console.log('\n[7g] 설정·가이드 화면 A안 스타일');
+  const sg=await page.evaluate(async()=>{const r={};document.documentElement.setAttribute('data-theme','dark');
+    setTab('backup');await new Promise(x=>setTimeout(x,150));
+    const b=document.querySelector('.bk-section');const cs=b&&getComputedStyle(b);r.sec=!!b&&cs.borderRadius==='24px'&&/rgba\(255, 255, 255, 0\.07\)/.test(cs.backgroundColor);
+    r.cols=innerWidth>=1000&&matchMedia('(orientation:landscape)').matches?getComputedStyle(document.querySelector('.scr-set')).columnCount:'skip';
+    r.ico=!!document.querySelector('.bk-ico')&&parseFloat(getComputedStyle(document.querySelector('.bk-ico')).width)>=40;
+    setTab('guide');await new Promise(x=>setTimeout(x,150));
+    const g=document.querySelector('.guide-card');r.guide=!!g&&getComputedStyle(g).borderRadius==='24px'&&getComputedStyle(document.querySelector('.guide-card-accent')).display==='none';
+    document.documentElement.removeAttribute('data-theme');setTab('stamp');return r;});
+  ok(sg.sec&&sg.ico,'설정 카드가 24px 유리 카드이고 아이콘이 40px 타일');
+  ok(sg.cols==='skip'||sg.cols==='2','가로 태블릿에서 설정이 2열: '+sg.cols);
+  ok(sg.guide,'가이드 카드도 유리 카드(위쪽 색 막대 없음)');
+
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);
   await page.evaluate(()=>asSavePrep()); await page.waitForTimeout(400);

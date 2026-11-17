@@ -110,6 +110,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(spd.max===1.6&&spd.min===0.8,'범위 0.8~1.6으로 제한: '+spd.min+'~'+spd.max);
   ok(spd.bad===1.15,'잘못된 값이면 기본값: '+spd.bad);
   ok(await page.evaluate(()=>S.tab==='stamp'),'첫 화면이 우리집 탭');
+  ok(await page.evaluate(()=>{const b=document.querySelector('.app-ver');return !!b&&b.textContent===APP_VER&&/^v\d+\.\d+$/.test(APP_VER);}),'헤더 오른쪽 위에 버전 표시');
 
   console.log('\n[3] 기상청 응답 해석·옷차림');
   await page.evaluate(()=>{localStorage.removeItem('fp_wx');S.wx=null;});

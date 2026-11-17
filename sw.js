@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-plan-v2';
+const CACHE_NAME = 'family-plan-v3';
 const SCOPE = self.registration.scope; // 예: https://user.github.io/family-plan/
 const urlsToCache = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png']
   .map(p => new URL(p, SCOPE).href);
@@ -15,6 +15,17 @@ self.addEventListener('activate', e => {
     Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
   ));
   self.clients.claim();
+});
+
+// 알림 탭 → 앱 열기/포커스
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) if ('focus' in c) return c.focus();
+      return clients.openWindow(SCOPE);
+    })
+  );
 });
 
 self.addEventListener('fetch', e => {

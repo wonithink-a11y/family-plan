@@ -68,6 +68,8 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 .hd-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .notif-btn{font-size:11px;font-weight:700;color:var(--warn);background:#FFF8E1;
   border-radius:20px;padding:5px 11px;border:1px solid #FFD54F}
+.notif-btn.on{color:#4CAF50;background:#E8F5E9;border-color:#A5D6A7}
+.notif-btn.off{color:#9E9E9E;background:#F5F5F5;border-color:#DDD}
 .sync-badge{font-size:11px;font-weight:700;border-radius:20px;padding:4px 9px;white-space:nowrap}
 .sync-ok{color:#4CAF50;background:#E8F5E9}
 .sync-conn{color:#FF9800;background:#FFF8E1}
@@ -465,6 +467,7 @@ let S={
   filter:'all',sortBy:'due',hideDone:false,
   calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),calDate:null,
   showDangerZone:false,fabOpen:false,events:[],evtOverlay:null,activeEvtId:null,evtForm:null,notif:typeof Notification!=='undefined'?Notification.permission:'denied',
+  notifOn:localStorage.getItem('notifOff')!=='1', // 이 기기의 알림 켜기/끄기
   showBanner:true,deferredPrompt:null,
   attachTargetId:null,imgViewSrc:null,txtAttachTargetId:null,
   trend:[],
@@ -516,6 +519,7 @@ function startSync(code){
         S.syncStatus='synced';
         updateTrend();
         render();
+        checkAlarms(); // 앱 열자마자/데이터 변경 시 즉시 확인
       },
       err=>{
         if(err.code==='permission-denied'){
@@ -622,8 +626,16 @@ function updateTrend(){
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    알람
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+// 서비스워커 알림 우선(안드로이드 PWA 대응), 실패 시 일반 Notification
+async function showNotif(title,body,tag){
+  try{
+    const reg=await navigator.serviceWorker?.getRegistration();
+    if(reg){await reg.showNotification(title,{body,tag,icon:'icon-192.png',badge:'icon-192.png'});return;}
+  }catch(e){}
+  try{new Notification(title,{body,tag});}catch(e){}
+}
 function checkAlarms(){
-  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  if(!S.notifOn||typeof Notification==='undefined'||Notification.permission!=='granted')return;
   const fired=new Set(JSON.parse(localStorage.getItem('fired3')||'[]'));
   S.items.forEach(item=>{
     if(!item.alarmEnabled)return;
@@ -631,12 +643,100 @@ function checkAlarms(){
     // 마감일이 바뀌면 다시 알리도록 id+마감일을 키로 사용
     const key=item.id+'|'+item.dueDate;
     if(d!==null&&d>=0&&d<=item.alarmDaysBefore&&!fired.has(key)){
-      new Notification(`📚 ${item.subject} 수행평가`,{body:`${fmt(item.dueDate)} 마감까지 ${d}일 남았어요!`});
+      showNotif(`📚 ${item.subject} 수행평가`,`${fmt(item.dueDate)} 마감까지 ${d}일 남았어요!`,key);
       fired.add(key);localStorage.setItem('fired3',JSON.stringify([...fired]));
     }
   });
 }
-async function reqNotif(){const p=await Notification.requestPermission();setState({notif:p});if(p==='granted')checkAlarms();}
+async function reqNotif(){
+  if(typeof Notification==='undefined'){alert('이 브라우저는 알림을 지원하지 않아요.\n(iOS는 홈 화면에 추가한 앱에서만 가능)');return;}
+  const p=await Notification.requestPermission();
+  if(p==='granted'){localStorage.removeItem('notifOff');S.notifOn=true;}
+  setState({notif:p});
+  if(p==='granted')checkAlarms();
+}
+// 이 기기 알림 켜기/끄기 (권한이 없으면 권한 요청부터)
+function toggleNotif(){
+  if(S.notif!=='granted'){reqNotif();return;}
+  const on=!S.notifOn;
+  if(on)localStorage.removeItem('notifOff');else localStorage.setItem('notifOff','1');
+  setState({notifOn:on});
+  if(on){showNotif('🔔 알림이 켜졌어요','마감 임박 수행평가를 알려드릴게요.','toggle-on');checkAlarms();}
+}
+function testNotif(){
+  if(S.notif!=='granted'){reqNotif();return;}
+  showNotif('📚 알림 테스트','알림이 정상적으로 표시돼요!','test-'+Date.now());
+}
+function notifBtn(){
+  if(typeof Notification==='undefined')return'';
+  if(S.notif==='denied')return`<button class="notif-btn off" onclick="alert('브라우저 설정에서 이 사이트의 알림 권한을 허용해주세요.')">🔕 차단됨</button>`;
+  if(S.notif!=='granted')return`<button class="notif-btn" onclick="reqNotif()">🔔 알림</button>`;
+  return`<button class="notif-btn ${S.notifOn?'on':'off'}" onclick="toggleNotif()">${S.notifOn?'🔔 켜짐':'🔕 꺼짐'}</button>`;
+}
+function notifStatusText(){
+  if(typeof Notification==='undefined')return'이 브라우저는 알림을 지원하지 않아요';
+  if(S.notif==='denied')return'브라우저 설정에서 알림이 차단되어 있어요';
+  if(S.notif!=='granted')return'켜면 알림 권한을 요청해요';
+  return S.notifOn?'마감 임박 시 이 기기로 알려요':'이 기기에서는 알림을 받지 않아요';
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   캘린더(.ics) 내보내기 — OS 캘린더가 백그라운드 알림 담당
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');}
+function icsFold(line){ // 75바이트 제한 → UTF-8 바이트 기준으로 줄바꿈
+  const enc=new TextEncoder();let out='',cur='',bytes=0;
+  for(const ch of line){const n=enc.encode(ch).length;
+    if(bytes+n>73){out+=cur+'\r\n ';cur='';bytes=1;}
+    cur+=ch;bytes+=n;}
+  return out+cur;
+}
+function icsEvent(item){
+  const [y,m,d]=item.dueDate.split('-').map(Number);
+  const p2=n=>String(n).padStart(2,'0');
+  const nx=new Date(Date.UTC(y,m-1,d+1));
+  const ds=y+p2(m)+p2(d);
+  const de=nx.getUTCFullYear()+p2(nx.getUTCMonth()+1)+p2(nx.getUTCDate());
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const n=Math.max(1,Number(item.alarmDaysBefore)||3);
+  const desc=[`중요도: ${PRI_NAME[item.priority||2]}`,`진행률: ${pct(item)}%`,
+    ...item.tasks.map((t,i)=>`${i+1}. [${t.done?'✓':' '}] ${t.text}`),
+    ...(item.memo?[`메모: ${item.memo}`]:[])].join('\n');
+  const alarms=item.alarmEnabled?[
+    'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${icsEsc(item.subject)} 수행평가 마감 ${n}일 전`,`TRIGGER:-P${n-1}DT15H`,'END:VALARM', // n일 전 09:00
+    'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${icsEsc(item.subject)} 수행평가 오늘 마감`,'TRIGGER:PT8H','END:VALARM'           // 당일 08:00
+  ]:[];
+  return['BEGIN:VEVENT',`UID:${item.id}@family-plan`,`DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${ds}`,`DTEND;VALUE=DATE:${de}`,
+    `SUMMARY:${icsEsc('📚 '+item.subject+' 수행평가')}`,`DESCRIPTION:${icsEsc(desc)}`,
+    'TRANSP:TRANSPARENT',...alarms,'END:VEVENT'];
+}
+function downloadICS(items,filename){
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//family-plan//KO','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    ...items.filter(i=>i.dueDate).flatMap(icsEvent),'END:VCALENDAR'];
+  const ics=lines.map(icsFold).join('\r\n')+'\r\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));
+  a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function exportItemICS(id){
+  const item=S.items.find(i=>i.id===id);if(!item||!item.dueDate)return;
+  downloadICS([item],`${item.subject}_${item.dueDate}.ics`);
+}
+function exportAllICS(){
+  const list=S.items.filter(i=>{const d=getDays(i.dueDate);return d!==null&&d>=0&&!(i.tasks.length>0&&i.tasks.every(t=>t.done));});
+  if(!list.length){alert('캘린더로 내보낼 진행중 수행평가가 없어요.');return;}
+  downloadICS(list,`패밀리플랜_${todayStr()}.ics`);
+}
+// 항목별 알림 on/off (가족 전체 기기에 동기화)
+function toggleItemAlarm(id){
+  const item=S.items.find(i=>i.id===id);if(!item)return;
+  const updated={...item,alarmEnabled:!item.alarmEnabled};
+  S.items=S.items.map(i=>i.id!==id?i:updated);
+  render();
+  saveItemFS(updated);
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    D-day 배지
@@ -745,7 +845,7 @@ function buildListView(){
     <div><div class="hd-title">패밀리 플랜</div></div>
     <div class="hd-right">
       ${syncBadge()}
-      ${S.notif!=='granted'?`<button class="notif-btn" onclick="reqNotif()">🔔 알림</button>`:''}
+      ${notifBtn()}
     </div>
   </div>
   <div class="stats">
@@ -1515,6 +1615,15 @@ function buildBackupView(){
     </button>
   </div>
   <div class="bk-section">
+    <div class="bk-title">🔔 알림</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+      <div><div style="font-size:14px;font-weight:600">이 기기 알림</div><div class="bk-btn-desc">${notifStatusText()}</div></div>
+      <div class="tog-wrap" onclick="toggleNotif()"><div class="tog-track${S.notif==='granted'&&S.notifOn?' tog-on':''}" style="background:${S.notif==='granted'&&S.notifOn?'var(--p)':'#CCC'}"><div class="tog-thumb"></div></div></div>
+    </div>
+    <button class="bk-btn" onclick="testNotif()"><span class="bk-ico">🧪</span><div><div>알림 테스트</div><div class="bk-btn-desc">지금 알림이 뜨는지 확인</div></div></button>
+    <button class="bk-btn" onclick="exportAllICS()"><span class="bk-ico">🗓️</span><div><div>캘린더로 내보내기 (.ics)</div><div class="bk-btn-desc">진행중 수행평가를 기본 캘린더에 추가 → 앱이 꺼져 있어도 알림</div></div></button>
+  </div>
+  <div class="bk-section">
     <div class="bk-title">💾 데이터 백업</div>
     <button class="bk-btn" onclick="exportJSON()"><span class="bk-ico">📤</span><div><div>JSON으로 내보내기</div><div class="bk-btn-desc">전체 데이터를 파일로 저장</div></div></button>
     <button class="bk-btn" onclick="document.getElementById('import-file').click()"><span class="bk-ico">📥</span><div><div>JSON 불러오기</div><div class="bk-btn-desc">저장된 파일로 복원 (Firestore에 업로드됨)</div></div></button>
@@ -1595,6 +1704,10 @@ ${item.memo?`<div class="det-memo">📌 ${esc(item.memo)}</div>`:''}
   <button class="act-btn" style="background:${sc.accent}" onclick="openEdit('${item.id}')">✏️ 수정</button>
   <button class="act-btn" style="background:#607D8B" onclick="shareItem('${item.id}')">📤 공유</button>
   <button class="act-btn" style="background:var(--danger)" onclick="deleteItem('${item.id}')">🗑️ 삭제</button>
+</div>
+<div class="act-row" style="margin-top:8px">
+  <button class="act-btn" style="background:${item.alarmEnabled?'#FF9800':'#9E9E9E'}" onclick="toggleItemAlarm('${item.id}')">${item.alarmEnabled?'🔔 알림 켜짐':'🔕 알림 꺼짐'}</button>
+  <button class="act-btn" style="background:#26A69A" onclick="exportItemICS('${item.id}')">🗓️ 캘린더 추가</button>
 </div>`;
 }
 
@@ -2039,6 +2152,8 @@ if(S.familyCode){
 }
 
 setInterval(checkAlarms,60000);
+// 백그라운드에서 돌아올 때 즉시 확인
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkAlarms();});
 </script>
 </body>
 </html>

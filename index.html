@@ -982,6 +982,15 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 :root[data-theme=dark] .f-input:focus{border-color:#818CF8}
 :root[data-theme=dark] .f-label{color:#A9B1D6}
 :root[data-theme=dark] .cancel-btn{background:rgba(255,255,255,.08);color:#C5CCEE}
+/* 날씨 선 아이콘 */
+.wxi{width:1em;height:1em;display:inline-block;vertical-align:-.14em;overflow:visible}
+.wxi .s{stroke:#E0A100}.wxi .c{stroke:#6B7399}.wxi .r{stroke:#3B6FE0}.wxi .n{stroke:#4B9BE0}.wxi .t{stroke:#E0A100}.wxi circle.n{fill:#4B9BE0;stroke:none}
+:root[data-theme=dark] .wxi .s,:root[data-theme=dark] .wxi .t{stroke:#FCD34D}
+:root[data-theme=dark] .wxi .c{stroke:#C5CCEE}
+:root[data-theme=dark] .wxi .r{stroke:#7DB2FF}
+:root[data-theme=dark] .wxi .n{stroke:#A5D8FF}:root[data-theme=dark] .wxi circle.n{fill:#A5D8FF}
+.w-wx-ic .wxi{width:1em;height:1em}
+.wall .wxi .s,.wall .wxi .t{stroke:#FCD34D}.wall .wxi .c{stroke:#C5CCEE}.wall .wxi .r{stroke:#7DB2FF}.wall .wxi .n{stroke:#A5D8FF}.wall .wxi circle.n{fill:#A5D8FF}
 </style>
 </head>
 <body>
@@ -1585,6 +1594,23 @@ function wxBase(now){ // 단기예보 발표시각(02·05·…·23시, 10분 뒤
   let b=bases.filter(x=>h>x||(h===x&&m>=10)).pop(); let d=new Date(now);
   if(b===undefined){b=23;d.setDate(d.getDate()-1);}
   return{date:d.getFullYear()+asPad(d.getMonth()+1)+asPad(d.getDate()),time:asPad(b)+'00'};
+}
+// 날씨 아이콘: 데이터는 이모지(☀️ ⛅ …)로 오고 저장된 예보도 그대로라서, 화면에 그릴 때만 선 아이콘(SVG)으로 바꾼다
+const WXI_CLOUD='M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z';
+const WXI={
+  '☀':'<circle class="s" cx="12" cy="12" r="4"/><path class="s" d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/>',
+  '⛅':'<circle class="s" cx="8" cy="8" r="3"/><path class="s" d="M8 2v1.4M2.4 8h1.4M4 4l1 1M12 4l-1 1"/><path class="c" transform="translate(2.5 1.5) scale(.9)" d="'+'M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z'+'"/>',
+  '☁':'<path class="c" d="M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z"/>',
+  '🌫':'<path class="c" transform="translate(0 -3)" d="M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z"/><path class="c" d="M5 19.5h14M8 22h8"/>',
+  '🌦':'<circle class="s" cx="7.5" cy="7" r="2.8"/><path class="s" d="M7.5 1.8v1.2M2.3 7h1.2M3.8 3.3l.9.9"/><path class="c" transform="translate(2.5 0) scale(.9)" d="M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z"/><path class="r" d="M10 19l-.9 2.4M14.5 19l-.9 2.4"/>',
+  '🌧':'<path class="c" transform="translate(0 -3)" d="M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z"/><path class="r" d="M8.5 18.5l-1 2.6M12.5 18.5l-1 2.6M16.5 18.5l-1 2.6"/>',
+  '🌨':'<path class="c" transform="translate(0 -3)" d="M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z"/><path class="r" d="M8 18.5l-.8 2M16 18.5l-.8 2"/><circle class="n" cx="12" cy="20" r=".9"/>',
+  '❄':'<path class="n" d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/>',
+  '⛈':'<path class="c" transform="translate(0 -3)" d="M7.5 18.5h9a4 4 0 0 0 .7-7.9 5.5 5.5 0 0 0-10.5 1.4 3.3 3.3 0 0 0 .8 6.5z"/><path class="t" d="M12.8 15l-2.6 3.8h3.2l-1.6 3.4"/>'
+};
+function wxIcon(e){
+  const k=String(e||'').replace(/\uFE0F/g,''); const body=WXI[k]||WXI['☁'];
+  return `<svg class="wxi" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 }
 const WX_SKY={1:['맑음','☀️'],3:['구름 많음','⛅'],4:['흐림','☁️']};
 const WX_PTY={1:['비','🌧️'],2:['비/눈','🌨️'],3:['눈','❄️'],4:['소나기','🌦️'],5:['빗방울','🌦️'],6:['빗방울·눈날림','🌨️'],7:['눈날림','🌨️']};
@@ -2985,12 +3011,12 @@ function wxLine(w){
 function wxHoursHtml(w){
   const hs=(w&&w.hours)||[]; if(!hs.length)return'';
   const td=asYmd(new Date()).replace(/-/g,'');
-  return`<div class="wx-hrs" role="list" aria-label="3시간 간격 예보">${hs.map(x=>`<div class="wx-hr" role="listitem"><span class="wx-hh">${x.d&&x.d!==td?'내일 ':''}${x.h}시</span><span class="wx-hi" aria-hidden="true">${x.icon}</span><span class="wx-ht">${x.temp}°</span><span class="wx-hp">${x.pop?x.pop+'%':'-'}</span></div>`).join('')}</div>`;
+  return`<div class="wx-hrs" role="list" aria-label="3시간 간격 예보">${hs.map(x=>`<div class="wx-hr" role="listitem"><span class="wx-hh">${x.d&&x.d!==td?'내일 ':''}${x.h}시</span><span class="wx-hi" aria-hidden="true">${wxIcon(x.icon)}</span><span class="wx-ht">${x.temp}°</span><span class="wx-hp">${x.pop?x.pop+'%':'-'}</span></div>`).join('')}</div>`;
 }
 function buildBriefCard(){
   const w=S.wx; const o=wxOutfit(w); const um=wxUmbrella(w);
   const body=w?`<div class="wx2">
-    <div class="wx-now"><div class="wx-k">지금</div><div class="wx-main"><span class="wx-ic" aria-hidden="true">${w.now.icon}</span><span class="wx-t">${w.now.temp}°</span></div><div class="wx-s">${esc(w.now.label)}</div></div>
+    <div class="wx-now"><div class="wx-k">지금</div><div class="wx-main"><span class="wx-ic" aria-hidden="true">${wxIcon(w.now.icon)}</span><span class="wx-t">${w.now.temp}°</span></div><div class="wx-s">${esc(w.now.label)}</div></div>
     <div class="wx-day"><div class="wx-k">오늘</div>
       ${w.min!==null?`<div class="wx-row"><b>${w.min}°</b> ~ <b>${w.max}°</b></div>`:''}
       <div class="wx-row">강수 <b>${w.popMax||0}%</b></div>
@@ -2998,7 +3024,7 @@ function buildBriefCard(){
   </div>
   ${wxHoursHtml(w)}
   <div class="bf-tips"><span class="bf-chip">${esc(o)}</span>${um?'<span class="bf-chip rain">우산 챙기기</span>':'<span class="bf-chip">우산 없어도 돼요</span>'}</div>
-  ${w.tmr?`<div class="note">내일 ${w.tmr.icon} ${esc(w.tmr.label)} ${w.tmr.min!==null?w.tmr.min+'° / '+w.tmr.max+'°':''}${w.tmr.pop?' · 강수 '+w.tmr.pop+'%':''}</div>`:''}
+  ${w.tmr?`<div class="note">내일 ${wxIcon(w.tmr.icon)} ${esc(w.tmr.label)} ${w.tmr.min!==null?w.tmr.min+'° / '+w.tmr.max+'°':''}${w.tmr.pop?' · 강수 '+w.tmr.pop+'%':''}</div>`:''}
   ${w.note?`<div class="note">${esc(w.note)}</div>`:''}`
   :`<div class="wx-s">${esc(wxLine(null))}</div>${S.wxErr?`<div class="note">${esc(S.wxErr)}</div>`:''}`;
   return`<div class="sec bf">
@@ -3072,7 +3098,7 @@ function buildAssessCard(){
 function buildWallWeather(){
   const w=S.wx; if(!w)return`<div class="w-wx"><div class="w-wx-s">${esc(wxLine(null))}</div></div>`;
   const o=wxOutfit(w), um=wxUmbrella(w);
-  return`<div class="w-wx"><div class="w-wx-ic">${w.now.icon}</div><div><div class="w-wx-t">${w.now.temp}°<small>${esc(w.now.label)}</small></div><div class="w-wx-s">${esc(wxLine(w))}</div><div class="w-wx-tip">🧥 ${esc(o)}${um?' · <b>☂️ 우산 챙기세요</b>':''}</div></div></div>`;
+  return`<div class="w-wx"><div class="w-wx-ic">${wxIcon(w.now.icon)}</div><div><div class="w-wx-t">${w.now.temp}°<small>${esc(w.now.label)}</small></div><div class="w-wx-s">${esc(wxLine(w))}</div><div class="w-wx-tip">🧥 ${esc(o)}${um?' · <b>☂️ 우산 챙기세요</b>':''}</div></div></div>`;
 }
 
 /* ── 7. 벽걸이 화면 켜짐 유지 시간대 (기본 07:40~08:30) ──
@@ -3936,7 +3962,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.17';
+const APP_VER='v4.18';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

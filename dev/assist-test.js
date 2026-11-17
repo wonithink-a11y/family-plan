@@ -320,6 +320,16 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(wc.svg&&wc.noEmoji,'웰컴 화면 로고는 SVG이고 이모지가 없음');
   ok(wc.input,'가족 코드 입력칸은 그대로(20자 제한)');
 
+  console.log('\n[7j] 날씨 선 아이콘(SVG)');
+  const wi=await page.evaluate(()=>{const em=['☀️','⛅','☁️','🌫️','🌦️','🌧️','🌨️','❄️','⛈️'];const all=em.map(wxIcon);
+    return{svg:all.every(h=>/^<svg class="wxi"/.test(h)&&/<path|<circle/.test(h)),uniq:new Set(all).size===em.length,fb:wxIcon('x')===wxIcon('☁️')&&wxIcon(undefined)===wxIcon('☁️'),
+      brief:/class="wx-ic"[^>]*><svg/.test(buildBriefCard()),noEmoji:!/[☀⛅☁🌫🌦🌧🌨❄⛈]/.test(buildBriefCard().replace(/<style[\s\S]*?<\/style>/g,'')),
+      strip:/class="wx-hi"[^>]*><svg/.test(wxHoursHtml(S.wx)||'')};});
+  ok(wi.svg&&wi.uniq,'날씨 이모지 9종이 서로 다른 SVG로 바뀜');
+  ok(wi.fb,'모르는 아이콘 문자열은 구름 아이콘으로 대체');
+  ok(wi.brief&&wi.noEmoji,'우리집 날씨 카드에 이모지가 남지 않음');
+  ok(wi.strip,'3시간 단위 날씨 줄도 SVG 아이콘');
+
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);
   await page.evaluate(()=>asSavePrep()); await page.waitForTimeout(400);

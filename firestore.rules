@@ -16,7 +16,7 @@ service cloud.firestore {
     match /families/{code} {
       allow read, write: if false;
       match /{sub}/{doc} {
-        allow read, write: if request.auth != null && sub in ['items','events'];
+        allow read, write: if request.auth != null && sub in ['items','events','meta','routine','stamps','coupons','preps','devices'];
       }
     }
 

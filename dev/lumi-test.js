@@ -129,7 +129,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   ok(bub.some(b=>b.includes('영어')&&b.includes('수행평가')),'도구로 조회한 답을 말함: '+bub[bub.length-1]);
   const g0=await ev(()=>window.__gemLog[0]);
   ok(g0.systemInstruction.parts[0].text.includes('"루미"'),'시스템 지침에 이름(루미)이 들어감');
-  ok(g0.tools[0].functionDeclarations.length===13,'도구 13개 선언: '+g0.tools[0].functionDeclarations.map(f=>f.name).length);
+  ok(g0.tools[0].functionDeclarations.length===15,'도구 15개 선언: '+g0.tools[0].functionDeclarations.map(f=>f.name).length);
   ok(await ev(()=>window.__gemLog.length)===2,'모델 2회 호출(도구 요청 → 결과로 답)');
 
   console.log('\n[4] 등록: 말 → 확인 카드 → "응"');
@@ -178,7 +178,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   await ev(()=>asLiveStart()); await page.waitForFunction(()=>A.live&&A.live.status==='live',null,{timeout:8000});
   const setups=await ev(()=>window.__wsLog.filter(m=>m.setup).map(m=>m.setup));
   ok(setups.length===2&&setups[0].responseModalities&&setups[1].generationConfig,'첫 조합(flat)이 거절되면 다음 조합(nested)으로 재시도');
-  ok(setups[1].tools[0].functionDeclarations.length===13&&setups[1].inputAudioTranscription&&setups[1].outputAudioTranscription,'도구·받아쓰기 설정 포함');
+  ok(setups[1].tools[0].functionDeclarations.length===15&&setups[1].inputAudioTranscription&&setups[1].outputAudioTranscription,'도구·받아쓰기 설정 포함');
   ok(await ev(()=>/BidiGenerateContent\?key=GEMKEY123$/.test(window.__wsUrl)),'엔드포인트와 키 전달 방식');
   ok(setups[1].generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName==='Kore','목소리 설정이 전달됨');
   ok(await ev(()=>JSON.parse(localStorage.getItem('fp_live_ok')).s)==='nested','성공한 조합을 기억');

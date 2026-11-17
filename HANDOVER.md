@@ -137,3 +137,11 @@
 - `dev/lumi-test.js`(신규, 모두 통과), `dev/assist-test.js`(옛 흐름, agent:false 로 통과), `dev/smoke.js` 통과.
 - 미검증(실서비스 필요): 실제 Gemini 함수 호출 응답, Live API, FCM 전송·수신, 실기기 호출어, 태블릿 마이크 에코.
 - 스크린샷: `docs/screen-lumi-chat.png`, `screen-lumi-live.png`, `screen-lumi-settings.png`.
+
+## 가족별 3칸(아빠/엄마/딸) + 구성원별 목소리 (2026-11-17)
+- 구성원: `MB_DEF`(아빠 Charon·엄마 Aoede·딸 Leda, 피치 .8/1.12/1.3) → Firestore `families/{code}/meta/members` + localStorage `fp_members`. ⚙ 설정에서 이름·목소리 변경, `multiVoice`로 구성원별 목소리 on/off.
+- 일정 담당: 기존 `person` 문자열 재사용. 아빠/아버지→dad, 엄마/어머니→mom, 딸/자녀/아이→kid, 그 외·빈값=온 가족(상단 공통 띠). 일정 폼에 담당 칩 추가.
+- 벽 화면: 기본 `wallLayout:'lanes'`(공통 띠 + 3칸, 칸별 🔊), 우상단 버튼으로 카드형 전환. 딸 칸에 루틴·수행평가·준비물·일정·도장.
+- 브리핑: `asBriefSegs()` 구간별 화자(루미 Kore → 딸 → 아빠 → 엄마 → 루미). 루미 대화에서 "아빠 일정 알려줘"는 아빠 목소리, "아빠 내일 3시 회의 등록"은 확인 후 등록.
+- 한계: 목소리는 Gemini 프리셋(실제 가족 목소리 복제 아님), Live 대화는 단일 목소리, 우리집 탭은 3칸 미적용, 푸시는 꺼둔 상태(미배포). 실서비스(Gemini 함수호출/Live/FCM)·실기기는 미검증.
+- 테스트: `dev/members-test.js` 추가, assist/lumi/smoke 통과.

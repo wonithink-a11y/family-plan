@@ -659,28 +659,28 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
 @media (min-width:1000px) and (orientation:landscape){.as-stopfab{bottom:24px;left:calc(50% + 42px)}.as-stopfab.kiosk{left:50%;bottom:70px}}
 /* 벽걸이 화면 */
 .wall{min-height:100vh;box-sizing:border-box;color:#EEF1FF;font-family:inherit;
-  background:radial-gradient(900px 560px at 12% -8%,#2B3180 0%,transparent 62%),radial-gradient(800px 520px at 108% 8%,#5A2F93 0%,transparent 58%),#0A0E22}
+  background:radial-gradient(700px 420px at 85% -10%,rgba(129,140,248,.28),transparent 60%),radial-gradient(600px 400px at 0% 110%,rgba(34,197,94,.10),transparent 60%),#0A0E1F}
 .wall.night{filter:brightness(.55)}
 .w-top{display:flex;align-items:flex-end;gap:22px;margin-bottom:22px;flex-wrap:wrap}
 .w-clock{font-size:clamp(64px,11vw,132px);font-weight:200;letter-spacing:-3px;line-height:.9;font-variant-numeric:tabular-nums}
-.w-date{font-size:clamp(18px,2.4vw,28px);font-weight:600;color:#A9B4E6;padding-bottom:8px}
+.w-date{font-size:clamp(18px,2.4vw,28px);font-weight:500;color:#E0E7FF;margin-bottom:10px;padding:6px 20px;border-radius:24px;background:rgba(129,140,248,.22);border:1px solid rgba(129,140,248,.4)}
 .w-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 @media (max-width:760px){.w-grid{grid-template-columns:1fr}}
-.w-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:26px;padding:22px 24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-.w-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;letter-spacing:2px;color:#8F9BD8;margin-bottom:14px}
+.w-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:22px 24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.w-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;letter-spacing:2px;color:#A9B1D6;margin-bottom:14px}
 .w-h span{letter-spacing:0;font-size:14px;color:#C9D2FF;font-weight:700}
 .w-rt{display:flex;align-items:center;gap:16px;padding:13px 0;font-size:clamp(18px,2.2vw,26px);font-weight:600;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)}
 .w-rt:last-of-type{border-bottom:none}
 .w-chk{width:36px;height:36px;border-radius:12px;border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#06281C;flex-shrink:0;transition:all .25s}
-.w-rt.on .w-chk{background:linear-gradient(135deg,#6EE7B7,#34D399);border-color:transparent;box-shadow:0 0 22px rgba(52,211,153,.55)}
+.w-rt.on .w-chk{background:#22C55E;border-color:transparent}
 .w-rt.on{color:rgba(238,241,255,.45)}
 .w-done{margin-top:12px;font-size:16px;font-weight:700;color:#6EE7B7}
 .w-dd{display:flex;align-items:center;gap:14px;padding:11px 0;font-size:clamp(16px,2vw,22px);font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)}
 .w-dd:last-of-type{border-bottom:none}
 .w-dd-b{min-width:62px;text-align:center;font-size:14px;font-weight:800;color:#fff;border-radius:10px;padding:6px 0;flex-shrink:0}
-.w-stamps{display:flex;gap:12px;margin:6px 0 14px}
-.w-stamp{flex:1;aspect-ratio:1;max-width:64px;border-radius:50%;border:2px dashed rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#1B1650}
-.w-stamp.on{border:none;background:linear-gradient(135deg,#9DB4FF,#C4B5FD);box-shadow:0 0 24px rgba(157,180,255,.55)}
+.w-stamps{display:flex;gap:8px;margin:6px 0 14px}
+.w-stamp{flex:1 1 0;min-width:0;overflow:hidden;box-sizing:border-box;aspect-ratio:1;max-width:64px;border-radius:50%;border:2px dashed rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#1B1650}
+.w-stamp.on{border-color:transparent;border-style:solid;background:#C7D0FF}
 .w-sub{font-size:15px;color:#A9B4E6;font-weight:600}
 .w-empty{color:rgba(238,241,255,.4);font-size:16px;padding:10px 0}
 .w-exit{position:fixed;right:14px;bottom:12px;font-size:18px;color:rgba(255,255,255,.18);text-decoration:none}
@@ -775,7 +775,7 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
 
 /* 벽걸이 가족별 3칸 */
 .w-layout{position:fixed;right:44px;bottom:12px;font-size:18px;color:rgba(255,255,255,.28);background:none}
-.w-shared{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 12px;padding:10px 16px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:clamp(14px,1.6vw,18px);font-weight:600}
+.w-shared{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 12px;padding:10px 16px;border-radius:20px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);font-size:clamp(14px,1.6vw,18px);font-weight:600}
 .w-shared b{color:#A9B4E6;font-weight:800}
 .w-shared span{display:inline-flex;align-items:center;gap:8px}
 .w-shared i{font-style:normal;font-size:12px;font-weight:800;color:#fff;border-radius:8px;padding:3px 8px}
@@ -789,7 +789,7 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
 .w-kid .w-chk{width:28px;height:28px;border-radius:9px;font-size:16px}
 .w-kid .w-dd{font-size:clamp(14px,1.4vw,18px);padding:7px 0}
 .w-kid .w-dd-b{min-width:54px;font-size:12px;padding:5px 0}
-.w-kid .w-stamp{max-width:42px;font-size:18px}
+.w-kid .w-stamp{max-width:42px;font-size:13px}
 .w-kid .w-tools{margin-top:10px;flex-wrap:wrap}
 .w-kid .w-tool{padding:6px 12px!important;white-space:nowrap}
 @media (min-width:1100px){.w-kid .w-rt{padding:6px 0}.w-kid .w-dd{padding:5px 0}}
@@ -805,7 +805,7 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
 .w-top{justify-content:space-between}
 .w-left{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
 .w-leave{font-size:clamp(15px,1.8vw,20px);font-weight:700;color:#FDE68A;background:rgba(253,230,138,.12);border:1px solid rgba(253,230,138,.28);border-radius:14px;padding:6px 14px;align-self:center}
-.w-wx{display:flex;align-items:center;gap:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:26px;padding:16px 24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.w-wx{display:flex;align-items:center;gap:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:16px 24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .w-wx-ic{font-size:clamp(46px,6vw,72px);line-height:1}
 .w-wx-t{font-size:clamp(34px,4.6vw,56px);font-weight:200;letter-spacing:-1px;line-height:1}
 .w-wx-t small{font-size:16px;font-weight:700;color:#A9B4E6;margin-left:10px;letter-spacing:0}
@@ -837,7 +837,7 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
   .w-rt{padding:9px 0;font-size:clamp(16px,1.7vw,22px)}
   .w-chk{width:30px;height:30px;font-size:17px}
   .w-dd{padding:7px 0;font-size:clamp(15px,1.5vw,19px)}
-  .w-stamp{max-width:54px;font-size:20px}
+  .w-stamp{max-width:54px;font-size:14px}
   .w-tools{margin-top:auto;padding-top:10px}
   .w-tool{padding:8px 14px!important;border-radius:16px!important;flex:1}
   .w-c-st{display:flex;flex-direction:column}
@@ -3883,7 +3883,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.14';
+const APP_VER='v4.15';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

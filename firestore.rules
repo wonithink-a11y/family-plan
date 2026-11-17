@@ -33,10 +33,10 @@ service cloud.firestore {
           && request.resource.size() < 500000;
       }
 
-      // 가족 구성원/템플릿 목록 (config/members, config/templates 문서만 허용)
+      // 가족 구성원/템플릿/목표점수 목록 (config/members, templates, goals 문서만 허용)
       match /config/{id} {
-        allow read, delete: if code.size() >= 2 && code.size() <= 20 && id in ['members', 'templates'];
-        allow create, update: if code.size() >= 2 && code.size() <= 20 && id in ['members', 'templates']
+        allow read, delete: if code.size() >= 2 && code.size() <= 20 && id in ['members', 'templates', 'goals'];
+        allow create, update: if code.size() >= 2 && code.size() <= 20 && id in ['members', 'templates', 'goals']
           && request.resource.data.keys().hasOnly(['list'])
           && request.resource.data.list is list
           && request.resource.data.list.size() <= 30

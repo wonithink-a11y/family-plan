@@ -449,6 +449,20 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 .srch-fl{font-size:calc(10px*var(--fs));font-weight:800;background:var(--bg);border-radius:6px;padding:1px 6px;margin-right:6px}
 .srch-hint{text-align:center;color:var(--muted);font-size:calc(13px*var(--fs));line-height:1.8;padding:36px 12px 6px}
 mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
+/* ── 성적 분석 ── */
+.sc-item{padding:6px 0 10px;border-bottom:1px solid var(--border);cursor:pointer}
+.sc-item:last-of-type{border-bottom:none}
+.sc-track{flex:1;position:relative;background:#ECEEF8;border-radius:4px;height:16px}
+.sc-track .score-bar-fill{border-radius:4px;min-width:34px}
+.sc-goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:#FF5252;border-radius:1px}
+.sc-grade{width:24px;height:24px;border-radius:50%;color:#fff;font-size:calc(12px*var(--fs));font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-sub{font-size:calc(11px*var(--fs));color:var(--muted);line-height:1.6;padding-left:60px}
+.sc-hint{font-size:calc(10px*var(--fs));color:var(--muted);text-align:center;margin-top:8px;line-height:1.5}
+.sc-tip{font-size:calc(13px*var(--fs));padding:6px 0;line-height:1.5}
+.ch-g{stroke:var(--border);stroke-width:1}
+.ch-t{fill:var(--muted)}
+.ch-v{fill:var(--text)}
+[data-theme=dark] .sc-track{background:#2E3248}
 </style>
 </head>
 <body>
@@ -538,7 +552,7 @@ let S={
   calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),calDate:null,
   showDangerZone:false,fabOpen:false,events:[],evtOverlay:null,activeEvtId:null,evtForm:null,notif:typeof Notification!=='undefined'?Notification.permission:'denied',
   notifOn:localStorage.getItem('notifOff')!=='1', // 이 기기의 알림 켜기/끄기
-  members:[],templates:[],personFilter:null,searchOpen:false,weekOpen:lsGet('weekOpen','1')==='1',
+  members:[],templates:[],goals:[],statsView:lsGet('statsView','progress'),scoreSem:'auto',scoreSubj:'',personFilter:null,searchOpen:false,weekOpen:lsGet('weekOpen','1')==='1',
   theme:lsGet('theme','auto'),fs:lsGet('fs','md'), // 이 기기의 화면 설정
   showBanner:true,deferredPrompt:null,
   attachTargetId:null,imgViewSrc:null,txtAttachTargetId:null,
@@ -581,11 +595,12 @@ function deleteItemFS(id){
 function startSync(code){
   if(unsubFS)unsubFS(); // 기존 구독 해제
   S.syncStatus='connecting';
-  S.items=[];S.events=[];S.members=[];S.templates=[];S.personFilter=null; // 코드 전환 시 이전 데이터 잔상 제거
+  S.items=[];S.events=[];S.members=[];S.templates=[];S.goals=[];S.personFilter=null; // 코드 전환 시 이전 데이터 잔상 제거
   render();
   startEventsSync(code);
   startMembersSync(code);
   startTemplatesSync(code);
+  startGoalsSync(code);
   unsubFS=db.collection('families').doc(code).collection('items')
     .onSnapshot(
       snap=>{
@@ -708,12 +723,13 @@ async function startWithCode(){
 }
 async function copyFamilyData(from,to){
   const fr=db.collection('families').doc(from),tr=db.collection('families').doc(to);
-  const [it,ev,mem,tpl]=await Promise.all([fr.collection('items').get(),fr.collection('events').get(),fr.collection('config').doc('members').get(),fr.collection('config').doc('templates').get()]);
+  const [it,ev,mem,tpl,gl]=await Promise.all([fr.collection('items').get(),fr.collection('events').get(),fr.collection('config').doc('members').get(),fr.collection('config').doc('templates').get(),fr.collection('config').doc('goals').get()]);
   const ops=[
     ...it.docs.map(d=>b=>b.set(tr.collection('items').doc(d.id),d.data())),
     ...ev.docs.map(d=>b=>b.set(tr.collection('events').doc(d.id),d.data())),
     ...(mem.exists?[b=>b.set(tr.collection('config').doc('members'),mem.data())]:[]),
-    ...(tpl.exists?[b=>b.set(tr.collection('config').doc('templates'),tpl.data())]:[])
+    ...(tpl.exists?[b=>b.set(tr.collection('config').doc('templates'),tpl.data())]:[]),
+    ...(gl.exists?[b=>b.set(tr.collection('config').doc('goals'),gl.data())]:[])
   ];
   await batchWrite(ops);
   return{items:it.size,events:ev.size};
@@ -725,7 +741,8 @@ async function deleteFamilyData(code){
     ...it.docs.map(d=>b=>b.delete(d.ref)),
     ...ev.docs.map(d=>b=>b.delete(d.ref)),
     b=>b.delete(fr.collection('config').doc('members')),
-    b=>b.delete(fr.collection('config').doc('templates'))
+    b=>b.delete(fr.collection('config').doc('templates')),
+    b=>b.delete(fr.collection('config').doc('goals'))
   ]);
 }
 async function changeFamilyCode(){
@@ -1220,6 +1237,158 @@ function runSearch(q){
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   성적 분석 — 학기별 · 과목별 누적 점수율, 추이, 목표 점수
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const semKey=ds=>{const [y,m]=ds.split('-').map(Number);return m>=3&&m<=7?`${y}-1`:m>=8?`${y}-2`:`${y-1}-2`;}; // 1학기 3~7월 / 2학기 8~2월
+const semLabel=k=>{const [y,n]=k.split('-');return`${y}년 ${n}학기`;};
+const isScored=i=>i.earnedScore!==null&&i.earnedScore!==undefined&&i.earnedScore!==''&&Number(i.maxScore)>0;
+const GRADE=p=>p>=90?'A':p>=80?'B':p>=70?'C':p>=60?'D':'E'; // 참고용 성취수준
+const GRADE_COLOR={A:'#4CAF50',B:'#2196F3',C:'#FF9800',D:'#FF7043',E:'#F44336'};
+const fmtP=v=>(Math.round(v*10)/10)+'%';
+const goalOf=n=>(S.goals.find(g=>g.subject===n)||{}).target||null;
+
+let unsubGoals=null;
+function startGoalsSync(code){
+  if(unsubGoals)unsubGoals();
+  unsubGoals=db.collection('families').doc(code).collection('config').doc('goals')
+    .onSnapshot(s=>{const l=s.exists?s.data().list:null;S.goals=Array.isArray(l)?l:[];renderKeep();},
+      err=>console.warn('goals sync err',err));
+}
+function saveGoals(list){
+  S.goals=list;render();
+  if(!S.familyCode)return;
+  db.collection('families').doc(S.familyCode).collection('config').doc('goals').set({list})
+    .catch(e=>alert('목표 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)'));
+}
+function setGoal(subject){
+  const cur=goalOf(subject);
+  const v=prompt(`'${subject}' 목표 점수율 (%)\n1~100 사이 숫자 · 비우면 목표 삭제${cur?`\n현재 목표: ${cur}%`:''}`,cur||'');
+  if(v===null)return;
+  const t=v.trim();
+  if(!t){saveGoals(S.goals.filter(g=>g.subject!==subject));return;}
+  const n=Math.round(Number(t));
+  if(!(n>=1&&n<=100)){alert('1~100 사이의 숫자를 입력해 주세요.');return;}
+  if(!cur&&S.goals.length>=30){alert('목표는 최대 30개까지 설정할 수 있어요.');return;}
+  saveGoals([...S.goals.filter(g=>g.subject!==subject),{subject,target:n}]);
+}
+function setStatsView(v){try{localStorage.setItem('statsView',v);}catch(e){}setState({statsView:v});}
+function statsTabs(){
+  return`<div class="seg" style="margin:0 0 10px">${[['progress','📋 진행'],['score','🏆 성적']].map(([v,l])=>`<button class="${S.statsView===v?'sel':''}" onclick="setStatsView('${v}')">${l}</button>`).join('')}</div>`;
+}
+function scoreData(){
+  const all=visItems().filter(i=>i.dueDate);
+  const sems=[...new Set(all.map(i=>semKey(i.dueDate)))].sort().reverse();
+  const cur=semKey(todayStr());
+  const sem=S.scoreSem==='auto'?(sems.includes(cur)?cur:'all'):(S.scoreSem==='all'||sems.includes(S.scoreSem)?S.scoreSem:'all');
+  const list=sem==='all'?all:all.filter(i=>semKey(i.dueDate)===sem);
+  const scored=list.filter(isScored).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  const pending=list.filter(i=>!isScored(i)&&getDays(i.dueDate)<0).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  const subs={};
+  list.forEach(i=>{
+    const o=subs[i.subject]||(subs[i.subject]={name:i.subject,earned:0,max:0,n:0,totalMax:0,remMax:0,remN:0});
+    o.totalMax+=Number(i.maxScore)||0;
+    if(isScored(i)){o.earned+=Number(i.earnedScore);o.max+=Number(i.maxScore);o.n++;}
+    else{o.remMax+=Number(i.maxScore)||0;o.remN++;}
+  });
+  const rows=Object.values(subs).filter(o=>o.n>0).map(o=>({...o,pct:o.earned/o.max*100})).sort((a,b)=>b.pct-a.pct);
+  const noScore=Object.values(subs).filter(o=>o.n===0);
+  return{sems,sem,list,scored,pending,rows,noScore,allSubjects:Object.values(subs).map(o=>o.name)};
+}
+function scoreChart(pts,goal){
+  const W=320,H=160,L=28,R=10,T=16,B=22;
+  const x=i=>pts.length===1?L+(W-L-R)/2:L+i/(pts.length-1)*(W-L-R);
+  const y=p=>T+(1-Math.max(0,Math.min(100,p))/100)*(H-T-B);
+  const P=pts.map((o,i)=>({x:x(i),y:y(o.p),...o}));
+  const grid=[0,50,70,90,100].map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="ch-g"/><text x="${L-4}" y="${y(v)+3}" text-anchor="end" font-size="8" class="ch-t">${v}</text>`).join('');
+  const many=pts.length>10;
+  const hi=Math.max(...pts.map(o=>o.p)),lo=Math.min(...pts.map(o=>o.p));
+  const dots=P.map((o,i)=>{
+    const show=!many||i===0||i===P.length-1||o.p===hi||o.p===lo;
+    return`<circle cx="${o.x.toFixed(1)}" cy="${o.y.toFixed(1)}" r="${many?3:4}" fill="${o.c}" stroke="var(--card)" stroke-width="1.5"/>${show?`<text x="${o.x.toFixed(1)}" y="${(o.y-7).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" class="ch-v">${Math.round(o.p)}</text>`:''}`;}).join('');
+  const line=P.length>1?`<polyline points="${P.map(o=>o.x.toFixed(1)+','+o.y.toFixed(1)).join(' ')}" fill="none" stroke="var(--p)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".75"/>`:'';
+  const gl=goal?`<line x1="${L}" x2="${W-R}" y1="${y(goal)}" y2="${y(goal)}" stroke="#FF5252" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${W-R}" y="${y(goal)-3}" text-anchor="end" font-size="8" font-weight="700" fill="#FF5252">목표 ${goal}%</text>`:'';
+  const xl=[0,Math.floor((P.length-1)/2),P.length-1].filter((v,i,a)=>a.indexOf(v)===i).map(i=>`<text x="${P[i].x.toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="8" class="ch-t">${P[i].d.slice(5).replace('-','/')}</text>`).join('');
+  return`<svg viewBox="0 0 ${W} ${H}" class="chart-svg" style="height:auto">${grid}${gl}${line}${dots}${xl}</svg>`;
+}
+function setScoreSem(v){setState({scoreSem:v});}
+function setScoreSubj(v){setState({scoreSubj:v});}
+function buildScoreView(){
+  const D=scoreData();
+  const {sems,sem,scored,pending,rows}=D;
+  if(S.scoreSubj&&!D.allSubjects.includes(S.scoreSubj))S.scoreSubj='';
+  const wTot=scored.reduce((a,i)=>a+Number(i.maxScore),0),wEarn=scored.reduce((a,i)=>a+Number(i.earnedScore),0);
+  const overall=wTot>0?wEarn/wTot*100:null;
+  const chipBar=(items,cur,fn)=>`<div class="ctrl-bar" style="padding:0 0 10px">${items.map(([v,l])=>`<button class="filter-btn${cur===v?' active':''}" data-v="${esc(v)}" onclick="${fn}(this.dataset.v)">${esc(l)}</button>`).join('')}</div>`;
+  const semBar=sems.length?chipBar([['all','전체'],...sems.map(k=>[k,semLabel(k)])],sem,'setScoreSem'):'';
+  // 요약
+  const best=rows[0],worst=rows.length>1?rows[rows.length-1]:null;
+  const goalRows=rows.filter(r=>goalOf(r.name));
+  const hit=goalRows.filter(r=>r.pct>=goalOf(r.name)).length;
+  const summary=`<div class="summary-grid" style="margin-bottom:14px">
+    <div class="sum-card"><div class="sum-val" style="color:var(--p)">${overall!==null?fmtP(overall):'--'}</div><div class="sum-lbl">누적 점수율${overall!==null?` · ${wEarn}/${wTot}점`:''}</div></div>
+    <div class="sum-card"><div class="sum-val" style="color:var(--ok)">${scored.length}</div><div class="sum-lbl">점수 입력된 평가</div></div>
+    <div class="sum-card"><div class="sum-val" style="color:#FF9800">${best?esc(best.name):'--'}</div><div class="sum-lbl">${best?'최고 · '+fmtP(best.pct):'최고 과목'}</div></div>
+    <div class="sum-card"><div class="sum-val" style="color:var(--danger)">${worst?esc(worst.name):'--'}</div><div class="sum-lbl">${worst?'보완 · '+fmtP(worst.pct):'보완 과목'}</div></div>
+  </div>`;
+  // 인사이트
+  const tips=[];
+  if(scored.length>=4){
+    const r3=scored.slice(-3),pr=scored.slice(-6,-3);
+    const avg=a=>a.reduce((x,i)=>x+Number(i.earnedScore)/Number(i.maxScore)*100,0)/a.length;
+    if(pr.length){const d=avg(r3)-avg(pr);tips.push(d>=3?`📈 최근 ${r3.length}회 평균이 이전보다 <b>${Math.round(d)}%p</b> 올랐어요`:d<=-3?`📉 최근 ${r3.length}회 평균이 이전보다 <b>${Math.round(-d)}%p</b> 내려갔어요`:'➖ 최근 점수가 이전과 비슷해요');}
+  }
+  if(goalRows.length)tips.push(`🎯 목표를 정한 ${goalRows.length}과목 중 <b>${hit}과목</b> 달성`);
+  if(pending.length)tips.push(`📝 마감이 지났는데 점수를 입력하지 않은 평가가 <b>${pending.length}개</b> 있어요`);
+  const insight=tips.length?`<div class="stat-section"><div class="stat-section-title">💡 한눈에 보기</div>${tips.map(t=>`<div class="sc-tip">${t}</div>`).join('')}</div>`:'';
+  // 과목별 (누적, 목표, 성취수준)
+  const noScoreHtml=D.noScore.map(o=>{const goal=goalOf(o.name);return`<div class="sc-item" data-s="${esc(o.name)}" onclick="setGoal(this.dataset.s)"><div class="sc-sub" style="padding-left:0"><b style="color:var(--text)">${esc(o.name)}</b> · 아직 입력된 점수 없음 (평가 ${o.remN}개 · 배점 ${o.remMax}점)${goal?` · 🎯 목표 ${goal}%`:' · 탭하여 목표 설정'}</div></div>`;}).join('');
+  const subjHtml=(rows.length===0&&!D.noScore.length)?`<div class="no-data">🏆 점수가 입력된 수행평가가 없어요<br><small style="color:#BBB">수행평가 상세에서 점수를 입력하면 분석돼요</small></div>`
+    :rows.map(r=>{
+      const goal=goalOf(r.name),sc=getColor(r.name),g=GRADE(r.pct);
+      let line=`누적 ${r.earned}/${r.max}점 · 평가 ${r.n}개`;
+      if(goal){
+        const diff=r.pct-goal;
+        line+=` · 목표 ${goal}% (${diff>=0?'+':''}${Math.round(diff*10)/10}%p)`;
+        if(r.remMax>0){
+          const need=(goal/100*r.totalMax-r.earned)/r.remMax*100;
+          line+=need<=0?`<br>✅ 남은 ${r.remN}개와 상관없이 목표 달성`:need>100?`<br>⚠️ 남은 ${r.remN}개(배점 ${r.remMax}점)로는 목표 달성이 어려워요`:`<br>🔎 남은 ${r.remN}개(배점 ${r.remMax}점)에서 평균 <b>${Math.ceil(need)}%</b> 이상 필요`;
+        }else if(diff<0)line+='<br>⚠️ 남은 평가가 없어 목표에 못 미쳐요';
+      }
+      return`<div class="sc-item" data-s="${esc(r.name)}" onclick="setGoal(this.dataset.s)">
+        <div class="score-bar-row" style="margin-bottom:3px"><div class="score-bar-label">${esc(r.name)}</div>
+          <div class="sc-track"><div class="score-bar-fill" style="width:${Math.min(100,r.pct)}%;background:${sc.accent}">${fmtP(r.pct)}</div>${goal?`<div class="sc-goal" style="left:${goal}%"></div>`:''}</div>
+          <div class="sc-grade" style="background:${GRADE_COLOR[g]}">${g}</div></div>
+        <div class="sc-sub">${line}</div></div>`;}).join('')+`<div class="sc-hint">과목을 탭하면 목표 점수율을 설정해요 · 등급은 점수율 기준 참고용(A 90↑ B 80↑ C 70↑ D 60↑)</div>`;
+  const subjAll=subjHtml.replace(/<div class="sc-hint">[\s\S]*$/,'')+noScoreHtml+(rows.length||D.noScore.length?`<div class="sc-hint">과목을 탭하면 목표 점수율을 설정해요 · 등급은 점수율 기준 참고용(A 90↑ B 80↑ C 70↑ D 60↑)</div>`:'');
+  // 추이
+  const trendPts=(S.scoreSubj?scored.filter(i=>i.subject===S.scoreSubj):scored).map(i=>({p:Number(i.earnedScore)/Number(i.maxScore)*100,d:i.dueDate,c:getColor(i.subject).accent}));
+  const subjChips=D.allSubjects.length>1?chipBar([['','전체'],...rows.map(r=>[r.name,r.name])],S.scoreSubj,'setScoreSubj'):'';
+  const trend=trendPts.length<2?`<div class="no-data">📈 점수가 2개 이상 입력되면 추이가 보여요</div>`
+    :scoreChart(trendPts,S.scoreSubj?goalOf(S.scoreSubj):null);
+  // 구성원별 (필터 해제 시)
+  let memHtml='';
+  if(!S.personFilter&&S.members.length){
+    const src=(sem==='all'?S.items.filter(i=>i.dueDate):S.items.filter(i=>i.dueDate&&semKey(i.dueDate)===sem)).filter(isScored);
+    const mr=S.members.map(m=>{const l=src.filter(i=>i.person===m.name);if(!l.length)return null;
+      const e=l.reduce((a,i)=>a+Number(i.earnedScore),0),t=l.reduce((a,i)=>a+Number(i.maxScore),0);return{name:m.name,color:m.color,pct:e/t*100,n:l.length};}).filter(Boolean);
+    if(mr.length)memHtml=`<div class="stat-section"><div class="stat-section-title">👥 구성원별 누적 점수율</div>${mr.map(r=>`<div class="score-bar-row"><div class="score-bar-label">${esc(r.name)}</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${Math.min(100,r.pct)}%;background:${r.color}">${fmtP(r.pct)}</div></div><div class="score-bar-val">${r.n}개</div></div>`).join('')}</div>`;
+  }
+  // 점수 미입력
+  const pend=pending.length?`<div class="stat-section"><div class="stat-section-title">📝 점수 입력 대기 <span style="font-weight:500;color:var(--muted);font-size:calc(11px*var(--fs))">탭해서 입력</span></div>${pending.slice(0,8).map(i=>{const sc=getColor(i.subject);return`<div class="wk-row" onclick="openDetail('${i.id}')"><span class="subj-tag" style="background:${sc.tag};color:${sc.accent}">${esc(i.subject)}</span><span class="wk-txt">${esc(i.tasks[0]?.text||'')}</span>${personPill(i.person)}<span class="wk-dim">${fmt(i.dueDate)}</span></div>`;}).join('')}${pending.length>8?`<div class="wk-dim" style="text-align:center;padding-top:6px">외 ${pending.length-8}개</div>`:''}</div>`:'';
+  return`
+<header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">🏆 성적</div><div class="hd-title">성적 분석</div></div><div class="hd-right">${syncBadge()}</div></div>${statsTabs()}${personFilterBar()}</header>
+<div class="screen">
+  ${semBar}
+  ${summary}
+  ${insight}
+  <div class="stat-section"><div class="stat-section-title">📚 과목별 누적 점수율 · 목표</div>${subjAll}</div>
+  <div class="stat-section"><div class="stat-section-title">📈 점수 추이</div>${subjChips}${trend}</div>
+  ${memHtml}
+  ${pend}
+</div>`;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    화면 설정 (다크모드 / 글자 크기) — 이 기기에만 저장
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const FS_MAP={sm:.9,md:1,lg:1.15,xl:1.3};
@@ -1560,6 +1729,7 @@ function buildCalView(){
 
 
 function buildStatsView(){
+  if(S.statsView==='score')return buildScoreView();
   const ITEMS=visItems();
   const scored=ITEMS.filter(i=>i.earnedScore!==null&&i.earnedScore!=='');
   const avg=scored.length>0?Math.round(scored.reduce((a,i)=>a+(i.earnedScore/i.maxScore*100),0)/scored.length):null;
@@ -1609,7 +1779,7 @@ function buildStatsView(){
   }).filter(Boolean);
 
   return`
-<header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">📊 분석</div><div class="hd-title">수행평가 통계</div></div><div class="hd-right">${syncBadge()}</div></div>${personFilterBar()}</header>
+<header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">📊 분석</div><div class="hd-title">수행평가 통계</div></div><div class="hd-right">${syncBadge()}</div></div>${statsTabs()}${personFilterBar()}</header>
 <div class="screen">
   <div class="summary-grid" style="margin-bottom:14px">
     <div class="sum-card"><div class="sum-val" style="color:var(--p)">${ITEMS.length}</div><div class="sum-lbl">전체</div></div>

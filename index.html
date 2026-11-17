@@ -628,9 +628,11 @@ function checkAlarms(){
   S.items.forEach(item=>{
     if(!item.alarmEnabled)return;
     const d=getDays(item.dueDate);
-    if(d!==null&&d>=0&&d<=item.alarmDaysBefore&&!fired.has(item.id)){
+    // 마감일이 바뀌면 다시 알리도록 id+마감일을 키로 사용
+    const key=item.id+'|'+item.dueDate;
+    if(d!==null&&d>=0&&d<=item.alarmDaysBefore&&!fired.has(key)){
       new Notification(`📚 ${item.subject} 수행평가`,{body:`${fmt(item.dueDate)} 마감까지 ${d}일 남았어요!`});
-      fired.add(item.id);localStorage.setItem('fired3',JSON.stringify([...fired]));
+      fired.add(key);localStorage.setItem('fired3',JSON.stringify([...fired]));
     }
   });
 }
@@ -652,11 +654,13 @@ function dBadge(days,allDone,sc){
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    동기화 상태 배지
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+// 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
+function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
   const [cls,txt]=m[S.syncStatus]||m.offline;
-  return`<span class="sync-badge ${cls}" onclick="${S.syncStatus==='error'?`alert('${esc(S.syncError||'오류가 발생했습니다.')}')`:''}">${txt}</span>`;
+  return`<span class="sync-badge ${cls}" onclick="${S.syncStatus==='error'?'showSyncError()':''}">${txt}</span>`;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1865,27 +1869,36 @@ document.getElementById('import-file').addEventListener('change',e=>{
       const items=data.items||data;
       if(!Array.isArray(items))throw new Error();
       if(!confirm(`${items.length}개 항목을 Firestore에 업로드할까요?\n(기존 데이터와 병합됩니다)`))return;
-      const batch=db.batch();
-      items.forEach(item=>{
-        const ref=colRef().doc(item.id||uid());
-        batch.set(ref,toFSDoc({attachments:[],...item}));
-      });
-      batch.commit().then(()=>alert('✅ 불러오기 완료! 잠시 후 목록이 업데이트됩니다.')).catch(e=>alert('오류: '+e.message));
+      // 보안 규칙: 문서 ID == data.id 이므로 id를 항상 명시
+      const docs=items.map(item=>{const id=item.id||uid();return{id,data:toFSDoc({attachments:[],...item,id})};});
+      batchWrite(docs.map(d=>b=>b.set(colRef().doc(d.id),d.data)))
+        .then(()=>alert('✅ 불러오기 완료! 잠시 후 목록이 업데이트됩니다.')).catch(e=>alert('오류: '+e.message));
     }catch(err){alert('파일 형식이 올바르지 않습니다.')}
   };
   reader.readAsText(file);e.target.value='';
 });
 function clearDone(){
   if(!confirm('완료된 수행평가를 모두 삭제할까요?\n(모든 가족 기기에 반영됩니다)'))return;
-  const batch=db.batch();
-  S.items.filter(i=>i.tasks.length>0&&i.tasks.every(t=>t.done)).forEach(i=>batch.delete(colRef().doc(i.id)));
-  batch.commit();
+  const ids=S.items.filter(i=>i.tasks.length>0&&i.tasks.every(t=>t.done)).map(i=>i.id);
+  ids.forEach(id=>localStorage.removeItem('img_'+id));
+  batchWrite(ids.map(id=>b=>b.delete(colRef().doc(id)))).catch(e=>alert('오류: '+e.message));
 }
 function clearAll(){
-  if(!confirm('모든 데이터를 삭제할까요?\n(모든 가족 기기에서 삭제됩니다. 복구 불가)'))return;
-  const batch=db.batch();
-  S.items.forEach(i=>batch.delete(colRef().doc(i.id)));
-  batch.commit();
+  if(!confirm('모든 데이터(수행평가+일정)를 삭제할까요?\n(모든 가족 기기에서 삭제됩니다. 복구 불가)'))return;
+  S.items.forEach(i=>localStorage.removeItem('img_'+i.id));
+  const ops=[
+    ...S.items.map(i=>b=>b.delete(colRef().doc(i.id))),
+    ...S.events.map(e=>b=>b.delete(evtColRef().doc(e.id)))
+  ];
+  batchWrite(ops).catch(e=>alert('오류: '+e.message));
+}
+// Firestore 배치는 500건 제한 → 400건씩 나눠 커밋
+async function batchWrite(ops){
+  for(let i=0;i<ops.length;i+=400){
+    const b=db.batch();
+    ops.slice(i,i+400).forEach(op=>op(b));
+    await b.commit();
+  }
 }
 function isPWA(){return window.matchMedia('(display-mode:standalone)').matches||window.navigator.standalone===true}
 

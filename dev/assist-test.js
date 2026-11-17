@@ -305,6 +305,16 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(sg.cols==='skip'||sg.cols==='2','가로 태블릿에서 설정이 2열: '+sg.cols);
   ok(sg.guide,'가이드 카드도 유리 카드(위쪽 색 막대 없음)');
 
+  console.log('\n[7h] 루미 시트 A안 스타일(다크에서 밝은 시트 없음)');
+  const lm=await page.evaluate(()=>{const r={};document.documentElement.setAttribute('data-theme','dark');
+    const box=document.createElement('div');box.innerHTML='<div class="as-sheet" id="t-sheet"><div class="lm-b u" id="t-u">a</div><div class="lm-b a" id="t-a">b</div><div class="lm-bar"><input id="t-in"></div></div>';document.body.appendChild(box);
+    const bg=getComputedStyle(document.getElementById('t-sheet')).backgroundColor;const m=/rgb\((\d+), (\d+), (\d+)\)/.exec(bg);r.dark=!!m&&(+m[1]+ +m[2]+ +m[3])/3<60;
+    r.bub=getComputedStyle(document.getElementById('t-u')).backgroundColor!==getComputedStyle(document.getElementById('t-a')).backgroundColor;
+    r.inp=/rgba\(255, 255, 255, 0\.06\)/.test(getComputedStyle(document.getElementById('t-in')).backgroundColor);
+    box.remove();document.documentElement.removeAttribute('data-theme');return r;});
+  ok(lm.dark,'다크 모드에서 루미 시트 바탕이 어두움');
+  ok(lm.bub&&lm.inp,'말풍선(사용자/루미)과 입력칸도 다크 색');
+
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);
   await page.evaluate(()=>asSavePrep()); await page.waitForTimeout(400);

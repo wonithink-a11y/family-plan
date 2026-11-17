@@ -929,6 +929,40 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 [data-theme=dark] .sc-track{background:#2E3248}
 /* 다크 유리 카드 우선순위 보정(앞쪽 다크 규칙이 같은 선택자 점수로 이기던 문제) */
 :root[data-theme=dark] .card,:root[data-theme=dark] .evt-card,:root[data-theme=dark] .stat-section,:root[data-theme=dark] .wk-card,:root[data-theme=dark] .cal-popup,:root[data-theme=dark] .cal-wrap,:root[data-theme=dark] .stat,:root[data-theme=dark] .bk-section,:root[data-theme=dark] .guide-card,:root[data-theme=dark] .guide-common-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);box-shadow:none;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+/* 루미 시트·대화·음성 화면: A안 (밝은 시트가 다크 화면 위에 뜨던 문제 포함) */
+.as-sheet{border-radius:24px 24px 0 0}
+@media (min-width:768px){.as-sheet{border-radius:24px}}
+.as-pri{background:#3B55C8;box-shadow:none}
+.as-mic,.lm-mic{background:#3B55C8;box-shadow:none}
+.lm-mic.on,.as-mic.on{background:#D6335A}
+.lm-mic.sp{background:#16803C}
+.lm-b.u{background:#3B55C8}
+.lm-b.a{background:#EEF1FF}
+.as-ans{background:#F1F4FF}
+:root[data-theme=dark] .as-sheet{background:#14182F;border:1px solid rgba(255,255,255,.12);color:#ECEEF8;box-shadow:0 -10px 50px rgba(0,0,0,.5)}
+:root[data-theme=dark] .as-ic{background:rgba(255,255,255,.08);color:#C5CCEE}
+:root[data-theme=dark] .as-sub,:root[data-theme=dark] .as-note,:root[data-theme=dark] .lm-sys,:root[data-theme=dark] .as-mic-t,:root[data-theme=dark] .lm-stat,:root[data-theme=dark] .as-form label,:root[data-theme=dark] .as-set>label,:root[data-theme=dark] .as-adv label,:root[data-theme=dark] .as-adv summary,:root[data-theme=dark] .as-form label small,:root[data-theme=dark] .as-set label small,:root[data-theme=dark] .as-adv label small{color:#A9B1D6}
+:root[data-theme=dark] #as-text,:root[data-theme=dark] .as-form input,:root[data-theme=dark] .as-set input,:root[data-theme=dark] .as-set select,:root[data-theme=dark] .lm-bar input,:root[data-theme=dark] .as-adv input{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#ECEEF8}
+:root[data-theme=dark] #as-text:focus,:root[data-theme=dark] .as-form input:focus,:root[data-theme=dark] .as-set input:focus,:root[data-theme=dark] .as-set select:focus,:root[data-theme=dark] .lm-bar input:focus{border-color:#818CF8;background:rgba(255,255,255,.1)}
+:root[data-theme=dark] .as-ghost{background:transparent;border-color:rgba(255,255,255,.16);color:#ECEEF8}
+:root[data-theme=dark] .as-pri,:root[data-theme=dark] .as-mic,:root[data-theme=dark] .lm-mic,:root[data-theme=dark] .lm-b.u{background:#818CF8;color:#0A0E1F}
+:root[data-theme=dark] .lm-mic.on,:root[data-theme=dark] .as-mic.on{background:#F87171;color:#0A0E1F}
+:root[data-theme=dark] .lm-mic.sp{background:#22C55E;color:#04210F}
+:root[data-theme=dark] .as-chips button{background:rgba(255,255,255,.08);color:#C5CCEE}
+:root[data-theme=dark] .as-ex{background:rgba(255,255,255,.05);color:#A9B1D6}
+:root[data-theme=dark] .as-ex b{color:#C5CCEE}
+:root[data-theme=dark] .as-say{background:rgba(255,255,255,.07);color:#ECEEF8}
+:root[data-theme=dark] .as-ans{background:rgba(129,140,248,.14);color:#ECEEF8}
+:root[data-theme=dark] .as-ans-t{color:#C7D0FF}
+:root[data-theme=dark] .as-err{background:rgba(248,113,113,.14);color:#FCA5A5}
+:root[data-theme=dark] .lm-b.a{background:rgba(255,255,255,.08);color:#ECEEF8}
+:root[data-theme=dark] .lm-pend{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.35)}
+:root[data-theme=dark] .lm-pend-t{color:#FCD34D}
+:root[data-theme=dark] .lm-pend-s,:root[data-theme=dark] .lv-st,:root[data-theme=dark] .as-ttl,:root[data-theme=dark] .as-q{color:#ECEEF8}
+:root[data-theme=dark] .lm-send{background:rgba(129,140,248,.2);color:#C7D0FF}
+:root[data-theme=dark] .lv-orb{background:rgba(255,255,255,.1)}
+:root[data-theme=dark] .as-adv{border-top-color:rgba(255,255,255,.1)}
+:root[data-theme=dark] .as-ck{color:#C5CCEE!important}
 </style>
 </head>
 <body>
@@ -3883,7 +3917,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.15';
+const APP_VER='v4.16';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

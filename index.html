@@ -423,6 +423,32 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 [data-theme=dark] [style*="color:#333"],[data-theme=dark] [style*="color:#222"]{color:#D5D8E8!important}
 [data-theme=dark] [style*="color:#888"],[data-theme=dark] [style*="color:#AAA"]{color:#9AA0B8!important}
 [data-theme=dark] [style*="color:#BBB"],[data-theme=dark] [style*="color:#CCC"]{color:#6F7590!important}
+/* ── 이번 주 요약 / 검색 ── */
+.icon-btn{font-size:calc(14px*var(--fs));background:var(--bg);border-radius:20px;padding:4px 11px;border:1px solid var(--border)}
+.wk-card{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:var(--sh);margin-bottom:12px}
+.wk-title{font-size:calc(15px*var(--fs));font-weight:800}
+.wk-sub{font-size:calc(10px*var(--fs));font-weight:600;color:var(--muted);margin-left:4px}
+.wk-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.wk-chip{font-size:calc(12px*var(--fs));background:var(--bg);border-radius:20px;padding:4px 10px;color:var(--muted);font-weight:600}
+.wk-chip b{color:var(--text)}
+.wk-day{font-size:calc(11px*var(--fs));font-weight:800;color:var(--muted);margin:12px 0 4px;letter-spacing:.3px}
+.wk-row{display:flex;align-items:center;gap:7px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.wk-row:last-child{border-bottom:none}
+.wk-txt{flex:1;min-width:0;font-size:calc(13px*var(--fs));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-dim{font-size:calc(11px*var(--fs));color:var(--muted);font-weight:500}
+.wk-empty{text-align:center;color:var(--muted);font-size:calc(12px*var(--fs));padding:16px 0 6px}
+.srch-ov{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;padding-top:calc(var(--safe-top) + 8px)}
+.srch-bar{display:flex;gap:8px;align-items:center;padding:6px 12px 10px}
+.srch-bar .f-input{flex:1}
+.srch-x{font-size:calc(14px*var(--fs));font-weight:700;color:var(--p);padding:8px 4px}
+.srch-res{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 12px calc(24px + var(--safe-bot))}
+.srch-sec{font-size:calc(11px*var(--fs));font-weight:800;color:var(--muted);letter-spacing:1px;margin:12px 2px 6px}
+.srch-row{background:var(--card);border-radius:12px;padding:11px 12px;margin-bottom:8px;box-shadow:var(--sh);cursor:pointer}
+.srch-row:active{transform:scale(.99)}
+.srch-snip{font-size:calc(12px*var(--fs));color:var(--muted);margin-top:5px;line-height:1.5;word-break:break-all}
+.srch-fl{font-size:calc(10px*var(--fs));font-weight:800;background:var(--bg);border-radius:6px;padding:1px 6px;margin-right:6px}
+.srch-hint{text-align:center;color:var(--muted);font-size:calc(13px*var(--fs));line-height:1.8;padding:36px 12px 6px}
+mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 </style>
 </head>
 <body>
@@ -512,7 +538,7 @@ let S={
   calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),calDate:null,
   showDangerZone:false,fabOpen:false,events:[],evtOverlay:null,activeEvtId:null,evtForm:null,notif:typeof Notification!=='undefined'?Notification.permission:'denied',
   notifOn:localStorage.getItem('notifOff')!=='1', // 이 기기의 알림 켜기/끄기
-  members:[],templates:[],personFilter:null,
+  members:[],templates:[],personFilter:null,searchOpen:false,weekOpen:lsGet('weekOpen','1')==='1',
   theme:lsGet('theme','auto'),fs:lsGet('fs','md'), // 이 기기의 화면 설정
   showBanner:true,deferredPrompt:null,
   attachTargetId:null,imgViewSrc:null,txtAttachTargetId:null,
@@ -1064,6 +1090,136 @@ function removeTemplate(id){
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   이번 주 할 일 요약 (오늘부터 7일)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const WDAY=['일','월','화','수','목','금','토'];
+const isAllDone=i=>i.tasks.length>0&&i.tasks.every(t=>t.done);
+function dayLabel(ds,k){
+  const w=WDAY[new Date(parseD(ds)).getUTCDay()];
+  return(k===0?'오늘':k===1?'내일':fmt(ds))+` · ${w}`;
+}
+function weekSummary(){
+  const today=todayStr(),end=addDays(today,6);
+  const days=Array.from({length:7},(_,k)=>({k,ds:addDays(today,k),items:[],evs:[]}));
+  const items=visItems();
+  const overdue=items.filter(i=>{const d=getDays(i.dueDate);return d!==null&&d<0&&!isAllDone(i);})
+    .sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  items.forEach(i=>{
+    if(!i.dueDate||isAllDone(i))return;
+    const k=diffDays(today,i.dueDate);
+    if(k>=0&&k<7)days[k].items.push(i);
+  });
+  visEvents().flatMap(e=>occurrences(e,today,end)).forEach(e=>{
+    const s0=e.startDate||e.date,e0=e.endDate||s0;
+    days.forEach(d=>{if(d.ds>=s0&&d.ds<=e0)d.evs.push({ev:e,nth:diffDays(s0,d.ds)+1,total:diffDays(s0,e0)+1});});
+  });
+  days.forEach(d=>d.evs.sort((a,b)=>(a.ev.allDay===false?a.ev.startTime||'99':'00').localeCompare(b.ev.allDay===false?b.ev.startTime||'99':'00')));
+  return{overdue,days};
+}
+function toggleWeek(){S.weekOpen=!S.weekOpen;try{localStorage.setItem('weekOpen',S.weekOpen?'1':'0');}catch(e){}render();}
+function buildWeekCard(){
+  if(S.syncStatus==='connecting'&&!S.items.length&&!S.events.length)return'';
+  const {overdue,days}=weekSummary();
+  const nItems=days.reduce((a,d)=>a+d.items.length,0);
+  const evKeys=new Set();days.forEach(d=>d.evs.forEach(x=>evKeys.add(x.ev.id+'|'+(x.ev.startDate||x.ev.date))));
+  const head=`<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleWeek()">
+    <div class="wk-title">📌 이번 주 할 일 <span class="wk-sub">오늘부터 7일</span></div>
+    <span style="font-size:calc(14px*var(--fs));color:var(--muted)">${S.weekOpen?'▲':'▼'}</span></div>
+    <div class="wk-stats">
+      <span class="wk-chip">📝 마감 <b>${nItems}</b></span>
+      <span class="wk-chip">📅 일정 <b>${evKeys.size}</b></span>
+      ${overdue.length?`<span class="wk-chip" style="color:var(--danger)">⚠️ 지연 <b>${overdue.length}</b></span>`:''}
+    </div>`;
+  if(!S.weekOpen)return`<div class="wk-card">${head}</div>`;
+  const itemRow=i=>{
+    const sc=getColor(i.subject),bd=dBadge(getDays(i.dueDate),false,sc);
+    const nxt=i.tasks.find(t=>!t.done),dn=i.tasks.filter(t=>t.done).length;
+    return`<div class="wk-row" onclick="openDetail('${i.id}')">
+      <span class="subj-tag" style="background:${sc.tag};color:${sc.accent}">${esc(i.subject)}</span>
+      <span class="wk-txt">${nxt?esc(nxt.text):'모든 단계 완료'}<span class="wk-dim"> ${dn}/${i.tasks.length}</span></span>
+      ${personPill(i.person)}<span class="d-badge" style="background:${bd.c}">${bd.t}</span></div>`;};
+  const evRow=({ev,nth,total})=>{
+    const ci=evtCatInfo(ev.category||'일반'),col=ev.color||ci[2];
+    const when=ev.allDay===false&&ev.startTime?ev.startTime:'종일';
+    return`<div class="wk-row" onclick="openEvtDetail('${ev.id}','${ev.startDate||ev.date}')">
+      <span class="evt-cat" style="background:${col}22;color:${col}">${ci[0]}</span>
+      <span class="wk-txt">${esc(ev.title)}${total>1?`<span class="wk-dim"> ${nth}/${total}일차</span>`:''}${ev.repeat?' 🔁':''}<span class="wk-dim"> ${when}</span></span>
+      ${personPill(ev.person)}</div>`;};
+  const od=overdue.length?`<div class="wk-day" style="color:var(--danger)">⚠️ 기한 지난 미완료</div>${overdue.map(i=>{
+    const sc=getColor(i.subject);
+    return`<div class="wk-row" onclick="openDetail('${i.id}')"><span class="subj-tag" style="background:${sc.tag};color:${sc.accent}">${esc(i.subject)}</span><span class="wk-txt">${esc((i.tasks.find(t=>!t.done)||{}).text||'')}<span class="wk-dim"> ${i.tasks.filter(t=>t.done).length}/${i.tasks.length}</span></span>${personPill(i.person)}<span class="d-badge" style="background:#9E9E9E">${fmt(i.dueDate)}</span></div>`;}).join('')}`:'';
+  const body=days.filter(d=>d.items.length||d.evs.length).map(d=>
+    `<div class="wk-day">${dayLabel(d.ds,d.k)}</div>${d.items.map(itemRow).join('')}${d.evs.map(evRow).join('')}`).join('');
+  return`<div class="wk-card">${head}${od}${body||(overdue.length?'':'<div class="wk-empty">🎉 이번 주는 예정된 마감·일정이 없어요</div>')}</div>`;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   검색 — 수행평가(과목·단계·메모·담당자·첨부 텍스트) + 일정(제목·메모·담당자·분류)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const searchBtn=()=>`<button class="icon-btn" onclick="openSearch()" aria-label="검색">🔍</button>`;
+function hl(text,toks){
+  const raw=String(text||'');
+  if(!toks.length)return esc(raw);
+  const re=new RegExp('('+toks.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
+  return raw.split(re).map((p,i)=>i%2?`<mark>${esc(p)}</mark>`:esc(p)).join('');
+}
+function openSearch(){
+  if(document.getElementById('srch-ov'))return;
+  S.searchOpen=true;
+  const div=document.createElement('div');div.id='srch-ov';div.className='srch-ov';
+  div.innerHTML=`<div class="srch-bar"><input id="srch-in" class="f-input" type="search" placeholder="과목 · 단계 · 메모 · 담당자 · 일정 검색" oninput="runSearch(this.value)" autocomplete="off"><button class="srch-x" onclick="closeSearch()">닫기</button></div><div id="srch-res" class="srch-res"></div>`;
+  document.body.appendChild(div);
+  runSearch('');
+  setTimeout(()=>document.getElementById('srch-in')?.focus(),50);
+}
+function closeSearch(){const el=document.getElementById('srch-ov');if(el)el.remove();S.searchOpen=false;}
+function searchSet(v){const el=document.getElementById('srch-in');if(el){el.value=v;runSearch(v);el.focus();}}
+function goSearch(type,id,date){closeSearch();if(type==='i')openDetail(id);else openEvtDetail(id,date);}
+function runSearch(q){
+  const res=document.getElementById('srch-res');if(!res)return;
+  const toks=q.toLowerCase().split(/\s+/).filter(Boolean);
+  if(!toks.length){
+    const subs=[...new Set(S.items.map(i=>i.subject))].slice(0,12);
+    const chips=[...subs,...S.members.map(m=>m.name)];
+    res.innerHTML=`<div class="srch-hint">🔍 과목, 수행 단계, 메모, 담당자, 일정 제목을 검색해요<br><small>여러 단어는 띄어쓰기로 (예: <b>수학 보고서</b>)</small></div>${chips.length?`<div class="person-chips" style="justify-content:center;margin-top:14px">${chips.map(c=>`<div class="pchip" style="--c:var(--p)" data-q="${esc(c)}" onclick="searchSet(this.dataset.q)">${esc(c)}</div>`).join('')}</div>`:''}`;
+    return;
+  }
+  const today=todayStr();
+  const hit=fields=>{const hay=fields.map(f=>f[1]).join('\n').toLowerCase();return toks.every(t=>hay.includes(t))?fields:null;};
+  // 수행평가
+  const items=[];
+  S.items.forEach(i=>{
+    const f=hit([['과목',i.subject],['담당',i.person],['메모',i.memo],['날짜',fmt(i.dueDate)],
+      ...i.tasks.map(t=>['단계',t.text]),...(i.attachments||[]).filter(a=>a.type==='txt').map(a=>['첨부',a.data])]);
+    if(f)items.push({i,f});
+  });
+  items.sort((a,b)=>(isAllDone(a.i)-isAllDone(b.i))||(isAllDone(a.i)?b.i.dueDate.localeCompare(a.i.dueDate):a.i.dueDate.localeCompare(b.i.dueDate)));
+  // 일정
+  const evs=[];
+  S.events.forEach(e=>{
+    const o=nextOccurrence(e,today)||e;
+    const f=hit([['제목',e.title],['분류',e.category],['담당',e.person],['메모',e.memo],['날짜',fmtDateRange(o)]]);
+    if(f)evs.push({e:o,f});
+  });
+  evs.sort((a,b)=>(a.e.startDate||a.e.date).localeCompare(b.e.startDate||b.e.date));
+  const snip=f=>{ // 과목·날짜 외에 일치한 항목을 보여줌
+    const m=f.find(x=>x[0]!=='과목'&&x[0]!=='제목'&&x[0]!=='날짜'&&toks.some(t=>String(x[1]||'').toLowerCase().includes(t)));
+    return m?`<div class="srch-snip"><span class="srch-fl">${m[0]}</span>${hl(String(m[1]).slice(0,80),toks)}</div>`:'';};
+  const itemHtml=items.slice(0,50).map(({i,f})=>{
+    const sc=getColor(i.subject),bd=dBadge(getDays(i.dueDate),isAllDone(i),sc);
+    return`<div class="srch-row" onclick="goSearch('i','${i.id}')">
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="subj-tag" style="background:${sc.tag};color:${sc.accent}">${hl(i.subject,toks)}</span>${personPill(i.person)}<span class="wk-dim">📅 ${fmt(i.dueDate)}</span><span class="d-badge" style="background:${bd.c};margin-left:auto">${bd.t}</span></div>${snip(f)}</div>`;}).join('');
+  const evHtml=evs.slice(0,50).map(({e,f})=>{
+    const ci=evtCatInfo(e.category||'일반'),col=e.color||ci[2];
+    return`<div class="srch-row" onclick="goSearch('e','${e.id}','${e.startDate||e.date}')">
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="evt-cat" style="background:${col}22;color:${col}">${ci[0]} ${esc(e.category||'일반')}</span><b style="font-size:calc(14px*var(--fs))">${hl(e.title,toks)}${e.repeat?' 🔁':''}</b>${personPill(e.person)}</div>
+      <div class="wk-dim" style="margin-top:3px">📅 ${fmtDateRange(e)}</div>${snip(f)}</div>`;}).join('');
+  res.innerHTML=!items.length&&!evs.length
+    ?`<div class="srch-hint">😶 '${esc(q)}' 검색 결과가 없어요</div>`
+    :`${items.length?`<div class="srch-sec">📝 수행평가 ${items.length}</div>${itemHtml}`:''}${evs.length?`<div class="srch-sec">📅 일정 ${evs.length}</div>${evHtml}`:''}`;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    화면 설정 (다크모드 / 글자 크기) — 이 기기에만 저장
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const FS_MAP={sm:.9,md:1,lg:1.15,xl:1.3};
@@ -1195,7 +1351,7 @@ function buildListView(){
   <div class="hd-row">
     <div><div class="hd-title">패밀리 플랜</div></div>
     <div class="hd-right">
-      ${syncBadge()}
+      ${searchBtn()}${syncBadge()}
       ${notifBtn()}
     </div>
   </div>
@@ -1220,6 +1376,7 @@ function buildListView(){
   ${personFilterBar()}
 </header>
 <div class="screen">
+  ${buildWeekCard()}
   ${filtered.length===0?`<div class="empty"><div class="empty-ico">${S.syncStatus==='connecting'?'🔄':'📝'}</div><div class="empty-title">${S.syncStatus==='connecting'?'데이터 불러오는 중...':'수행평가가 없어요'}</div><div class="empty-hint">${S.syncStatus==='connecting'?'잠시만 기다려 주세요':'+ 버튼으로 추가해 보세요!'}</div></div>`:`<div class="grid">${filtered.map(buildCard).join('')}</div>`}
 </div>`;
 }
@@ -1382,7 +1539,7 @@ function buildCalView(){
 <header>
   <div class="hd-row" style="margin-bottom:12px">
     <div><div class="hd-title" style="display:flex;align-items:center;gap:7px"><svg class="nav-svg" width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#5B7FFF" fill-opacity=".18" stroke="#5B7FFF" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#5B7FFF" fill-opacity=".35"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><circle cx="7.5" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="12" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="16.5" cy="16.5" r="1.4" fill="#5B7FFF"/></svg><span>달력</span></div></div>
-    <div class="hd-right">${syncBadge()}</div>
+    <div class="hd-right">${searchBtn()}${syncBadge()}</div>
   </div>
   <div style="text-align:center;padding-bottom:8px">
     <span style="font-size:calc(16px*var(--fs));font-weight:800;color:var(--text)">${y}년 ${mn[m]}</span>
@@ -1496,7 +1653,7 @@ function buildEventsView(){
 <header>
   <div class="hd-row" style="margin-bottom:12px">
     <div><div class="hd-title" style="display:flex;align-items:center;gap:7px"><svg style="vertical-align:middle" width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#FF9500" fill-opacity=".18" stroke="#FF9500" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#FF9500" fill-opacity=".38"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#FF9500" stroke-width="2.3" stroke-linecap="round"/><rect x="6" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="14" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".75"/><rect x="10" y="14" width="4" height="4" rx="1.2" fill="#FF9500" fill-opacity=".32"/></svg><span>가족 일정</span></div></div>
-    <div class="hd-right">${syncBadge()}</div>
+    <div class="hd-right">${searchBtn()}${syncBadge()}</div>
   </div>
   ${personFilterBar()}
 </header>
@@ -2560,6 +2717,11 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('popstate', () => {
+  if(S.searchOpen){
+    closeSearch();
+    history.pushState({page:'app'}, '', '');
+    return;
+  }
   // 오버레이(시트)가 열려있으면 닫기
   if(S.overlay){
     closeOverlay();

@@ -963,6 +963,25 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 :root[data-theme=dark] .lv-orb{background:rgba(255,255,255,.1)}
 :root[data-theme=dark] .as-adv{border-top-color:rgba(255,255,255,.1)}
 :root[data-theme=dark] .as-ck{color:#C5CCEE!important}
+/* 웰컴·입력 시트(수행평가/일정 폼, 상세): A안 */
+.welcome-ico{width:84px;height:84px;margin:0 auto 14px;border-radius:26px;display:flex;align-items:center;justify-content:center;background:rgba(91,127,255,.12);color:#3B55C8}
+.welcome-card{border-radius:24px;border:1px solid var(--border)}
+.welcome-start-btn{background:#3B55C8;min-height:48px}
+.welcome-hint{color:#5B6396}
+.sheet{border-radius:24px 24px 0 0}
+@media (min-width:768px){.sheet{border-radius:24px}}
+.f-input{min-height:44px;border-radius:14px}
+.cancel-btn,.save-btn{min-height:44px;border-radius:14px}
+:root[data-theme=dark] .welcome{background:radial-gradient(700px 420px at 85% -10%,rgba(129,140,248,.28),transparent 60%),radial-gradient(600px 400px at 0% 110%,rgba(34,197,94,.10),transparent 60%),#0A0E1F}
+:root[data-theme=dark] .welcome-card{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+:root[data-theme=dark] .welcome-ico{background:rgba(129,140,248,.2);color:#C7D0FF}
+:root[data-theme=dark] .welcome-start-btn{background:#818CF8;color:#0A0E1F}
+:root[data-theme=dark] .welcome-hint{color:#A9B1D6}
+:root[data-theme=dark] .sheet{background:#14182F;border:1px solid rgba(255,255,255,.12)}
+:root[data-theme=dark] .f-input{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#ECEEF8}
+:root[data-theme=dark] .f-input:focus{border-color:#818CF8}
+:root[data-theme=dark] .f-label{color:#A9B1D6}
+:root[data-theme=dark] .cancel-btn{background:rgba(255,255,255,.08);color:#C5CCEE}
 </style>
 </head>
 <body>
@@ -3917,7 +3936,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.16';
+const APP_VER='v4.17';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -3930,17 +3949,17 @@ function syncBadge(){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function buildWelcome(){
   return`<div class="welcome">
-  <div class="welcome-ico">📚</div>
-  <div class="welcome-title">패밀리 플랜 🌹</div>
+  <div class="welcome-ico" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></div>
+  <div class="welcome-title">패밀리 플랜</div>
   <div class="welcome-desc">우리 가족 일정 &amp; 수행평가를 함께 관리해요.<br><b>가족 코드</b>를 입력하면 모든 기기에서<br>같은 데이터를 공유할 수 있어요.</div>
   <div class="welcome-card">
     <div class="f-label">가족 코드</div>
     <input id="fc-input" class="f-input" style="margin-top:6px;font-size:calc(18px*var(--fs));text-align:center;font-weight:800;letter-spacing:1px"
       placeholder="예: 우리가족2025" maxlength="20"
       onkeydown="if(event.key==='Enter')startWithCode()">
-    <div class="welcome-hint">가족 모두가 <b>같은 코드</b>를 입력하면<br>실시간으로 데이터가 공유됩니다 🔄<br>새 코드는 <b>8자 이상</b> · 추측하기 쉬운 코드는 안 돼요</div>
+    <div class="welcome-hint">가족 모두가 <b>같은 코드</b>를 입력하면<br>실시간으로 데이터가 공유됩니다<br>새 코드는 <b>8자 이상</b> · 추측하기 쉬운 코드는 안 돼요</div>
     <button class="welcome-start-btn" onclick="startWithCode()">시작하기 →</button>
-    <button class="bk-btn" style="margin:10px 0 0;justify-content:center;font-size:calc(13px*var(--fs))" onclick="fillGenCode()">🎲 안전한 코드 만들기</button>
+    <button class="bk-btn" style="margin:10px 0 0;justify-content:center;font-size:calc(13px*var(--fs))" onclick="fillGenCode()">안전한 코드 만들기</button>
   </div>
   ${S.syncStatus==='error'?`<div class="welcome-err">⚠️ ${esc(S.syncError||'오류')}<br><small>Firebase 콘솔 → 데이터베이스 및 스토리지 → Firestore Database를 먼저 활성화해주세요.</small></div>`:''}
 </div>`;

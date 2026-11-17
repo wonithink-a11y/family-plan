@@ -315,6 +315,11 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(lm.dark,'다크 모드에서 루미 시트 바탕이 어두움');
   ok(lm.bub&&lm.inp,'말풍선(사용자/루미)과 입력칸도 다크 색');
 
+  console.log('\n[7i] 웰컴 화면');
+  const wc=await page.evaluate(()=>{const h=buildWelcome();return{svg:/welcome-ico[^>]*><svg/.test(h),noEmoji:!/📚|🌹|🎲|🔄/.test(h),input:/id="fc-input"/.test(h)&&/maxlength="20"/.test(h)};});
+  ok(wc.svg&&wc.noEmoji,'웰컴 화면 로고는 SVG이고 이모지가 없음');
+  ok(wc.input,'가족 코드 입력칸은 그대로(20자 제한)');
+
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);
   await page.evaluate(()=>asSavePrep()); await page.waitForTimeout(400);

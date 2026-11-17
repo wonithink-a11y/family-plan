@@ -464,8 +464,9 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 header.hh>*{max-width:none;margin:0}
 header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 16px 6px;background:transparent;box-shadow:none}
 .hh-left{min-width:0}
-.hh-clock{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:clamp(16px,2.2vw,28px);min-width:0}
-.hh-time,.hh-date{font-size:clamp(32px,5.6vw,64px);font-weight:200;letter-spacing:-.04em;line-height:1.02;color:var(--text);white-space:nowrap}
+.hh-clock{display:flex;align-items:stretch;flex-wrap:wrap;gap:10px;min-width:0}
+.hh-time,.hh-date{display:inline-flex;align-items:center;gap:.28em;padding:2px clamp(12px,1.6vw,22px) 4px;border-radius:24px;background:rgba(91,127,255,.08);border:1px solid var(--border);font-size:clamp(28px,4.9vw,56px);font-weight:200;letter-spacing:-.04em;line-height:1.1;color:var(--text);white-space:nowrap}
+.hh-dow{color:#3B55C8;font-weight:300}
 .hh-time{font-variant-numeric:tabular-nums}
 .hh-leave{font-size:13px;color:#5B6396;margin-top:2px;min-height:1.2em}
 .hh-right{display:flex;align-items:center;gap:8px;padding-bottom:4px;flex-shrink:0}
@@ -512,6 +513,8 @@ header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-
 /* 다크 모드: 반투명 유리 카드 + 은은한 빛 번짐 */
 [data-theme=dark] .sec{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 [data-theme=dark] .app-wrap:has(.home-fit){background:radial-gradient(700px 420px at 85% -10%,rgba(129,140,248,.28),transparent 60%),radial-gradient(600px 400px at 0% 110%,rgba(34,197,94,.10),transparent 60%),#0A0E1F}
+[data-theme=dark] .hh-time,[data-theme=dark] .hh-date{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+[data-theme=dark] .hh-dow{color:#C7D0FF}
 [data-theme=dark] .hh-leave,[data-theme=dark] .wx-k,[data-theme=dark] .wx-s,[data-theme=dark] .lm-s{color:#A9B1D6}
 [data-theme=dark] .hh-ic{background:rgba(129,140,248,.2);color:#C7D0FF}
 [data-theme=dark] .wx-now,[data-theme=dark] .wx-day,[data-theme=dark] .wx-hr{background:rgba(255,255,255,.06)}
@@ -560,15 +563,18 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
   .screen.home-fit>*{max-width:1500px}
   header .hd-row{margin-bottom:4px!important}
   .home-fit .home-cols{column-count:auto;display:grid;flex:1;min-height:0;width:100%;gap:10px;
-    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1fr) auto auto}
+    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:auto minmax(0,1fr) auto}
   .home-fit .home-cols>*{margin:0!important;min-height:0;min-width:0}
   .home-fit .sec{overflow:auto;scrollbar-width:none}
   .home-fit .sec::-webkit-scrollbar{display:none}
   .home-fit .sec{padding:12px 16px;border-radius:24px;display:flex;flex-direction:column}
-  .home-fit .lm-card{flex-direction:row}
+  .home-fit .lm-card{flex-direction:row;gap:18px;padding:12px 18px}
+  .home-fit .orb{width:112px;height:112px}.home-fit .orb::after{inset:12px}.home-fit .orb-core{inset:25px}.home-fit .orb-core svg{width:58%;height:auto}
+  .home-fit .lm-t{font-size:18px}.home-fit .lm-s{font-size:14px;margin-top:2px}.home-fit .lm-act{margin-top:10px}
   header.hh{padding:10px 22px 4px}
   .home-fit .sec-h{margin-bottom:6px}
   .home-fit .note{margin-top:4px;font-size:10px;line-height:1.4}
+  .home-fit .wx-hr{padding:4px 0}.home-fit .wx-hrs{margin-top:6px}.home-fit .bf-tips{margin-top:8px}
   .home-fit .home-cols>:nth-child(1){grid-column:1;grid-row:1}          /* 날씨·브리핑 */
   .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2}          /* 루미 */
   .home-fit .home-cols>:nth-child(4){grid-column:2;grid-row:1 / span 3} /* 아침 루틴 */
@@ -2963,7 +2969,7 @@ function buildClockHeader(){
   const now=new Date(); const DOW=['일','월','화','수','목','금','토'];
   const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0');
   return`<header class="hh">
-  <div class="hh-left"><div class="hh-clock"><span class="hh-time" id="fp-time">${hh}:${mm}</span><span class="hh-date" id="fp-date">${now.getMonth()+1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일</span></div><div class="hh-leave" id="fp-leave">${asLeaveText(now)}</div></div>
+  <div class="hh-left"><div class="hh-clock"><span class="hh-time" id="fp-time">${hh}:${mm}</span><span class="hh-date" id="fp-date"><span>${now.getMonth()+1}월 ${now.getDate()}일</span> <span class="hh-dow">${DOW[now.getDay()]}요일</span></span></div><div class="hh-leave" id="fp-leave">${asLeaveText(now)}</div></div>
   <div class="hh-right">
     <button class="hh-ic" onclick="asBrief()" aria-label="오늘 브리핑 듣기"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
     <button class="hh-ic" onclick="asOpen('listen')" aria-label="말하기"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
@@ -2975,7 +2981,7 @@ function fpClockTick(){
   const t=document.getElementById('fp-time'); if(!t)return;
   const now=new Date(), DOW=['일','월','화','수','목','금','토'];
   const v=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'); if(t.textContent!==v)t.textContent=v;
-  const d=document.getElementById('fp-date'); const dv=(now.getMonth()+1)+'월 '+now.getDate()+'일 '+DOW[now.getDay()]+'요일'; if(d&&d.textContent!==dv)d.textContent=dv;
+  const d=document.getElementById('fp-date'); const dv=(now.getMonth()+1)+'월 '+now.getDate()+'일 '+DOW[now.getDay()]+'요일'; if(d&&d.textContent!==dv)d.innerHTML='<span>'+(now.getMonth()+1)+'월 '+now.getDate()+'일</span> <span class="hh-dow">'+DOW[now.getDay()]+'요일</span>';
   const l=document.getElementById('fp-leave'); if(l){const lv=asLeaveText(now); if(l.textContent!==lv)l.textContent=lv;}
 }
 setInterval(fpClockTick,10000);
@@ -3856,7 +3862,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.11';
+const APP_VER='v4.12';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

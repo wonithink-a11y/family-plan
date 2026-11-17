@@ -36,6 +36,7 @@ window.addEventListener('unhandledrejection',function(e){
 });
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 :root{
   --p:#5B7FFF;--bg:#F5F4FF;--card:#fff;--text:#1A1A2E;--muted:#888;
@@ -409,6 +410,9 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+// 익명 인증: 앱을 통한 접근만 허용 (Firestore 규칙에서 request.auth != null 요구)
+const authReady = firebase.auth().signInAnonymously()
+  .catch(e=>console.warn('익명 로그인 실패:',e));
 
 // 오프라인 지원 켜기 - 인터넷 없어도 마지막 데이터 볼 수 있음
 db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
@@ -569,6 +573,7 @@ function getDeviceId(){
 }
 async function backupFamilyCode(code){
   try{
+    await authReady;
     const did=getDeviceId();
     await db.collection('_device_codes').doc(did).set({
       familyCode:code,
@@ -578,6 +583,7 @@ async function backupFamilyCode(code){
 }
 async function restoreFamilyCode(){
   try{
+    await authReady;
     const did=getDeviceId();
     const snap=await db.collection('_device_codes').doc(did).get();
     if(snap.exists){
@@ -1542,7 +1548,7 @@ function buildBackupView(){
       <button class="bk-btn bk-danger" onclick="clearAll()"><span class="bk-ico">⚠️</span><div><div>전체 초기화</div><div class="bk-btn-desc">모든 데이터 삭제 (복구 불가)</div></div></button>
     </div>`:''}
   </div>
-  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.2 Auto-Restore Edition</p>
+  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.3 Anonymous-Auth Edition</p>
 </div>`;
 }
 
@@ -2016,25 +2022,28 @@ window.addEventListener('popstate', () => {
 });
 
 
-if(S.familyCode){
-  // 저장된 가족 코드가 있으면 바로 Firestore 연결
-  startSync(S.familyCode);
-} else {
-  // localStorage에 없으면 Firebase에서 복원 시도
-  document.getElementById('app').innerHTML=`
-    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#667eea,#764ba2);">
-      <div style="font-size:40px">👨‍👩‍👧‍👦</div>
-      <div style="color:#fff;font-weight:700;font-size:16px">데이터 복원 중...</div>
-      <div style="color:rgba(255,255,255,0.7);font-size:12px">잠시만 기다려주세요</div>
-    </div>`;
-  restoreFamilyCode().then(restored=>{
-    if(restored){
-      startSync(restored);
-    } else {
-      render(); // 복원 실패 시 웰컴 화면
-    }
-  });
-}
+// 인증 완료 후 시작 (실패해도 진행: 오프라인 대응)
+authReady.then(()=>{
+  if(S.familyCode){
+    // 저장된 가족 코드가 있으면 바로 Firestore 연결
+    startSync(S.familyCode);
+  } else {
+    // localStorage에 없으면 Firebase에서 복원 시도
+    document.getElementById('app').innerHTML=`
+      <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#667eea,#764ba2);">
+        <div style="font-size:40px">👨‍👩‍👧‍👦</div>
+        <div style="color:#fff;font-weight:700;font-size:16px">데이터 복원 중...</div>
+        <div style="color:rgba(255,255,255,0.7);font-size:12px">잠시만 기다려주세요</div>
+      </div>`;
+    restoreFamilyCode().then(restored=>{
+      if(restored){
+        startSync(restored);
+      } else {
+        render(); // 복원 실패 시 웰컴 화면
+      }
+    });
+  }
+});
 
 setInterval(checkAlarms,60000);
 </script>

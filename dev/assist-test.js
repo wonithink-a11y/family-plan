@@ -259,7 +259,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     r.dots=document.querySelectorAll('.st-dot').length;r.dotsOn=document.querySelectorAll('.st-dot.on').length;r.cnt=((S.reward&&S.reward.stampCount)||0)%STAMPS_PER_COUPON;
     r.stampBtn=!!document.querySelector('.st-btn');r.hero=!!document.querySelector('.hero');
     r.hrs=document.querySelectorAll('.wx-hr').length;r.hrSpan=S.wx.hours.length>=4;
-    const fs=id=>parseFloat(getComputedStyle(document.getElementById(id)).fontSize);r.sameSize=fs('fp-time')===fs('fp-date');
+    const fs=id=>parseFloat(getComputedStyle(document.getElementById(id)).fontSize);r.sameSize=fs('fp-time')>fs('fp-date')&&getComputedStyle(document.getElementById('fp-time')).backgroundColor!==getComputedStyle(document.getElementById('fp-date')).backgroundColor;
     r.stampH=document.querySelector('.st-card').offsetHeight;
     r.noTicket=document.querySelectorAll('.st-card .ticket').length===0&&!/사용하기/.test(document.querySelector('.st-card').textContent);
     document.querySelector('.st-open').click();await new Promise(x=>setTimeout(x,150));
@@ -268,7 +268,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(hm.now&&hm.day,'날씨 카드에 지금(현재 기온·상태)과 오늘(최저·최고·강수·등교 시간 기온)이 같이 나옴');
   ok(hm.orb,'루미 음성 구슬 버튼이 있음(말하기 시작)');
   ok(hm.hrs===6&&hm.hrSpan,'날씨 카드에 3시간 간격 예보 6칸(15시간 이상)이 보임: '+hm.hrs+'칸')
-  ok(hm.sameSize,'날짜·요일 글자 크기가 시간과 같음')
+  ok(hm.sameSize,'시간 칸이 날짜 칸보다 크고 색이 다름')
   ok(hm.stampH>0&&hm.stampH<=130,'도장 카드가 낮은 한 줄 구성(높이 '+hm.stampH+'px)');
   ok(hm.dots===10&&hm.dotsOn===hm.cnt,'도장 동그라미 10개 중 '+hm.cnt+'개가 채워짐: '+hm.dotsOn+'/'+hm.dots);
   ok(hm.stampBtn&&hm.noTicket&&!hm.hero,'도장 카드에는 도장 찍기 버튼만 있고 구입권 사용하기는 보이지 않음');

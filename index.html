@@ -553,6 +553,7 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 
 
 /* ── 말하는 도우미 · 날씨 · 수행평가 카드 ── */
+.app-ver{font-size:10px;font-weight:700;color:#9AA0BD;margin-left:6px;letter-spacing:.3px;vertical-align:middle}
 .hd-ic{width:38px;height:38px;border-radius:12px;background:#EEF1FF;color:#5B7FFF;font-size:18px;display:inline-flex;align-items:center;justify-content:center}
 .bf-wx{display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#EAF0FF,#F3EDFF);border-radius:16px;padding:14px 16px}
 .bf-ic{font-size:46px;line-height:1}
@@ -3613,11 +3614,12 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
+const APP_VER='v3.9';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
   const [cls,txt]=m[S.syncStatus]||m.offline;
-  return`<span class="sync-badge ${cls}" onclick="${S.syncStatus==='error'?'showSyncError()':''}">${txt}</span>`;
+  return`<span class="sync-badge ${cls}" onclick="${S.syncStatus==='error'?'showSyncError()':''}">${txt}</span><span class="app-ver">${APP_VER}</span>`;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -4600,7 +4602,7 @@ function buildBackupView(){
       <button class="bk-btn bk-danger" onclick="clearAll()"><span class="bk-ico">⚠️</span><div><div>전체 초기화</div><div class="bk-btn-desc">모든 데이터 삭제 (복구 불가)</div></div></button>
     </div>`:''}
   </div>
-  <p style="text-align:center;font-size:calc(11px*var(--fs));color:#CCC;margin-top:6px">v3.8 Family-Hub Edition</p>
+  <p style="text-align:center;font-size:calc(11px*var(--fs));color:#CCC;margin-top:6px">${APP_VER} Family-Hub Edition</p>
 </div>`;
 }
 

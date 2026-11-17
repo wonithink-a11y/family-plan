@@ -1731,16 +1731,17 @@ function asStopSpeak(){
   if(_playDone){const f=_playDone;_playDone=null;f();} if(_devDone){const f=_devDone;_devDone=null;f();}
   A.speaking=false; asRefreshSpeakBtn();
 }
-async function asSpeak(text,voice,pitch){
+async function asSpeak(text,voice,pitch,toast){
   asUnlock(); asStopSpeak();
   const id=_speakId; text=(text||'').replace(/[ \t]+/g,' ').trim(); if(!text)return;
   A.speaking=true; A.ttsNote=''; asRefreshSpeakBtn();
   const cfg=asCfg(); let ok=false;
   if(cfg.ttsMode!=='device'&&geminiKey()){
-    try{const a=await asTtsFetch(text,voice||cfg.voice||'Kore'); if(id!==_speakId)return; asRefreshSpeakBtn(); await asPlayPcm(a,id); ok=true;}
-    catch(e){ console.warn('Gemini TTS 실패',e); A.ttsNote='AI 목소리를 쓰지 못해 기기 음성으로 읽었어요 ('+(e.message||e)+')'; }
+    try{const a=await asTtsFetch(text,voice||cfg.voice||'Kore'); if(id!==_speakId)return; asRefreshSpeakBtn(); if(toast)asVoiceToast(voice||cfg.voice||'Kore'); await asPlayPcm(a,id); ok=true;}
+    catch(e){ console.warn('Gemini TTS 실패',e); A.ttsNote='AI 목소리를 쓰지 못해 기기 음성으로 읽었어요 ('+(e.message||e)+')'; if(toast)asVoiceToast(voice||cfg.voice||'Kore'); }
   } else if(cfg.ttsMode!=='device'){ A.ttsNote='Gemini 키가 없어 기기 음성으로 읽었어요. 목소리 설정은 Gemini 키가 있어야 적용돼요'; }
   else A.ttsNote='기기 음성 모드예요. 목소리 설정은 "자동"일 때 적용돼요';
+  if(!ok&&toast&&A.ttsNote)asVoiceToast(voice||cfg.voice||'Kore');
   if(!ok&&id===_speakId){asRefreshSpeakBtn();await asSpeakDevice(text,id,pitch,asGender(voice||cfg.voice));}
   if(id===_speakId){A.speaking=false;asRefreshSpeakBtn();}
 }
@@ -1954,13 +1955,17 @@ function asSaveSettings(){
   try{localStorage.removeItem('fp_wx');}catch(e){} S.wx=null; fetchWeather(true); asWake(); asWakeToggleSaved();
   A.mode=asAgentOn()?'chat':'main';A.notice='설정을 저장했어요.';A.msgs=[];A.hist=[];asRender(); if(A.mode==='chat')asEnterChat(); rewardRefresh();
 }
+function asVoiceToast(want){
+  if(!A.open||A.mode!=='settings')return;
+  asToast(A.ttsNote?('⚠ '+A.ttsNote):('요청한 목소리 '+want+' → AI 목소리: '+(A.ttsInfo||'?')+' · 앱 '+APP_VER));
+}
 function asTestMember(id){
   asCollectSettings(); mbSave(); const m=mbById(id); A.mode='settings';asRender();
-  asSpeak(m.name+' 목소리예요. 오늘 일정은 이렇게 읽어 드려요.',m.voice,m.pitch);
+  asSpeak(m.name+' 목소리예요. 오늘 일정은 이렇게 읽어 드려요.',m.voice,m.pitch,true);
 }
 function asTestVoice(){
   asCollectSettings(); A.mode='settings';asRender();
-  asSpeak('안녕하세요! 오늘 아침 브리핑을 들려드릴게요. 우산은 필요 없고, 가볍게 입고 가면 좋아요.');
+  asSpeak('안녕하세요! 오늘 아침 브리핑을 들려드릴게요. 우산은 필요 없고, 가볍게 입고 가면 좋아요.',undefined,undefined,true);
 }
 function asOpenExam(pub){window.open(pub?AS_EXAM_PUB:examUrl(),'_blank','noopener');}
 
@@ -3716,7 +3721,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.4';
+const APP_VER='v4.5';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

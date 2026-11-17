@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-plan-v3';
+const CACHE_NAME = 'family-plan-v4';
 const BASE = '/family-plan';
 const urlsToCache = [BASE+'/', BASE+'/index.html', BASE+'/manifest.json'];
 

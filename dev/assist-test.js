@@ -274,6 +274,24 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(hm.stampBtn&&hm.noTicket&&!hm.hero,'도장 카드에는 도장 찍기 버튼만 있고 구입권 사용하기는 보이지 않음');
   ok(hm.sheet&&hm.closed,'도장 동그라미를 누르면 구입권 시트(사용하기)가 열리고 닫힘');
 
+  console.log('\n[7f] 일정·수행평가 화면 A안 스타일');
+  const st=await page.evaluate(async()=>{const r={};document.documentElement.setAttribute('data-theme','dark');
+    setTab('list');setLsSub('list');await new Promise(x=>setTimeout(x,150));
+    const c=document.querySelector('.card');const cs=c&&getComputedStyle(c);
+    r.card=!!c&&cs.borderRadius==='24px'&&/rgba\(255, 255, 255, 0\.07\)/.test(cs.backgroundColor);
+    r.accentHidden=!document.querySelector('.card-accent')||getComputedStyle(document.querySelector('.card-accent')).display==='none';
+    const b=document.querySelector('.tabseg .seg button');r.seg=!!b&&parseFloat(getComputedStyle(b).minHeight)>=44;
+    r.cols=innerWidth>=1000&&matchMedia('(orientation:landscape)').matches?getComputedStyle(document.querySelector('.scr-list')).columnCount:'skip';
+    setTab('events');setEvSub('cal');await new Promise(x=>setTimeout(x,150));
+    const w=document.querySelector('.cal-wrap');r.cal=!!w&&getComputedStyle(w).borderRadius==='24px';
+    setLsSub('list');setTab('list');setLsSub('stats');await new Promise(x=>setTimeout(x,150));
+    r.stats=!!document.querySelector('.scr-stats .stat-section')&&!!document.querySelector('header .seg');
+    document.documentElement.removeAttribute('data-theme');setTab('stamp');return r;});
+  ok(st.card&&st.accentHidden,'수행평가 카드가 24px 둥근 유리 카드이고 왼쪽 색 막대는 없음');
+  ok(st.seg,'목록/통계 전환 막대 버튼이 44px 이상');
+  ok(st.cols==='skip'||st.cols==='2','가로 태블릿에서 목록이 2열: '+st.cols);
+  ok(st.cal&&st.stats,'달력 카드와 통계 화면도 같은 스타일');
+
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);
   await page.evaluate(()=>asSavePrep()); await page.waitForTimeout(400);

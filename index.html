@@ -523,6 +523,37 @@ header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-
 [data-theme=dark] .st-dot.on{background:#C7D0FF}
 [data-theme=dark] .st-btn{background:#fff;color:#1B1F4B}
 
+/* 일정·수행평가 화면: A안(벤토 다크 글라스) — 투명 머리말, 유리 카드, 알약 전환 막대 */
+header,[data-theme=dark] header{background:transparent;box-shadow:none}
+.tabseg{background:transparent;padding:8px 16px 4px}
+.tabseg .seg,header .seg{display:inline-flex;gap:4px;padding:4px;border-radius:18px;background:rgba(91,127,255,.1);border:1px solid var(--border)}
+.tabseg .seg button,header .seg button{min-height:44px;padding:0 22px;border:0;border-radius:14px;background:transparent;color:#4B5486;font-size:14px;font-weight:700;flex:none}
+.tabseg .seg button.sel,header .seg button.sel{background:#3B55C8;color:#fff}
+.sum-card{border-radius:16px;background:rgba(91,127,255,.08)}.sum-val{font-weight:300}
+.stat{border-radius:16px;background:rgba(91,127,255,.08);padding:8px 4px}
+.stat-val{font-weight:300;font-size:calc(22px*var(--fs));letter-spacing:-.5px}
+.filter-btn,.sort-btn{min-height:44px;padding:0 16px;font-size:13px;font-weight:700}
+.card,.evt-card,.stat-section,.wk-card,.cal-popup,.cal-wrap{border-radius:24px}
+.card-accent,.evt-accent{display:none}
+.card{padding:14px 16px}.evt-card{padding:13px 16px}
+.cal-wrap{background:var(--card);border:1px solid var(--border);padding:12px 14px}
+[data-theme=dark] .app-wrap{background:radial-gradient(700px 420px at 85% -10%,rgba(129,140,248,.28),transparent 60%),radial-gradient(600px 400px at 0% 110%,rgba(34,197,94,.10),transparent 60%),#0A0E1F}
+[data-theme=dark] .card,[data-theme=dark] .evt-card,[data-theme=dark] .stat-section,[data-theme=dark] .wk-card,[data-theme=dark] .cal-popup,[data-theme=dark] .cal-wrap,[data-theme=dark] .stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);box-shadow:none;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+[data-theme=dark] .tabseg .seg,[data-theme=dark] header .seg{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+[data-theme=dark] .tabseg .seg button,[data-theme=dark] header .seg button{color:#A9B1D6}
+[data-theme=dark] .tabseg .seg button.sel,[data-theme=dark] header .seg button.sel{background:#818CF8;color:#0A0E1F}
+[data-theme=dark] .sum-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+[data-theme=dark] .filter-btn,[data-theme=dark] .sort-btn{background:rgba(255,255,255,.07);color:#C5CCEE;border:1px solid rgba(255,255,255,.1)}
+[data-theme=dark] .filter-btn.active{background:#818CF8;color:#0A0E1F}
+[data-theme=dark] .sort-btn.active{background:#ECEEF8;color:#0A0E1F}
+[data-theme=dark] .cal-nav-btn{background:rgba(255,255,255,.08);color:#ECEEF8}
+.card,.evt-card,.stat-section,.wk-card{border:1px solid var(--border)}
+@media (min-width:768px){
+  header{padding-left:22px;padding-right:22px}.screen{padding-left:22px;padding-right:22px}.app-wrap .tabseg{padding-left:22px;padding-right:22px}
+  .stat{display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 8px;min-height:44px}
+  .stat-val{display:inline;font-size:calc(20px*var(--fs))}.stat-lbl{font-size:calc(12px*var(--fs))}
+}
+
 /* 가로 태블릿(1000px↑): 우리집 탭을 스크롤 없이 한 화면에 배치 (갤럭시 탭 S8+ 1138×712 기준) */
 @media (min-width:1000px) and (orientation:landscape){
   .screen.home-fit{overflow:hidden;display:flex;flex-direction:column;padding:10px 18px calc(66px + var(--safe-bot))!important}
@@ -581,6 +612,12 @@ header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-
   .nav-ico{font-size:24px!important}
   .screen{padding-bottom:28px!important}
   .screen.home-fit{padding-bottom:14px!important}
+  .scr-list,.scr-evt{column-count:2;column-gap:16px}
+  .scr-list>*,.scr-evt>*{break-inside:avoid}
+  .scr-list>.wk-card,.scr-evt>.sec-label{column-span:all}
+  .scr-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .scr-stats>*{margin:0!important;min-width:0}
+  .scr-stats>:first-child{grid-column:1 / -1}
   .fab{bottom:calc(24px + var(--safe-bot))!important}
   .fab-menu{bottom:calc(88px + var(--safe-bot))!important}
   .install-banner{margin-left:84px}
@@ -3766,7 +3803,7 @@ function buildScoreView(){
   const pend=pending.length?`<div class="stat-section"><div class="stat-section-title">📝 점수 입력 대기 <span style="font-weight:500;color:var(--muted);font-size:calc(11px*var(--fs))">탭해서 입력</span></div>${pending.slice(0,8).map(i=>{const sc=getColor(i.subject);return`<div class="wk-row" onclick="openDetail('${i.id}')"><span class="subj-tag" style="background:${sc.tag};color:${sc.accent}">${esc(i.subject)}</span><span class="wk-txt">${esc(i.tasks[0]?.text||'')}</span>${personPill(i.person)}<span class="wk-dim">${fmt(i.dueDate)}</span></div>`;}).join('')}${pending.length>8?`<div class="wk-dim" style="text-align:center;padding-top:6px">외 ${pending.length-8}개</div>`:''}</div>`:'';
   return`
 <header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">🏆 성적</div><div class="hd-title">성적 분석</div></div><div class="hd-right">${syncBadge()}</div></div>${statsTabs()}${personFilterBar()}</header>
-<div class="screen">
+<div class="screen scr-stats">
   ${semBar}
   ${summary}
   ${insight}
@@ -3819,7 +3856,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.10';
+const APP_VER='v4.11';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -3934,7 +3971,7 @@ function buildListView(){
   </div>
   ${personFilterBar()}
 </header>
-<div class="screen">
+<div class="screen scr-list">
   ${buildWeekCard()}
   ${filtered.length===0?`<div class="empty"><div class="empty-ico">${S.syncStatus==='connecting'?'🔄':'📝'}</div><div class="empty-title">${S.syncStatus==='connecting'?'데이터 불러오는 중...':'수행평가가 없어요'}</div><div class="empty-hint">${S.syncStatus==='connecting'?'잠시만 기다려 주세요':'+ 버튼으로 추가해 보세요!'}</div></div>`:`<div class="grid">${filtered.map(buildCard).join('')}</div>`}
 </div>`;
@@ -4105,7 +4142,7 @@ function buildCalView(){
   </div>
   ${personFilterBar()}
 </header>
-<div class="screen">
+<div class="screen scr-cal">
   <div class="cal-wrap" id="cal-wrap"
     ontouchstart="calTouchStart(event)"
     ontouchend="calTouchEnd(event)">
@@ -4170,7 +4207,7 @@ function buildStatsView(){
 
   return`
 <header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">📊 분석</div><div class="hd-title">수행평가 통계</div></div><div class="hd-right">${syncBadge()}</div></div>${statsTabs()}${personFilterBar()}</header>
-<div class="screen">
+<div class="screen scr-stats">
   <div class="summary-grid" style="margin-bottom:14px">
     <div class="sum-card"><div class="sum-val" style="color:var(--p)">${ITEMS.length}</div><div class="sum-lbl">전체</div></div>
     <div class="sum-card"><div class="sum-val" style="color:var(--ok)">${cr}%</div><div class="sum-lbl">전체 완료율</div></div>
@@ -4217,7 +4254,7 @@ function buildEventsView(){
   </div>
   ${personFilterBar()}
 </header>
-<div class="screen">
+<div class="screen scr-evt">
   ${upcoming.length===0&&past.length===0?`<div class="empty-evt"><div style="margin-bottom:10px"><svg width="56" height="56" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#FF9500" fill-opacity=".18" stroke="#FF9500" stroke-width="1.6"/><rect x="2" y="9" width="20" height="3.2" fill="#FF9500" fill-opacity=".38"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#FF9500" stroke-width="2" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#FF9500" stroke-width="2" stroke-linecap="round"/><rect x="5.5" y="13.5" width="4" height="4" rx="1" fill="#FF9500" fill-opacity=".7"/><rect x="14.5" y="13.5" width="4" height="4" rx="1" fill="#FF9500" fill-opacity=".7"/><rect x="10" y="13.5" width="4" height="4" rx="1" fill="#FF9500" fill-opacity=".3"/></svg></div><div style="font-size:calc(17px*var(--fs));font-weight:800;color:#555;margin-bottom:5px">등록된 일정이 없어요</div><div style="font-size:calc(12px*var(--fs));color:#AAA">+ 버튼으로 가족 일정을 추가해 보세요</div></div>`:''}
   ${upcoming.length>0?`<div style="font-size:calc(11px*var(--fs));font-weight:800;color:var(--muted);letter-spacing:1px;margin-bottom:10px">📅 다가오는 일정</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">${upcoming.map(buildEvtCard).join('')}</div>`:''}
   ${past.length>0?`<div style="font-size:calc(11px*var(--fs));font-weight:800;color:#CCC;letter-spacing:1px;margin-bottom:10px">🕐 지난 일정</div><div style="display:flex;flex-direction:column;gap:10px;opacity:.6">${past.map(buildEvtCard).join('')}</div>`:''}

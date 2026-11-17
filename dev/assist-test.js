@@ -54,9 +54,10 @@ const MOCK=`
     return real(url,opt);
   };
   // 음성 인식 가짜: start() 하면 window.__say 를 말한 것처럼 돌려준다
-  window.SpeechRecognition=function(){this.start=()=>{setTimeout(()=>{this.onstart&&this.onstart();
-    setTimeout(()=>{this.onresult&&this.onresult({resultIndex:0,results:[Object.assign([{transcript:window.__say||''}],{isFinal:true})]});
-      setTimeout(()=>this.onend&&this.onend(),30);},60);},10);};this.stop=()=>{};this.abort=()=>{};};
+  window.__AS_SILENCE=150; window.__AS_IDLE=500;
+  window.SpeechRecognition=function(){this.__n=0;this.start=()=>{const n=++this.__n;setTimeout(()=>{this.onstart&&this.onstart();
+    setTimeout(()=>{if(n===1)this.onresult&&this.onresult({resultIndex:0,results:[Object.assign([{transcript:window.__say||''}],{isFinal:true})]});
+      setTimeout(()=>this.onend&&this.onend(),30);},60);},10);};this.stop=()=>{setTimeout(()=>this.onend&&this.onend(),5);};this.abort=()=>{};};
   window.webkitSpeechRecognition=window.SpeechRecognition;
   // 기기 음성 가짜
   window.SpeechSynthesisUtterance=function(t){this.text=t;};
@@ -193,6 +194,26 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     window.__tts38fail=false;localStorage.setItem('fp_tts_model','gemini-3.8-flash-tts');return r;});
   ok(vz.log[0]==='Charon'&&vz.log[1]==='Aoede','선택한 목소리 이름이 요청마다 다르게 전달됨: '+vz.log.join(','));
   ok(vz.fallback==='Charon','3.1/2.5 폴백은 prebuiltVoiceConfig.voiceName 으로 목소리 지정');
+
+  console.log('\n[7b2] 말이 잠깐 끊겨도 바로 끝내지 않음 / 소리로 확인');
+  const sil=await page.evaluate(async()=>{const r={};window.__say='';asBack();window.__say='안녕하세요 오늘 날씨';A.text='';A.err='';asOpen('listen');
+    await new Promise(x=>setTimeout(x,110)); r.t110=A.listening;        // 인식이 한 번 끝났어도(30ms 뒤) 아직 듣는 중
+    await new Promise(x=>setTimeout(x,700)); r.late=A.listening; return r;});
+  ok(sil.t110===true,'인식이 끊겨도 다시 시작해서 계속 듣는 중(말 사이 쉼 허용)');
+  ok(sil.late===false,'마지막 말소리 뒤 일정 시간이 지나면 끝냄');
+  const conf=await page.evaluate(async()=>{const r={};asBack();const n0=S.items.length;
+    window.__say='영어 수행평가 다음 주 월요일까지 발표 준비';asOpen('listen');
+    for(let i=0;i<60&&A.mode!=='draft';i++)await new Promise(x=>setTimeout(x,25));
+    r.draft=A.mode==='draft';window.__say='응';
+    for(let i=0;i<80&&A.mode==='draft';i++)await new Promise(x=>setTimeout(x,25));
+    await new Promise(x=>setTimeout(x,300)); r.mode=A.mode; r.added=S.items.length-n0;
+    asBack();const n1=S.items.length;window.__say='국어 수행평가 다음 주 화요일까지 감상문';asOpen('listen');
+    for(let i=0;i<60&&A.mode!=='draft';i++)await new Promise(x=>setTimeout(x,25));
+    window.__say='아니';for(let i=0;i<80&&A.mode==='draft';i++)await new Promise(x=>setTimeout(x,25));
+    await new Promise(x=>setTimeout(x,200)); r.noAdded=S.items.length-n1; r.noMode=A.mode; return r;});
+  ok(conf.draft,'말로 등록하면 확인 카드가 뜸');
+  ok(conf.mode==='result'&&conf.added===1,'"응"이라고 답하면 버튼 없이 등록됨: mode='+conf.mode+' 추가='+conf.added);
+  ok(conf.noAdded===0&&conf.noMode!=='draft','"아니"라고 답하면 등록하지 않고 닫음: 추가='+conf.noAdded+' mode='+conf.noMode);
 
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);

@@ -47,11 +47,12 @@ const MOCK=`
   };
   // 음성 인식: 한 번짜리는 __sayQ 에서 꺼내 말하고, continuous(호출어)는 테스트가 직접 결과를 밀어 넣는다
   window.__recs=[]; window.__sayQ=[];
+  window.__AS_SILENCE=150;window.__AS_IDLE=500;
   window.SpeechRecognition=function(){window.__recs.push(this);
     this.start=()=>{ if(this.continuous){this.__active=true;return;}
-      setTimeout(()=>{this.onstart&&this.onstart();const say=window.__sayQ.length?window.__sayQ.shift():'';
+      setTimeout(()=>{this.onstart&&this.onstart();const say=((this.__n=(this.__n||0)+1)===1&&window.__sayQ.length)?window.__sayQ.shift():'';
         setTimeout(()=>{if(say)this.onresult&&this.onresult({resultIndex:0,results:[Object.assign([{transcript:say}],{isFinal:true})]});setTimeout(()=>this.onend&&this.onend(),30);},60);},10);};
-    this.stop=()=>{};this.abort=()=>{this.__active=false;};};
+    this.stop=()=>{setTimeout(()=>this.onend&&this.onend(),5);};this.abort=()=>{this.__active=false;};};
   window.webkitSpeechRecognition=window.SpeechRecognition;
   window.SpeechSynthesisUtterance=function(t){this.text=t;};
   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[],cancel(){},speak(u){window.__spoken.push(u.text);setTimeout(()=>u.onend&&u.onend(),5);}}});

@@ -709,8 +709,9 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 .w-kid .w-dd{font-size:clamp(14px,1.4vw,18px);padding:7px 0}
 .w-kid .w-dd-b{min-width:54px;font-size:12px;padding:5px 0}
 .w-kid .w-stamp{max-width:42px;font-size:18px}
-.w-kid .w-tools{margin-top:14px;flex-wrap:wrap}
-.w-kid .w-tool{padding:8px 14px!important}
+.w-kid .w-tools{margin-top:10px;flex-wrap:wrap}
+.w-kid .w-tool{padding:6px 12px!important;white-space:nowrap}
+@media (min-width:1100px){.w-kid .w-rt{padding:6px 0}.w-kid .w-dd{padding:5px 0}}
 @media (min-width:1100px){
   .w-lanes{flex:1;min-height:0;grid-template-columns:1fr 1fr 1.9fr}
   .w-kid-in{grid-template-columns:1fr 1fr}
@@ -1635,13 +1636,15 @@ async function asIdbPut(k,v){
 // base64 → {pcm:Int16Array, rate}. WAV(RIFF) 이면 헤더를 건너뛰고, 아니면 헤더 없는 PCM 으로 본다.
 function asDecodeAudio(b64,mime){
   const bin=atob(b64); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-  let off=0, rate=24000;
+  let off=0, rate=24000, end=u.length;
   const mr=/rate=(\d+)/.exec(mime||''); if(mr)rate=+mr[1];
   if(u.length>44&&u[0]===0x52&&u[1]===0x49&&u[2]===0x46&&u[3]===0x46){
     const dv=new DataView(u.buffer); rate=dv.getUint32(24,true); let p=12; off=44;
-    while(p+8<=u.length){const id=String.fromCharCode(u[p],u[p+1],u[p+2],u[p+3]); const sz=dv.getUint32(p+4,true); if(id==='data'){off=p+8;break;} p+=8+sz+(sz%2);}
+    while(p+8<=u.length){const id=String.fromCharCode(u[p],u[p+1],u[p+2],u[p+3]); const sz=dv.getUint32(p+4,true);
+      if(id==='data'){off=p+8; if(sz>0&&sz!==0xFFFFFFFF&&off+sz<=u.length)end=off+sz; break;}   // data 조각 뒤의 다른 조각(LIST 등)은 소리가 아니다
+      p+=8+sz+(sz%2);}
   }
-  const n=Math.floor((u.length-off)/2); const dv2=new DataView(u.buffer); const pcm=new Int16Array(n);
+  const n=Math.floor((end-off)/2); const dv2=new DataView(u.buffer); const pcm=new Int16Array(n);
   for(let i=0;i<n;i++)pcm[i]=dv2.getInt16(off+i*2,true);
   return{pcm,rate};
 }
@@ -1668,7 +1671,19 @@ function asFindAudio(data){
   if(part){const inl=part.inlineData||part.inline_data;return{data:inl.data,mime:inl.mimeType||inl.mime_type||''};}
   return null;
 }
-async function asTtsFetch(text,voice){
+// Gemini 음성은 무료 구간에서 분당 요청 수 한도가 낮다. 요청을 한 줄로 세우고(동시에 여러 개 보내지 않음),
+// 한도(429)에 걸리면 서버가 알려 준 시간(RetryInfo.retryDelay)만큼 기다렸다가 다시 시도한다. 그래도 안 되면 기기 음성으로 대신한다.
+let _ttsQ=Promise.resolve();
+function asTtsRetryDelay(body){
+  try{const d=((body&&body.error&&body.error.details)||[]).find(x=>x&&x.retryDelay); if(d){const m=/([\d.]+)s/.exec(d.retryDelay); if(m)return Math.ceil(+m[1]);}}catch(e){}
+  return 0;
+}
+const asSleep=ms=>new Promise(r=>setTimeout(r,ms));
+function asTtsFetch(text,voice){
+  const run=()=>asTtsFetch1(text,voice);
+  const p=_ttsQ.then(run,run); _ttsQ=p.catch(()=>{}); return p;
+}
+async function asTtsFetch1(text,voice){
   const key='v2|'+voice+'|'+asHash(text); const hit=await asIdbGet(key); if(hit){A.ttsInfo=(hit.model||'저장된 소리')+' · '+voice;return hit;}
   const k=geminiKey(); let lastErr='TTS 모델을 찾지 못했어요';
   for(const c of asTtsChain(text,voice)){
@@ -1676,7 +1691,14 @@ async function asTtsFetch(text,voice){
     try{res=await asFetch(c.url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}
     catch(e){throw new Error('네트워크 오류');}
     if(res.status===401||res.status===403)throw new Error('Gemini 키 권한 오류('+res.status+')');
-    if(res.status===429)throw new Error('Gemini 음성 사용량 한도');
+    if(res.status===429){   // 한도: 알려 준 시간(최대 30초) 기다렸다가 같은 요청을 한 번 더
+      let body=null; try{body=await res.json();}catch(e){}
+      const wait=Math.min(30,asTtsRetryDelay(body)||(window.__AS_RETRY||8)); A.ttsNote='Gemini 음성 사용량 한도라 '+wait+'초 기다린 뒤 다시 시도해요'; asRefreshSpeakBtn();
+      await asSleep((window.__AS_RETRY_MS!==undefined?window.__AS_RETRY_MS:wait*1000));
+      try{res=await asFetch(c.url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}catch(e){throw new Error('네트워크 오류');}
+      A.ttsNote='';
+      if(res.status===429)throw new Error('Gemini 음성 사용량 한도(무료 구간은 분당 요청 수가 적어요)');
+    }
     if(!res.ok){lastErr=c.model+' 응답 '+res.status;continue;}
     const data=await res.json();
     const au=asFindAudio(data);
@@ -1699,7 +1721,10 @@ function asPlayPcm(a,id){
       const pcm=a.pcm instanceof Int16Array?a.pcm:new Int16Array(a.pcm);
       const buf=_ac.createBuffer(1,pcm.length,a.rate||24000); const ch=buf.getChannelData(0);
       for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
-      const src=_ac.createBufferSource(); src.buffer=buf; src.playbackRate.value=asSpeed(); src.connect(_ac.destination);
+      const src=_ac.createBufferSource(); src.buffer=buf; src.playbackRate.value=asSpeed();
+      const g=_ac.createGain(), sp=asSpeed(), dur=buf.duration/sp, t0=_ac.currentTime;
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(1,t0+0.02); g.gain.setValueAtTime(1,Math.max(t0+0.02,t0+dur-0.04)); g.gain.linearRampToValueAtTime(0,t0+dur);
+      src.connect(g); g.connect(_ac.destination);
       src.onended=()=>{if(_curSrc===src)_curSrc=null;_playDone=null;res();};
       if(id!==_speakId){res();return;}
       _curSrc=src; _playDone=res; src.start();
@@ -3721,7 +3746,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.5';
+const APP_VER='v4.6';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

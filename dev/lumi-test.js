@@ -41,11 +41,12 @@ const MOCK=`
     url=String(url); window.__calls.push(url.slice(0,300));
     if(url.includes('apis.data.go.kr'))return J({response:{header:{resultCode:'00',resultMsg:'OK'},body:{items:{item:kma()}}}});
     if(url.includes('open-meteo'))return J({},500);
-    if(url.includes('generativelanguage')&&/tts/.test(url)){
+    if(url.includes('generativelanguage')&&(/tts/.test(url)||url.includes('/interactions'))){
       const n=7200,buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);const w=(o,s)=>[...s].forEach((c,i)=>dv.setUint8(o+i,c.charCodeAt(0)));
       w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,24000,true);dv.setUint32(28,48000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
       for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.round(Math.sin(i/12)*8000),true);
       let b='';new Uint8Array(buf).forEach(x=>b+=String.fromCharCode(x));
+      if(url.includes('/interactions'))return J({steps:[{type:'model_output',content:[{type:'audio',data:btoa(b)}]}]});
       return J({candidates:[{content:{parts:[{inlineData:{mimeType:'audio/wav',data:btoa(b)}}]}}]});
     }
     if(url.includes('generativelanguage')){const body=JSON.parse(opt.body);window.__gemLog.push(body);return J(window.__gemHandler(body));}
@@ -160,10 +161,10 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   ok(await ev(()=>Object.values(window.__store).some(d=>d&&d.text==='리코더 케이스')),'확인 버튼으로도 실행됨(준비물 요청 저장)');
 
   console.log('\n[6] 연속 대화(마이크 → 답 읽기 → 다시 듣기)');
-  const ttsBefore=await ev(()=>window.__calls.filter(u=>/tts/.test(u)).length);
+  const ttsBefore=await ev(()=>window.__calls.filter(u=>/tts|\/interactions/.test(u)).length);
   await ev(()=>{window.__sayQ=['오늘 수행평가 뭐 있어?','',''];asClose();asOpen('listen');});
   await page.waitForFunction(()=>!A.conv,null,{timeout:15000});
-  bub=await ev(()=>({u:A.msgs.filter(m=>m.r==='u').map(m=>m.t),sys:A.msgs.filter(m=>m.r==='s').length,tts:window.__calls.filter(u=>/tts/.test(u)).length}));
+  bub=await ev(()=>({u:A.msgs.filter(m=>m.r==='u').map(m=>m.t),sys:A.msgs.filter(m=>m.r==='s').length,tts:window.__calls.filter(u=>/tts|\/interactions/.test(u)).length}));
   ok(bub.u.includes('오늘 수행평가 뭐 있어?'),'말한 내용이 대화에 들어감');
   ok(bub.tts>ttsBefore,'답을 소리로 읽음(TTS 호출)');
   ok(bub.sys===1,'말이 두 번 연속 없으면 대화를 멈추고 안내');

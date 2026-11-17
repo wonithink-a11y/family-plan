@@ -384,23 +384,23 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 
 /* 우리집 탭 · 벽걸이 화면 (루틴 · 도장 · 준비물) */
 .nav-dot{position:absolute;top:-2px;right:-5px;width:8px;height:8px;border-radius:50%;background:#FF5252;box-shadow:0 0 0 2px #fff}
-.hero{position:relative;overflow:hidden;border-radius:24px;padding:20px;margin-bottom:14px;color:#fff;
+.hero{position:relative;overflow:hidden;border-radius:20px;padding:14px 16px;margin-bottom:12px;color:#fff;
   background:radial-gradient(420px 220px at 105% -20%,rgba(167,139,250,.55),transparent 60%),linear-gradient(135deg,#1B2149 0%,#2D2A6E 55%,#43308F 100%);
   box-shadow:0 14px 34px rgba(45,42,110,.35)}
 .hero-row{display:flex;align-items:center;gap:18px}
-.ring{--p:0;position:relative;width:104px;height:104px;border-radius:50%;flex-shrink:0;
+.ring{--p:0;position:relative;width:76px;height:76px;border-radius:50%;flex-shrink:0;
   background:conic-gradient(#9DB4FF calc(var(--p)*1%),rgba(255,255,255,.14) 0)}
-.ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:#262866}
+.ring::before{content:"";position:absolute;inset:7px;border-radius:50%;background:#262866}
 .ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ring-n{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.ring-n{font-size:22px;font-weight:800;letter-spacing:-1px;line-height:1}
 .ring-n small{font-size:14px;font-weight:600;opacity:.6}
 .hero-k{font-size:11px;letter-spacing:1.4px;font-weight:700;color:#B7C3FF;margin-bottom:6px}
-.hero-big{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
+.hero-big{font-size:19px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
 .hero-sub{font-size:12px;color:#B7C3FF;margin-top:6px;line-height:1.5}
-.pips{display:flex;gap:6px;margin:16px 0 14px}
+.pips{display:flex;gap:4px;margin:10px 0 10px}
 .pip{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.16)}
 .pip.on{background:linear-gradient(90deg,#9DB4FF,#C4B5FD);box-shadow:0 0 12px rgba(157,180,255,.6)}
-.hero-btn{width:100%;border-radius:14px;padding:13px;font-size:15px;font-weight:800;color:#1B2149;
+.hero-btn{width:100%;border-radius:12px;padding:10px;font-size:14px;font-weight:800;color:#1B2149;
   background:linear-gradient(135deg,#fff,#E4E9FF);box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .hero-btn:active{transform:scale(.98)}
 .sec{background:#fff;border:1px solid #ECEEF8;border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 2px 14px rgba(40,50,120,.05)}
@@ -456,9 +456,9 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .nav-ico{font-size:24px}
   .home-cols{column-count:2;column-gap:20px}
   .home-cols>*{break-inside:avoid}
-  .hero{padding:26px}
-  .ring{width:128px;height:128px}.ring::before{inset:11px}
-  .ring-n{font-size:38px}.hero-big{font-size:30px}.hero-row{gap:24px}
+  .hero{padding:16px 20px}
+  .ring{width:84px;height:84px}.ring::before{inset:8px}
+  .ring-n{font-size:26px}.hero-big{font-size:21px}.hero-row{gap:18px}
   .sec{padding:20px}
   .rt-row{padding:14px 2px}.rt-txt{font-size:16px}.rt-chk{width:28px;height:28px}
   .prep-t,.ticket-t{font-size:15px}
@@ -466,13 +466,32 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 @media (max-width:767px){.home-cols{column-count:1}}
 
 
+
+/* 다크 모드: 우리집 탭(루틴·도장·준비물·브리핑) */
+[data-theme=dark] .sec,[data-theme=dark] .tabseg{background:var(--card);border-color:var(--border);box-shadow:none}
+[data-theme=dark] .sec-t,[data-theme=dark] .hd-sub,[data-theme=dark] .note,[data-theme=dark] .app-ver{color:#9AA0C8}
+[data-theme=dark] .sec-pill,[data-theme=dark] .sec-btn,[data-theme=dark] .hd-ic{background:#2A2F58;color:#9DB4FF}
+[data-theme=dark] .sec-pill.ok{background:#14382B;color:#4ADE9E}
+[data-theme=dark] .ghost-btn,[data-theme=dark] .bf-act button{background:#262A42;border-color:var(--border);color:#C5CCEE}
+[data-theme=dark] .rt-prog{background:#2E3248}
+[data-theme=dark] .rt-row,[data-theme=dark] .prep-row,[data-theme=dark] .as-row,[data-theme=dark] .log-row{border-bottom-color:#2E3248}
+[data-theme=dark] .rt-chk{border-color:#4A4F6A;background:transparent}
+[data-theme=dark] .rt-row.on .rt-txt{color:#6F7590}
+[data-theme=dark] .ticket{background:#262A42;border-color:var(--border)}
+[data-theme=dark] .ticket-s,[data-theme=dark] .prep-s,[data-theme=dark] .as-rs,[data-theme=dark] .log-row span:last-child{color:#8A90B8}
+[data-theme=dark] .bf-wx{background:linear-gradient(135deg,#24305E,#30295A)}
+[data-theme=dark] .bf-t{color:#ECEEF8}[data-theme=dark] .bf-t small,[data-theme=dark] .bf-s{color:#A9B4E6}
+[data-theme=dark] .bf-chip{background:#2A2E55;color:#C5CCEE}
+[data-theme=dark] .mini-btn{background:#2A2E45!important}
+[data-theme=dark] .hero{box-shadow:none}
+
 /* 가로 태블릿(1000px↑): 우리집 탭을 스크롤 없이 한 화면에 배치 (갤럭시 탭 S8+ 1138×712 기준) */
 @media (min-width:1000px) and (orientation:landscape){
   .screen.home-fit{overflow:hidden;display:flex;flex-direction:column;padding:10px 18px calc(66px + var(--safe-bot))!important}
   .screen.home-fit>*{max-width:1500px}
   header .hd-row{margin-bottom:4px!important}
   .home-fit .home-cols{column-count:auto;display:grid;flex:1;min-height:0;width:100%;gap:10px;
-    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1.75fr) minmax(0,1fr) minmax(0,.85fr)}
+    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1fr) auto auto}
   .home-fit .home-cols>*{margin:0!important;min-height:0;min-width:0}
   .home-fit .sec,.home-fit .hero{overflow:auto;scrollbar-width:none}
   .home-fit .sec::-webkit-scrollbar{display:none}
@@ -480,17 +499,17 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .home-fit .sec-h{margin-bottom:6px}
   .home-fit .note{margin-top:4px;font-size:10px;line-height:1.4}
   .home-fit .home-cols>:nth-child(1){grid-column:1;grid-row:1}          /* 날씨·브리핑 */
-  .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2 / span 2} /* 도장 */
+  .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2}          /* 도장(작게) */
   .home-fit .home-cols>:nth-child(4){grid-column:2;grid-row:1 / span 3} /* 아침 루틴 */
   .home-fit .home-cols>:nth-child(2){grid-column:3;grid-row:1}          /* 수행평가 */
-  .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2}          /* 준비물 */
-  .home-fit .home-cols>:nth-child(6){grid-column:3;grid-row:3}          /* 구입권 */
+  .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2 / span 2}  /* 준비물 */
+  .home-fit .home-cols>:nth-child(6){grid-column:1;grid-row:3}          /* 구입권 */
   .home-fit .home-cols>:nth-child(7){display:none}                      /* 최근 도장(공간 부족) */
   .home-fit .ghost-btn{margin:0!important;padding:7px;font-size:12px}
-  .home-fit .hero{padding:14px 18px;border-radius:18px;display:flex;flex-direction:column;justify-content:center}
-  .home-fit .ring{width:92px;height:92px}.home-fit .ring::before{inset:8px}
-  .home-fit .ring-n{font-size:28px}.home-fit .hero-big{font-size:22px}.home-fit .hero-row{gap:16px}
-  .home-fit .pips{margin:10px 0}.home-fit .hero-btn{padding:10px;font-size:14px}
+  .home-fit .hero{padding:10px 16px;border-radius:16px}
+  .home-fit .ring{width:64px;height:64px}.home-fit .ring::before{inset:6px}
+  .home-fit .ring-n{font-size:20px}.home-fit .hero-big{font-size:17px}.home-fit .hero-row{gap:14px}
+  .home-fit .hero-sub{margin-top:2px}.home-fit .pips{margin:8px 0}.home-fit .hero-btn{padding:8px;font-size:13px}
   .home-fit .rt-row{padding:7px 2px;gap:10px}.home-fit .rt-txt{font-size:14px}.home-fit .rt-chk{width:22px;height:22px;font-size:12px}
   .home-fit .prep-row{padding:6px 0}.home-fit .prep-t,.home-fit .ticket-t{font-size:13px}
   .home-fit .ticket{margin-bottom:4px}.home-fit .ticket-b{padding:7px 12px}.home-fit .ticket-l{width:50px}
@@ -1011,7 +1030,7 @@ function startSync(code){
    구입권이 중복 발급되지 않도록 한다 (구입권 id = cp{발급순번},
    루틴 도장 id = rt_{날짜} 라서 하루 한 번만 찍힌다).
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const STAMPS_PER_COUPON=5;
+const STAMPS_PER_COUPON=10;   // 도장 10개마다 책 구입권 (기존 5개에서 변경: 이미 모은 도장은 그대로 이어서 센다)
 const COUPON_TITLE='책 구입권';
 const DEFAULT_ROUTINE=['기상 · 이불 정리','세안 · 스킨케어 · 선크림','양치','교복 입고 머리 단장','아침 식사','오늘 시간표 · 준비물 챙기기','수행평가 · 제출물 확인'];
 const KIOSK=new URLSearchParams(location.search).get('view')==='wall'; // 벽걸이 화면
@@ -1623,34 +1642,47 @@ function asDecodeAudio(b64,mime){
   for(let i=0;i<n;i++)pcm[i]=dv2.getInt16(off+i*2,true);
   return{pcm,rate};
 }
+// Gemini TTS 요청 순서. 3.8 모델은 공식 문서의 Interactions API(/v1beta/interactions, speech_config:[{voice}]),
+// 3.1/2.5 는 generateContent(prebuiltVoiceConfig.voiceName). 목소리를 이름으로 정확히 지정해야 목소리 설정이 반영된다.
+// (예전 코드는 3.8 모델에 맞지 않는 형식을 보내 목소리가 무시되고 기본 목소리 하나로만 나왔다.)
+const G_API='https://generativelanguage.googleapis.com/v1beta/';
 function asTtsChain(text,voice){
-  const style='warm, clear and friendly, like a kind older sister greeting in the morning';
-  const mk=(model,fmt)=>({model,body:fmt==='new'
-    ?{contents:[{role:'user',parts:[{text,speech_metadata:{style}}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{voice}}}}
-    :{contents:[{parts:[{text:'Say in Korean in a warm, clear and friendly tone: '+text}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}});
-  const chain=[mk('gemini-3.8-flash-tts','new'),mk('gemini-3.1-flash-tts-preview','old'),mk('gemini-2.5-flash-preview-tts','old')];
+  const style='warm, clear and friendly';
+  const inter=model=>({model,url:G_API+'interactions',body:{model,input:[{type:'user_input',content:[{type:'text',text,annotations:[{type:'speech_metadata',style}]}]}],
+    response_format:{type:'audio'},generation_config:{speech_config:[{voice}]}}});
+  const gen=model=>({model,url:G_API+'models/'+model+':generateContent',body:{contents:[{parts:[{text:'Say in Korean in a warm, clear and friendly tone: '+text}]}],
+    generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}});
+  const chain=[inter('gemini-3.8-flash-tts'),gen('gemini-3.1-flash-tts-preview'),gen('gemini-2.5-flash-preview-tts')];
   let last=''; try{last=localStorage.getItem('fp_tts_model')||'';}catch(e){}
   const i=chain.findIndex(c=>c.model===last); if(i>0)chain.unshift(chain.splice(i,1)[0]);
   return chain;
 }
+// 응답에서 base64 오디오 찾기: Interactions(steps[].content[].data) 또는 generateContent(candidates[].content.parts[].inlineData)
+function asFindAudio(data){
+  const st=(data&&data.steps)||[];
+  for(let i=st.length-1;i>=0;i--){const c=(st[i].content||[]).filter(x=>x&&x.type==='audio'&&x.data); if(c.length)return{data:c[c.length-1].data,mime:c[c.length-1].mime_type||c[c.length-1].mimeType||''};}
+  const part=((data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts)||[]).find(p=>p.inlineData||p.inline_data);
+  if(part){const inl=part.inlineData||part.inline_data;return{data:inl.data,mime:inl.mimeType||inl.mime_type||''};}
+  return null;
+}
 async function asTtsFetch(text,voice){
-  const key=voice+'|'+asHash(text); const hit=await asIdbGet(key); if(hit)return hit;
+  const key='v2|'+voice+'|'+asHash(text); const hit=await asIdbGet(key); if(hit){A.ttsInfo=(hit.model||'저장된 소리')+' · '+voice;return hit;}
   const k=geminiKey(); let lastErr='TTS 모델을 찾지 못했어요';
   for(const c of asTtsChain(text,voice)){
     let res;
-    try{res=await asFetch('https://generativelanguage.googleapis.com/v1beta/models/'+c.model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}
+    try{res=await asFetch(c.url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}
     catch(e){throw new Error('네트워크 오류');}
     if(res.status===401||res.status===403)throw new Error('Gemini 키 권한 오류('+res.status+')');
     if(res.status===429)throw new Error('Gemini 음성 사용량 한도');
     if(!res.ok){lastErr=c.model+' 응답 '+res.status;continue;}
     const data=await res.json();
-    const part=((data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts)||[]).find(p=>p.inlineData||p.inline_data);
-    if(!part){lastErr=c.model+' 오디오 없음';continue;}
-    const inl=part.inlineData||part.inline_data;
-    const out=asDecodeAudio(inl.data,inl.mimeType||inl.mime_type);
+    const au=asFindAudio(data);
+    if(!au){lastErr=c.model+' 오디오 없음';continue;}
+    const out=asDecodeAudio(au.data,au.mime);
     if(!out.pcm.length){lastErr=c.model+' 빈 오디오';continue;}
     try{localStorage.setItem('fp_tts_model',c.model);}catch(e){}
-    asIdbPut(key,{pcm:out.pcm.buffer,rate:out.rate,at:Date.now()});
+    asIdbPut(key,{pcm:out.pcm.buffer,rate:out.rate,at:Date.now(),model:c.model});
+    A.ttsInfo=c.model+' · '+voice;
     return {pcm:out.pcm,rate:out.rate};
   }
   throw new Error(lastErr);
@@ -1671,13 +1703,15 @@ function asPlayPcm(a,id){
     }catch(e){rej(e);}
   });
 }
-function asSpeakDevice(text,id,pitch){
+const asGender=v=>{const f=AS_VOICES.find(x=>x[0]===v);return f&&/남성/.test(f[1])?'m':'f';};
+function asSpeakDevice(text,id,pitch,gender){
   return new Promise(res0=>{
     const res=()=>{_devDone=null;res0();}; _devDone=res;
     if(!('speechSynthesis' in window)){res();return;}
     const sents=(text.match(/[^.!?。\n]+[.!?。]?/g)||[text]).map(s=>s.trim()).filter(Boolean);
     const vs=speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang));
-    const v=vs.find(x=>/google|yuna|sun-?hi|heami|female|여/i.test(x.name))||vs[0];
+    const v=(gender==='m'&&vs.find(x=>/(?<!fe)male|남/i.test(x.name)))||vs.find(x=>/google|yuna|sun-?hi|heami|female|여/i.test(x.name))||vs[0];
+    if(gender==='m'&&pitch===undefined)pitch=0.85;   // 남성 목소리를 못 찾으면 톤만 낮춘다
     let i=0;
     const next=()=>{
       if(id!==_speakId||i>=sents.length){res();return;}
@@ -1700,10 +1734,11 @@ async function asSpeak(text,voice,pitch){
   A.speaking=true; A.ttsNote=''; asRefreshSpeakBtn();
   const cfg=asCfg(); let ok=false;
   if(cfg.ttsMode!=='device'&&geminiKey()){
-    try{const a=await asTtsFetch(text,voice||cfg.voice||'Kore'); if(id!==_speakId)return; await asPlayPcm(a,id); ok=true;}
+    try{const a=await asTtsFetch(text,voice||cfg.voice||'Kore'); if(id!==_speakId)return; asRefreshSpeakBtn(); await asPlayPcm(a,id); ok=true;}
     catch(e){ console.warn('Gemini TTS 실패',e); A.ttsNote='AI 목소리를 쓰지 못해 기기 음성으로 읽었어요 ('+(e.message||e)+')'; }
-  }
-  if(!ok&&id===_speakId)await asSpeakDevice(text,id,pitch);
+  } else if(cfg.ttsMode!=='device'){ A.ttsNote='Gemini 키가 없어 기기 음성으로 읽었어요. 목소리 설정은 Gemini 키가 있어야 적용돼요'; }
+  else A.ttsNote='기기 음성 모드예요. 목소리 설정은 "자동"일 때 적용돼요';
+  if(!ok&&id===_speakId){asRefreshSpeakBtn();await asSpeakDevice(text,id,pitch,asGender(voice||cfg.voice));}
   if(id===_speakId){A.speaking=false;asRefreshSpeakBtn();}
 }
 
@@ -1756,7 +1791,7 @@ function asParse(raw,now){
   return{kind:'ask',q:t0};
 }
 
-const A={open:false,mode:'main',text:'',interim:'',listening:false,speaking:false,viaVoice:false,busy:false,err:'',answer:'',answerTitle:'',draft:null,ttsNote:'',notice:'',q:'',msgs:[],hist:[],pending:null,turn:0,lastUser:'',conv:false,stat:'',noSpeech:0,live:null,segs:null,segsFor:'',replyVoice:null};
+const A={ttsInfo:'',open:false,mode:'main',text:'',interim:'',listening:false,speaking:false,viaVoice:false,busy:false,err:'',answer:'',answerTitle:'',draft:null,ttsNote:'',notice:'',q:'',msgs:[],hist:[],pending:null,turn:0,lastUser:'',conv:false,stat:'',noSpeech:0,live:null,segs:null,segsFor:'',replyVoice:null};
 let _rec=null;
 function asEnsureRoot(){
   let r=document.getElementById('as-root');
@@ -1809,9 +1844,9 @@ function asSpeakFloat(){
 }
 function asRefreshSpeakBtn(){
   asSpeakFloat();
+  const n=document.getElementById('as-ttsnote'); if(n)n.textContent=A.ttsNote||A.ttsInfo&&('AI 목소리: '+A.ttsInfo)||'';
   const b=document.getElementById('as-speak'); if(!b)return;
   b.textContent=A.speaking?'⏹ 멈추기':'🔊 다시 듣기'; b.onclick=A.speaking?asStopSpeak:asReplay;
-  const n=document.getElementById('as-ttsnote'); if(n)n.textContent=A.ttsNote||'';
 }
 function asReplay(){if(A.segs&&A.segsFor===A.answer)asSpeakSegs(A.segs);else asSpeak(A.answer);}
 
@@ -1921,6 +1956,7 @@ ${members().map(m=>`<div class="as-mb"><span class="as-mb-ic" style="background:
 <label>말하는 속도 <small>(느리면 올려 보세요)</small></label><select id="as-s-speed">${[0.8,0.9,1,1.1,1.15,1.25,1.4,1.6].map(x=>`<option value="${x}"${Math.abs(asSpeed()-x)<0.001?' selected':''}>${x===1?'보통 (1.0배)':x+'배'}</option>`).join('')}</select>
 <label>목소리</label><select id="as-s-voice">${AS_VOICES.map(v=>`<option value="${v[0]}"${cfg.voice===v[0]?' selected':''}>${v[1]}</option>`).join('')}</select>
 <button class="as-ghost" onclick="asTestVoice()">🔊 저장하고 미리 듣기</button>
+<div class="as-note" id="as-ttsnote">${esc(A.ttsNote||(A.ttsInfo?'AI 목소리: '+A.ttsInfo:''))}</div>
 <label>아침 브리핑 자동 재생 (벽걸이 화면)</label>
 <div class="as-inl"><label class="as-ck"><input type="checkbox" id="as-s-auto"${cfg.autoBrief?' checked':''}> 켜기</label><input type="time" id="as-s-btime" value="${esc(cfg.briefTime)}"><label class="as-ck"><input type="checkbox" id="as-s-wk"${cfg.weekdaysOnly?' checked':''}> 평일만</label></div>
 <label>등교 시각 (벽걸이 화면 카운트다운)</label><input type="time" id="as-s-leave" value="${esc(cfg.leave)}">
@@ -1963,7 +1999,7 @@ ${(!d.subject||!d.date)?'<div class="as-note" style="color:#E5484D">인식하지
   }else if(A.mode==='result'){
     body=`${A.q?`<div class="as-say">“${esc(A.q)}”</div>`:''}<div class="as-ans-t">${esc(A.answerTitle)}</div><div class="as-ans">${asHtml(A.answer)}</div>
 <div class="as-btns"><button class="as-ghost" id="as-speak" onclick="${A.speaking?'asStopSpeak()':'asReplay()'}">${A.speaking?'⏹ 멈추기':'🔊 다시 듣기'}</button><button class="as-ghost" onclick="asShare()">📤 공유·복사</button></div>
-<div class="as-note" id="as-ttsnote">${esc(A.ttsNote)}</div>
+<div class="as-note" id="as-ttsnote">${esc(A.ttsNote||(A.ttsInfo?'AI 목소리: '+A.ttsInfo:''))}</div>
 ${A.notice==='nokey'?'<div class="as-btns"><button class="as-pri" onclick="A.mode=\'settings\';A.notice=\'\';asRender()">⚙ 키 설정하러 가기</button></div>':(A.notice?`<div class="as-note">${esc(A.notice)}</div>`:'')}
 <div class="as-btns"><button class="as-pri" onclick="asBack()">다시 말하기</button></div>`;
   }else{
@@ -2081,13 +2117,14 @@ async function asSpeakSegs(segs){
   A.speaking=true; A.ttsNote=''; asRefreshSpeakBtn();
   const cfg=asCfg(), useGem=cfg.ttsMode!=='device'&&!!geminiKey();
   const fetchSeg=s=>useGem?asTtsFetch(s.text,asVoiceOf(s.who).voice).catch(e=>{A.ttsNote='AI 목소리를 쓰지 못해 기기 음성으로 읽었어요 ('+(e.message||e)+')';return null;}):Promise.resolve(null);
+  if(!useGem)A.ttsNote=cfg.ttsMode==='device'?'기기 음성 모드예요. 목소리 설정은 "자동"일 때 적용돼요':'Gemini 키가 없어 기기 음성으로 읽었어요. 목소리 설정은 Gemini 키가 있어야 적용돼요';
   let next=fetchSeg(merged[0]);
   for(let i=0;i<merged.length;i++){
     if(id!==_speakId)return;
     const a=await next; if(id!==_speakId)return;
     next=i+1<merged.length?fetchSeg(merged[i+1]):null;
     let ok=false; if(a){try{await asPlayPcm(a,id);ok=true;}catch(e){}}
-    if(!ok&&id===_speakId)await asSpeakDevice(merged[i].text,id,asVoiceOf(merged[i].who).pitch);
+    if(!ok&&id===_speakId){asRefreshSpeakBtn();const vo=asVoiceOf(merged[i].who);await asSpeakDevice(merged[i].text,id,vo.pitch,asGender(vo.voice));}
   }
   if(id===_speakId){A.speaking=false;asRefreshSpeakBtn();}
 }
@@ -3646,7 +3683,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.1';
+const APP_VER='v4.3';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

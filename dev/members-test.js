@@ -33,12 +33,13 @@ const MOCK=`
     url=String(url); window.__calls.push(url.slice(0,300));
     if(url.includes('apis.data.go.kr'))return J({response:{header:{resultCode:'00',resultMsg:'OK'},body:{items:{item:kma()}}}});
     if(url.includes('open-meteo'))return J({},500);
-    if(url.includes('generativelanguage')&&/tts/.test(url)){
-      {const b=JSON.parse(opt.body),sc=(b.generationConfig||{}).speechConfig||{},vc=sc.voiceConfig||{};window.__ttsVoices.push(vc.voice||(vc.prebuiltVoiceConfig||{}).voiceName);}
+    if(url.includes('generativelanguage')&&(/tts/.test(url)||url.includes('/interactions'))){
+      {const b=JSON.parse(opt.body),sc=(b.generationConfig||{}).speechConfig||{},vc=sc.voiceConfig||{};window.__ttsVoices.push(((b.generation_config||{}).speech_config||[{}])[0].voice||vc.voice||(vc.prebuiltVoiceConfig||{}).voiceName);}
       const n=7200,buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);const w=(o,s)=>[...s].forEach((c,i)=>dv.setUint8(o+i,c.charCodeAt(0)));
       w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,24000,true);dv.setUint32(28,48000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
       for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.round(Math.sin(i/12)*8000),true);
       let b='';new Uint8Array(buf).forEach(x=>b+=String.fromCharCode(x));
+      if(url.includes('/interactions'))return J({steps:[{type:'model_output',content:[{type:'audio',data:btoa(b)}]}]});
       return J({candidates:[{content:{parts:[{inlineData:{mimeType:'audio/wav',data:btoa(b)}}]}}]});
     }
     if(url.includes('generativelanguage')){const body=JSON.parse(opt.body);window.__gemLog.push(body);return J(window.__gemHandler(body));}

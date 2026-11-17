@@ -34,15 +34,17 @@ const MOCK=`
     const J=(o,s)=>new Response(JSON.stringify(o),{status:s||200,headers:{'Content-Type':'application/json'}});
     if(url.includes('apis.data.go.kr'))return J({response:{header:{resultCode:'00',resultMsg:'OK'},body:{items:{item:kma()}}}});
     if(url.includes('open-meteo'))return J({},500);
-    if(url.includes('generativelanguage')&&/tts/.test(url)){
+    if(url.includes('generativelanguage')&&(/tts/.test(url)||url.includes('/interactions'))){
       // 0.3초짜리 WAV(24kHz 16bit mono) — 헤더 있는 형식
       const n=7200,buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);
       const w=(o,s)=>[...s].forEach((c,i)=>dv.setUint8(o+i,c.charCodeAt(0)));
       w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,24000,true);dv.setUint32(28,48000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
       for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.round(Math.sin(i/12)*8000),true);
       let b='';new Uint8Array(buf).forEach(x=>b+=String.fromCharCode(x));
-      window.__ttsBody=JSON.parse(opt.body); window.__ttsUrl=url;
-      if(url.includes('3.8')&&window.__tts38fail)return J({error:{message:'nf'}},404);
+      window.__ttsBody=JSON.parse(opt.body); window.__ttsUrl=url; (window.__ttsLog=window.__ttsLog||[]).push({url,body:window.__ttsBody});
+      const is38=url.includes('/interactions');
+      if(is38&&window.__tts38fail)return J({error:{message:'nf'}},404);
+      if(is38)return J({steps:[{type:'model_output',content:[{type:'audio',data:btoa(b)}]}]});
       return J({candidates:[{content:{parts:[{inlineData:{mimeType:'audio/wav',data:btoa(b)}}]}}]});
     }
     if(url.includes('generativelanguage')){
@@ -179,8 +181,18 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(after.saved===4&&after.last&&after.last.subject==='수학'&&after.last.dueDate==='2026-11-27'||(after.saved===4&&after.last&&after.last.subject==='수학'),'Firestore(스텁)에 저장됨, 수행 내용 보존');
   await page.waitForTimeout(600);
   const spoke=await page.evaluate(()=>({tts:window.__ttsUrl,model:localStorage.getItem('fp_tts_model'),body:window.__ttsBody}));
-  ok(/tts/.test(spoke.tts||'')&&spoke.model==='gemini-3.8-flash-tts','음성 입력으로 한 일은 Gemini 3.8 TTS로 읽어 줌 ('+spoke.model+')');
-  ok(spoke.body&&spoke.body.generationConfig.speechConfig.voiceConfig.voice==='Kore'&&spoke.body.contents[0].parts[0].speech_metadata,'새 TTS 요청 형식(voiceConfig.voice + speech_metadata)');
+  ok(/tts|interactions/.test(spoke.tts||'')&&spoke.model==='gemini-3.8-flash-tts','음성 입력으로 한 일은 Gemini 3.8 TTS로 읽어 줌 ('+spoke.model+')');
+  ok(spoke.body&&spoke.body.generation_config.speech_config[0].voice==='Kore'&&spoke.body.input[0].content[0].annotations[0].type==='speech_metadata'&&/\/interactions$/.test(spoke.tts),'3.8 TTS는 공식 Interactions 형식(speech_config:[{voice}] + speech_metadata)');
+
+  console.log('\n[7b] 목소리 설정이 요청에 반영됨');
+  const vz=await page.evaluate(async()=>{window.__ttsLog=[];window.__tts38fail=false;const r={};
+    for(const v of ['Charon','Aoede']){await asTtsFetch('목소리 구분 테스트 '+v,v);}
+    r.log=window.__ttsLog.map(x=>x.body.generation_config&&x.body.generation_config.speech_config[0].voice);
+    window.__tts38fail=true;localStorage.removeItem('fp_tts_model');window.__ttsLog=[];await asTtsFetch('폴백 형식 테스트','Charon');
+    const g=window.__ttsLog.find(x=>!/interactions/.test(x.url));r.fallback=g&&g.body.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName;
+    window.__tts38fail=false;localStorage.setItem('fp_tts_model','gemini-3.8-flash-tts');return r;});
+  ok(vz.log[0]==='Charon'&&vz.log[1]==='Aoede','선택한 목소리 이름이 요청마다 다르게 전달됨: '+vz.log.join(','));
+  ok(vz.fallback==='Charon','3.1/2.5 폴백은 prebuiltVoiceConfig.voiceName 으로 목소리 지정');
 
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);

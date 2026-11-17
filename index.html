@@ -384,23 +384,23 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 
 /* 우리집 탭 · 벽걸이 화면 (루틴 · 도장 · 준비물) */
 .nav-dot{position:absolute;top:-2px;right:-5px;width:8px;height:8px;border-radius:50%;background:#FF5252;box-shadow:0 0 0 2px #fff}
-.hero{position:relative;overflow:hidden;border-radius:24px;padding:20px;margin-bottom:14px;color:#fff;
+.hero{position:relative;overflow:hidden;border-radius:20px;padding:14px 16px;margin-bottom:12px;color:#fff;
   background:radial-gradient(420px 220px at 105% -20%,rgba(167,139,250,.55),transparent 60%),linear-gradient(135deg,#1B2149 0%,#2D2A6E 55%,#43308F 100%);
   box-shadow:0 14px 34px rgba(45,42,110,.35)}
 .hero-row{display:flex;align-items:center;gap:18px}
-.ring{--p:0;position:relative;width:104px;height:104px;border-radius:50%;flex-shrink:0;
+.ring{--p:0;position:relative;width:76px;height:76px;border-radius:50%;flex-shrink:0;
   background:conic-gradient(#9DB4FF calc(var(--p)*1%),rgba(255,255,255,.14) 0)}
-.ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:#262866}
+.ring::before{content:"";position:absolute;inset:7px;border-radius:50%;background:#262866}
 .ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ring-n{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.ring-n{font-size:22px;font-weight:800;letter-spacing:-1px;line-height:1}
 .ring-n small{font-size:14px;font-weight:600;opacity:.6}
 .hero-k{font-size:11px;letter-spacing:1.4px;font-weight:700;color:#B7C3FF;margin-bottom:6px}
-.hero-big{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
+.hero-big{font-size:19px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
 .hero-sub{font-size:12px;color:#B7C3FF;margin-top:6px;line-height:1.5}
-.pips{display:flex;gap:6px;margin:16px 0 14px}
+.pips{display:flex;gap:4px;margin:10px 0 10px}
 .pip{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.16)}
 .pip.on{background:linear-gradient(90deg,#9DB4FF,#C4B5FD);box-shadow:0 0 12px rgba(157,180,255,.6)}
-.hero-btn{width:100%;border-radius:14px;padding:13px;font-size:15px;font-weight:800;color:#1B2149;
+.hero-btn{width:100%;border-radius:12px;padding:10px;font-size:14px;font-weight:800;color:#1B2149;
   background:linear-gradient(135deg,#fff,#E4E9FF);box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .hero-btn:active{transform:scale(.98)}
 .sec{background:#fff;border:1px solid #ECEEF8;border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 2px 14px rgba(40,50,120,.05)}
@@ -456,9 +456,9 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .nav-ico{font-size:24px}
   .home-cols{column-count:2;column-gap:20px}
   .home-cols>*{break-inside:avoid}
-  .hero{padding:26px}
-  .ring{width:128px;height:128px}.ring::before{inset:11px}
-  .ring-n{font-size:38px}.hero-big{font-size:30px}.hero-row{gap:24px}
+  .hero{padding:16px 20px}
+  .ring{width:84px;height:84px}.ring::before{inset:8px}
+  .ring-n{font-size:26px}.hero-big{font-size:21px}.hero-row{gap:18px}
   .sec{padding:20px}
   .rt-row{padding:14px 2px}.rt-txt{font-size:16px}.rt-chk{width:28px;height:28px}
   .prep-t,.ticket-t{font-size:15px}
@@ -466,13 +466,32 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 @media (max-width:767px){.home-cols{column-count:1}}
 
 
+
+/* 다크 모드: 우리집 탭(루틴·도장·준비물·브리핑) */
+[data-theme=dark] .sec,[data-theme=dark] .tabseg{background:var(--card);border-color:var(--border);box-shadow:none}
+[data-theme=dark] .sec-t,[data-theme=dark] .hd-sub,[data-theme=dark] .note,[data-theme=dark] .app-ver{color:#9AA0C8}
+[data-theme=dark] .sec-pill,[data-theme=dark] .sec-btn,[data-theme=dark] .hd-ic{background:#2A2F58;color:#9DB4FF}
+[data-theme=dark] .sec-pill.ok{background:#14382B;color:#4ADE9E}
+[data-theme=dark] .ghost-btn,[data-theme=dark] .bf-act button{background:#262A42;border-color:var(--border);color:#C5CCEE}
+[data-theme=dark] .rt-prog{background:#2E3248}
+[data-theme=dark] .rt-row,[data-theme=dark] .prep-row,[data-theme=dark] .as-row,[data-theme=dark] .log-row{border-bottom-color:#2E3248}
+[data-theme=dark] .rt-chk{border-color:#4A4F6A;background:transparent}
+[data-theme=dark] .rt-row.on .rt-txt{color:#6F7590}
+[data-theme=dark] .ticket{background:#262A42;border-color:var(--border)}
+[data-theme=dark] .ticket-s,[data-theme=dark] .prep-s,[data-theme=dark] .as-rs,[data-theme=dark] .log-row span:last-child{color:#8A90B8}
+[data-theme=dark] .bf-wx{background:linear-gradient(135deg,#24305E,#30295A)}
+[data-theme=dark] .bf-t{color:#ECEEF8}[data-theme=dark] .bf-t small,[data-theme=dark] .bf-s{color:#A9B4E6}
+[data-theme=dark] .bf-chip{background:#2A2E55;color:#C5CCEE}
+[data-theme=dark] .mini-btn{background:#2A2E45!important}
+[data-theme=dark] .hero{box-shadow:none}
+
 /* 가로 태블릿(1000px↑): 우리집 탭을 스크롤 없이 한 화면에 배치 (갤럭시 탭 S8+ 1138×712 기준) */
 @media (min-width:1000px) and (orientation:landscape){
   .screen.home-fit{overflow:hidden;display:flex;flex-direction:column;padding:10px 18px calc(66px + var(--safe-bot))!important}
   .screen.home-fit>*{max-width:1500px}
   header .hd-row{margin-bottom:4px!important}
   .home-fit .home-cols{column-count:auto;display:grid;flex:1;min-height:0;width:100%;gap:10px;
-    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1.75fr) minmax(0,1fr) minmax(0,.85fr)}
+    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1fr) auto auto}
   .home-fit .home-cols>*{margin:0!important;min-height:0;min-width:0}
   .home-fit .sec,.home-fit .hero{overflow:auto;scrollbar-width:none}
   .home-fit .sec::-webkit-scrollbar{display:none}
@@ -480,17 +499,17 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .home-fit .sec-h{margin-bottom:6px}
   .home-fit .note{margin-top:4px;font-size:10px;line-height:1.4}
   .home-fit .home-cols>:nth-child(1){grid-column:1;grid-row:1}          /* 날씨·브리핑 */
-  .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2 / span 2} /* 도장 */
+  .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2}          /* 도장(작게) */
   .home-fit .home-cols>:nth-child(4){grid-column:2;grid-row:1 / span 3} /* 아침 루틴 */
   .home-fit .home-cols>:nth-child(2){grid-column:3;grid-row:1}          /* 수행평가 */
-  .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2}          /* 준비물 */
-  .home-fit .home-cols>:nth-child(6){grid-column:3;grid-row:3}          /* 구입권 */
+  .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2 / span 2}  /* 준비물 */
+  .home-fit .home-cols>:nth-child(6){grid-column:1;grid-row:3}          /* 구입권 */
   .home-fit .home-cols>:nth-child(7){display:none}                      /* 최근 도장(공간 부족) */
   .home-fit .ghost-btn{margin:0!important;padding:7px;font-size:12px}
-  .home-fit .hero{padding:14px 18px;border-radius:18px;display:flex;flex-direction:column;justify-content:center}
-  .home-fit .ring{width:92px;height:92px}.home-fit .ring::before{inset:8px}
-  .home-fit .ring-n{font-size:28px}.home-fit .hero-big{font-size:22px}.home-fit .hero-row{gap:16px}
-  .home-fit .pips{margin:10px 0}.home-fit .hero-btn{padding:10px;font-size:14px}
+  .home-fit .hero{padding:10px 16px;border-radius:16px}
+  .home-fit .ring{width:64px;height:64px}.home-fit .ring::before{inset:6px}
+  .home-fit .ring-n{font-size:20px}.home-fit .hero-big{font-size:17px}.home-fit .hero-row{gap:14px}
+  .home-fit .hero-sub{margin-top:2px}.home-fit .pips{margin:8px 0}.home-fit .hero-btn{padding:8px;font-size:13px}
   .home-fit .rt-row{padding:7px 2px;gap:10px}.home-fit .rt-txt{font-size:14px}.home-fit .rt-chk{width:22px;height:22px;font-size:12px}
   .home-fit .prep-row{padding:6px 0}.home-fit .prep-t,.home-fit .ticket-t{font-size:13px}
   .home-fit .ticket{margin-bottom:4px}.home-fit .ticket-b{padding:7px 12px}.home-fit .ticket-l{width:50px}
@@ -537,6 +556,15 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
   .install-banner{margin-left:84px}
 }
 
+/* 호출어 대기 표시 */
+.as-wakedot{position:fixed;left:94px;bottom:10px;z-index:50;display:none;font-size:11px;font-weight:700;color:#7C829E;background:rgba(120,130,170,.14);border-radius:12px;padding:4px 10px;pointer-events:none}
+@media (max-width:999px),(orientation:portrait){.as-wakedot{left:10px;bottom:calc(66px + var(--safe-bot))}}
+/* 말 멈추기 (떠 있는 버튼) */
+.as-stopfab{position:fixed;left:50%;bottom:calc(84px + var(--safe-bot));transform:translateX(-50%);z-index:96;display:none;align-items:center;gap:6px;
+  background:linear-gradient(135deg,#FF5E7E,#FF8A5B);color:#fff;border-radius:30px;padding:12px 22px;font-size:15px;font-weight:800;
+  box-shadow:0 10px 30px rgba(255,94,126,.45);animation:asPulse2 1.6s infinite}
+.as-stopfab.kiosk{bottom:70px}
+@media (min-width:1000px) and (orientation:landscape){.as-stopfab{bottom:24px;left:calc(50% + 42px)}.as-stopfab.kiosk{left:50%;bottom:70px}}
 /* 벽걸이 화면 */
 .wall{min-height:100vh;box-sizing:border-box;color:#EEF1FF;font-family:inherit;
   background:radial-gradient(900px 560px at 12% -8%,#2B3180 0%,transparent 62%),radial-gradient(800px 520px at 108% 8%,#5A2F93 0%,transparent 58%),#0A0E22}
@@ -1005,7 +1033,7 @@ function startSync(code){
    구입권이 중복 발급되지 않도록 한다 (구입권 id = cp{발급순번},
    루틴 도장 id = rt_{날짜} 라서 하루 한 번만 찍힌다).
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const STAMPS_PER_COUPON=5;
+const STAMPS_PER_COUPON=10;   // 도장 10개마다 책 구입권 (기존 5개에서 변경: 이미 모은 도장은 그대로 이어서 센다)
 const COUPON_TITLE='책 구입권';
 const DEFAULT_ROUTINE=['기상 · 이불 정리','세안 · 스킨케어 · 선크림','양치','교복 입고 머리 단장','아침 식사','오늘 시간표 · 준비물 챙기기','수행평가 · 제출물 확인'];
 const KIOSK=new URLSearchParams(location.search).get('view')==='wall'; // 벽걸이 화면
@@ -1617,34 +1645,47 @@ function asDecodeAudio(b64,mime){
   for(let i=0;i<n;i++)pcm[i]=dv2.getInt16(off+i*2,true);
   return{pcm,rate};
 }
+// Gemini TTS 요청 순서. 3.8 모델은 공식 문서의 Interactions API(/v1beta/interactions, speech_config:[{voice}]),
+// 3.1/2.5 는 generateContent(prebuiltVoiceConfig.voiceName). 목소리를 이름으로 정확히 지정해야 목소리 설정이 반영된다.
+// (예전 코드는 3.8 모델에 맞지 않는 형식을 보내 목소리가 무시되고 기본 목소리 하나로만 나왔다.)
+const G_API='https://generativelanguage.googleapis.com/v1beta/';
 function asTtsChain(text,voice){
-  const style='warm, clear and friendly, like a kind older sister greeting in the morning';
-  const mk=(model,fmt)=>({model,body:fmt==='new'
-    ?{contents:[{role:'user',parts:[{text,speech_metadata:{style}}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{voice}}}}
-    :{contents:[{parts:[{text:'Say in Korean in a warm, clear and friendly tone: '+text}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}});
-  const chain=[mk('gemini-3.8-flash-tts','new'),mk('gemini-3.1-flash-tts-preview','old'),mk('gemini-2.5-flash-preview-tts','old')];
+  const style='warm, clear and friendly';
+  const inter=model=>({model,url:G_API+'interactions',body:{model,input:[{type:'user_input',content:[{type:'text',text,annotations:[{type:'speech_metadata',style}]}]}],
+    response_format:{type:'audio'},generation_config:{speech_config:[{voice}]}}});
+  const gen=model=>({model,url:G_API+'models/'+model+':generateContent',body:{contents:[{parts:[{text:'Say in Korean in a warm, clear and friendly tone: '+text}]}],
+    generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}});
+  const chain=[inter('gemini-3.8-flash-tts'),gen('gemini-3.1-flash-tts-preview'),gen('gemini-2.5-flash-preview-tts')];
   let last=''; try{last=localStorage.getItem('fp_tts_model')||'';}catch(e){}
   const i=chain.findIndex(c=>c.model===last); if(i>0)chain.unshift(chain.splice(i,1)[0]);
   return chain;
 }
+// 응답에서 base64 오디오 찾기: Interactions(steps[].content[].data) 또는 generateContent(candidates[].content.parts[].inlineData)
+function asFindAudio(data){
+  const st=(data&&data.steps)||[];
+  for(let i=st.length-1;i>=0;i--){const c=(st[i].content||[]).filter(x=>x&&x.type==='audio'&&x.data); if(c.length)return{data:c[c.length-1].data,mime:c[c.length-1].mime_type||c[c.length-1].mimeType||''};}
+  const part=((data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts)||[]).find(p=>p.inlineData||p.inline_data);
+  if(part){const inl=part.inlineData||part.inline_data;return{data:inl.data,mime:inl.mimeType||inl.mime_type||''};}
+  return null;
+}
 async function asTtsFetch(text,voice){
-  const key=voice+'|'+asHash(text); const hit=await asIdbGet(key); if(hit)return hit;
+  const key='v2|'+voice+'|'+asHash(text); const hit=await asIdbGet(key); if(hit){A.ttsInfo=(hit.model||'저장된 소리')+' · '+voice;return hit;}
   const k=geminiKey(); let lastErr='TTS 모델을 찾지 못했어요';
   for(const c of asTtsChain(text,voice)){
     let res;
-    try{res=await asFetch('https://generativelanguage.googleapis.com/v1beta/models/'+c.model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}
+    try{res=await asFetch(c.url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify(c.body)},25000);}
     catch(e){throw new Error('네트워크 오류');}
     if(res.status===401||res.status===403)throw new Error('Gemini 키 권한 오류('+res.status+')');
     if(res.status===429)throw new Error('Gemini 음성 사용량 한도');
     if(!res.ok){lastErr=c.model+' 응답 '+res.status;continue;}
     const data=await res.json();
-    const part=((data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts)||[]).find(p=>p.inlineData||p.inline_data);
-    if(!part){lastErr=c.model+' 오디오 없음';continue;}
-    const inl=part.inlineData||part.inline_data;
-    const out=asDecodeAudio(inl.data,inl.mimeType||inl.mime_type);
+    const au=asFindAudio(data);
+    if(!au){lastErr=c.model+' 오디오 없음';continue;}
+    const out=asDecodeAudio(au.data,au.mime);
     if(!out.pcm.length){lastErr=c.model+' 빈 오디오';continue;}
     try{localStorage.setItem('fp_tts_model',c.model);}catch(e){}
-    asIdbPut(key,{pcm:out.pcm.buffer,rate:out.rate,at:Date.now()});
+    asIdbPut(key,{pcm:out.pcm.buffer,rate:out.rate,at:Date.now(),model:c.model});
+    A.ttsInfo=c.model+' · '+voice;
     return {pcm:out.pcm,rate:out.rate};
   }
   throw new Error(lastErr);
@@ -1665,13 +1706,15 @@ function asPlayPcm(a,id){
     }catch(e){rej(e);}
   });
 }
-function asSpeakDevice(text,id,pitch){
+const asGender=v=>{const f=AS_VOICES.find(x=>x[0]===v);return f&&/남성/.test(f[1])?'m':'f';};
+function asSpeakDevice(text,id,pitch,gender){
   return new Promise(res0=>{
     const res=()=>{_devDone=null;res0();}; _devDone=res;
     if(!('speechSynthesis' in window)){res();return;}
     const sents=(text.match(/[^.!?。\n]+[.!?。]?/g)||[text]).map(s=>s.trim()).filter(Boolean);
     const vs=speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang));
-    const v=vs.find(x=>/google|yuna|sun-?hi|heami|female|여/i.test(x.name))||vs[0];
+    const v=(gender==='m'&&vs.find(x=>/(?<!fe)male|남/i.test(x.name)))||vs.find(x=>/google|yuna|sun-?hi|heami|female|여/i.test(x.name))||vs[0];
+    if(gender==='m'&&pitch===undefined)pitch=0.85;   // 남성 목소리를 못 찾으면 톤만 낮춘다
     let i=0;
     const next=()=>{
       if(id!==_speakId||i>=sents.length){res();return;}
@@ -1694,10 +1737,11 @@ async function asSpeak(text,voice,pitch){
   A.speaking=true; A.ttsNote=''; asRefreshSpeakBtn();
   const cfg=asCfg(); let ok=false;
   if(cfg.ttsMode!=='device'&&geminiKey()){
-    try{const a=await asTtsFetch(text,voice||cfg.voice||'Kore'); if(id!==_speakId)return; await asPlayPcm(a,id); ok=true;}
+    try{const a=await asTtsFetch(text,voice||cfg.voice||'Kore'); if(id!==_speakId)return; asRefreshSpeakBtn(); await asPlayPcm(a,id); ok=true;}
     catch(e){ console.warn('Gemini TTS 실패',e); A.ttsNote='AI 목소리를 쓰지 못해 기기 음성으로 읽었어요 ('+(e.message||e)+')'; }
-  }
-  if(!ok&&id===_speakId)await asSpeakDevice(text,id,pitch);
+  } else if(cfg.ttsMode!=='device'){ A.ttsNote='Gemini 키가 없어 기기 음성으로 읽었어요. 목소리 설정은 Gemini 키가 있어야 적용돼요'; }
+  else A.ttsNote='기기 음성 모드예요. 목소리 설정은 "자동"일 때 적용돼요';
+  if(!ok&&id===_speakId){asRefreshSpeakBtn();await asSpeakDevice(text,id,pitch,asGender(voice||cfg.voice));}
   if(id===_speakId){A.speaking=false;asRefreshSpeakBtn();}
 }
 
@@ -1750,7 +1794,7 @@ function asParse(raw,now){
   return{kind:'ask',q:t0};
 }
 
-const A={open:false,mode:'main',text:'',interim:'',listening:false,speaking:false,viaVoice:false,busy:false,err:'',answer:'',answerTitle:'',draft:null,ttsNote:'',notice:'',q:'',msgs:[],hist:[],pending:null,turn:0,lastUser:'',conv:false,stat:'',noSpeech:0,live:null,segs:null,segsFor:'',replyVoice:null};
+const A={ttsInfo:'',open:false,mode:'main',text:'',interim:'',listening:false,speaking:false,viaVoice:false,busy:false,err:'',answer:'',answerTitle:'',draft:null,ttsNote:'',notice:'',q:'',msgs:[],hist:[],pending:null,turn:0,lastUser:'',conv:false,stat:'',noSpeech:0,live:null,segs:null,segsFor:'',replyVoice:null};
 let _rec=null;
 function asEnsureRoot(){
   let r=document.getElementById('as-root');
@@ -1770,32 +1814,55 @@ function asClose(){
   const r=document.getElementById('as-root'); if(r)r.innerHTML='';
 }
 function asBg(e){if(e.target===e.currentTarget)asClose();}
+// 음성 인식 유지: 브라우저는 1초쯤 말이 끊기면 인식을 끝내 버린다 → 끝나면 다시 시작하고,
+// 마지막 말소리(중간 결과 포함) 뒤 AS_SILENCE ms 가 지나야 끝낸다. 아무 말도 없으면 AS_IDLE ms 뒤에 끝낸다.
+const AS_SILENCE=window.__AS_SILENCE||2000, AS_IDLE=window.__AS_IDLE||7000, AS_MAXLISTEN=45000;   // window.__AS_* 는 테스트에서만 줄여 쓴다
+function asSrKeep(r){
+  const K={fin:false,t:null,t0:Date.now(),heard:false};
+  K.arm=()=>{clearTimeout(K.t);K.t=setTimeout(()=>{K.t=null;K.fin=true;try{r.stop();}catch(e){}},K.heard?AS_SILENCE:AS_IDLE);};
+  K.touch=()=>{K.heard=true;K.arm();};
+  K.again=()=>{if(K.fin||Date.now()-K.t0>AS_MAXLISTEN){clearTimeout(K.t);return false;} try{r.start();return true;}catch(e){clearTimeout(K.t);return false;}};
+  K.stop=()=>{K.fin=true;clearTimeout(K.t);try{r.stop();}catch(e){}};
+  r._K=K; return K;
+}
 function asStopListen(){try{if(_rec){_rec.onend=null;_rec.abort();}}catch(e){} _rec=null; A.listening=false; if(typeof _hearRes!=='undefined'&&_hearRes){const f=_hearRes;_hearRes=null;f();}}
 function asListen(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   asStopSpeak();
   if(!SR){A.err='이 브라우저는 음성 인식을 지원하지 않아요. 아래 칸에 글자로 쓰거나, 키보드의 마이크 버튼을 써 주세요.';A.mode='main';asRender();return;}
-  if(A.listening){try{_rec.stop();}catch(e){asStopListen();asRender();}return;}
+  if(A.listening){try{if(_rec&&_rec._K)_rec._K.stop();else _rec.stop();}catch(e){asStopListen();asRender();}return;}
   A.err='';A.notice='';A.mode='main';A.text='';A.interim='';A.viaVoice=true;
   const r=new SR(); _rec=r; r.lang='ko-KR'; r.interimResults=true; r.continuous=false; r.maxAlternatives=1;
-  let fin='';
-  r.onstart=()=>{A.listening=true;asRender();};
+  const K=asSrKeep(r); let fin='';
+  r.onstart=()=>{if(!A.listening){A.listening=true;asRender();} if(!K.t)K.arm();};
   r.onresult=e=>{
     let it=''; for(let i=e.resultIndex;i<e.results.length;i++){const s=e.results[i][0].transcript; if(e.results[i].isFinal)fin+=s; else it+=s;}
-    A.text=(fin+it).trim(); asSetText(A.text);
+    A.text=(fin+it).trim(); asSetText(A.text); K.touch();
   };
   r.onerror=e=>{
     const m={'not-allowed':'마이크 사용이 막혀 있어요. 주소창의 자물쇠 → 마이크 허용으로 바꿔 주세요.','service-not-allowed':'마이크 사용이 막혀 있어요. 브라우저 설정에서 허용해 주세요.','no-speech':'말소리가 들리지 않았어요. 다시 눌러 말해 주세요.','audio-capture':'마이크를 찾을 수 없어요.','network':'음성 인식은 인터넷이 필요해요. 연결을 확인해 주세요.','aborted':''};
+    if(K.heard&&(e.error==='no-speech'||e.error==='aborted'))return;   // 말한 뒤의 조용함은 오류가 아니다
     A.err=e.error in m?m[e.error]:'음성 인식 오류: '+e.error;
   };
-  r.onend=()=>{A.listening=false;_rec=null; if(fin.trim()){A.text=fin.trim();asRun();}else asRender();};
+  let ended=false;
+  r.onend=()=>{ if(ended)return; if(K.again())return; ended=true; A.listening=false;_rec=null; if((fin.trim()||A.text.trim())&&K.heard){A.text=(fin.trim()||A.text.trim());asRun();}else asRender();};
   try{r.start();}catch(e){A.err='음성 인식을 시작하지 못했어요.';A.listening=false;asRender();}
 }
 function asSetText(t){const el=document.getElementById('as-text');if(el&&document.activeElement!==el)el.value=t;}
+// 말하는 동안 화면 어디서든 보이는 '말 멈추기' 버튼 (우리집 브리핑, 벽걸이 🔊, 루미 대화, 실시간 대화 모두)
+function asIsSpeaking(){return !!A.speaking||(typeof LV!=='undefined'&&!LV.mute&&!!asLiveState().speaking);}
+function asStopAll(){asStopSpeak(); if(typeof lvStopSpeech==='function')lvStopSpeech(); asSpeakFloat();}
+function asSpeakFloat(){
+  let el=document.getElementById('as-stopfab');
+  if(!el){el=document.createElement('button');el.id='as-stopfab';el.className='as-stopfab';el.textContent='⏹ 말 멈추기';el.onclick=asStopAll;document.body.appendChild(el);}
+  el.classList.toggle('kiosk',!!KIOSK);
+  el.style.display=asIsSpeaking()?'flex':'none';
+}
 function asRefreshSpeakBtn(){
+  asSpeakFloat();
+  const n=document.getElementById('as-ttsnote'); if(n)n.textContent=A.ttsNote||A.ttsInfo&&('AI 목소리: '+A.ttsInfo)||'';
   const b=document.getElementById('as-speak'); if(!b)return;
   b.textContent=A.speaking?'⏹ 멈추기':'🔊 다시 듣기'; b.onclick=A.speaking?asStopSpeak:asReplay;
-  const n=document.getElementById('as-ttsnote'); if(n)n.textContent=A.ttsNote||'';
 }
 function asReplay(){if(A.segs&&A.segsFor===A.answer)asSpeakSegs(A.segs);else asSpeak(A.answer);}
 
@@ -1805,8 +1872,8 @@ async function asRun(){
   if(p.kind==='empty'){A.err='먼저 말하거나 글자를 입력해 주세요.';asRender();return;}
   if(p.kind==='brief'){asBrief();return;}
   if(p.kind==='listAssess'){A.mode='result';A.answerTitle='수행평가';A.answer=asListSpeech(p.date);asRender();if(A.viaVoice)asSpeak(A.answer);return;}
-  if(p.kind==='assess'){A.mode='draft';A.draft=p;asRender();return;}
-  if(p.kind==='prep'){A.mode='draft';A.draft=p;asRender();return;}
+  if(p.kind==='assess'){A.mode='draft';A.draft=p;asRender();asVoiceConfirmDraft();return;}
+  if(p.kind==='prep'){A.mode='draft';A.draft=p;asRender();asVoiceConfirmDraft();return;}
   return asAskAI(p.q);
 }
 async function asBrief(){
@@ -1845,6 +1912,18 @@ async function asAskAI(q){
   }catch(e){A.busy=false;A.mode='main';A.err=e.message||String(e);asRender();}
 }
 
+// 말로 등록했을 때: 내용을 읽어 주고 "응/네"라고 답하면 등록, "아니"면 취소. 화면의 등록하기 버튼도 그대로 쓸 수 있다.
+// (쓰기는 반드시 확인 뒤에 실행한다는 규칙은 그대로: 확인을 소리로 받는 것이다)
+async function asVoiceConfirmDraft(){
+  const d=A.draft; if(!d||!A.viaVoice)return;
+  const ok=d.kind==='assess'?!!(d.subject&&d.date):!!(d.date&&d.text); if(!ok)return;   // 못 알아들은 칸이 있으면 화면에서 고치게 둔다
+  const q=d.kind==='assess'?d.subject+' 수행평가, '+fmt(d.date)+(d.text?' '+d.text:'')+'. 등록할까요?':fmt(d.date)+' 준비물로 '+d.text+'. 요청할까요?';
+  await asSpeak(q); if(A.draft!==d||A.mode!=='draft')return;
+  const h=await asHear(); if(A.draft!==d||A.mode!=='draft')return;
+  const t=(h&&h.text||'').trim(); if(!t)return;
+  if(asIsYes(t)){ if(!document.getElementById('as-d-date'))return; try{ if(d.kind==='assess')await asSaveAssess(); else await asSavePrep(); }catch(e){console.warn('소리 확인 등록 실패',e);} }
+  else if(AS_NO.test(t)){ asBack(); asSpeak('알겠어요, 등록하지 않았어요.'); }
+}
 async function asSaveAssess(){
   const subject=(document.getElementById('as-d-subj')||{}).value.trim(), date=(document.getElementById('as-d-date')||{}).value, text=(document.getElementById('as-d-text')||{}).value.trim(), score=+((document.getElementById('as-d-score')||{}).value)||20;
   if(!subject||!date){A.err='과목과 제출일을 확인해 주세요.';asRender();return;}
@@ -1905,6 +1984,7 @@ ${members().map(m=>`<div class="as-mb"><span class="as-mb-ic" style="background:
 <label>말하는 속도 <small>(느리면 올려 보세요)</small></label><select id="as-s-speed">${[0.8,0.9,1,1.1,1.15,1.25,1.4,1.6].map(x=>`<option value="${x}"${Math.abs(asSpeed()-x)<0.001?' selected':''}>${x===1?'보통 (1.0배)':x+'배'}</option>`).join('')}</select>
 <label>목소리</label><select id="as-s-voice">${AS_VOICES.map(v=>`<option value="${v[0]}"${cfg.voice===v[0]?' selected':''}>${v[1]}</option>`).join('')}</select>
 <button class="as-ghost" onclick="asTestVoice()">🔊 저장하고 미리 듣기</button>
+<div class="as-note" id="as-ttsnote">${esc(A.ttsNote||(A.ttsInfo?'AI 목소리: '+A.ttsInfo:''))}</div>
 <label>아침 브리핑 자동 재생 (벽걸이 화면)</label>
 <div class="as-inl"><label class="as-ck"><input type="checkbox" id="as-s-auto"${cfg.autoBrief?' checked':''}> 켜기</label><input type="time" id="as-s-btime" value="${esc(cfg.briefTime)}"><label class="as-ck"><input type="checkbox" id="as-s-wk"${cfg.weekdaysOnly?' checked':''}> 평일만</label></div>
 <label>등교 시각 (벽걸이 화면 카운트다운)</label><input type="time" id="as-s-leave" value="${esc(cfg.leave)}">
@@ -1947,7 +2027,7 @@ ${(!d.subject||!d.date)?'<div class="as-note" style="color:#E5484D">인식하지
   }else if(A.mode==='result'){
     body=`${A.q?`<div class="as-say">“${esc(A.q)}”</div>`:''}<div class="as-ans-t">${esc(A.answerTitle)}</div><div class="as-ans">${asHtml(A.answer)}</div>
 <div class="as-btns"><button class="as-ghost" id="as-speak" onclick="${A.speaking?'asStopSpeak()':'asReplay()'}">${A.speaking?'⏹ 멈추기':'🔊 다시 듣기'}</button><button class="as-ghost" onclick="asShare()">📤 공유·복사</button></div>
-<div class="as-note" id="as-ttsnote">${esc(A.ttsNote)}</div>
+<div class="as-note" id="as-ttsnote">${esc(A.ttsNote||(A.ttsInfo?'AI 목소리: '+A.ttsInfo:''))}</div>
 ${A.notice==='nokey'?'<div class="as-btns"><button class="as-pri" onclick="A.mode=\'settings\';A.notice=\'\';asRender()">⚙ 키 설정하러 가기</button></div>':(A.notice?`<div class="as-note">${esc(A.notice)}</div>`:'')}
 <div class="as-btns"><button class="as-pri" onclick="asBack()">다시 말하기</button></div>`;
   }else{
@@ -2065,13 +2145,14 @@ async function asSpeakSegs(segs){
   A.speaking=true; A.ttsNote=''; asRefreshSpeakBtn();
   const cfg=asCfg(), useGem=cfg.ttsMode!=='device'&&!!geminiKey();
   const fetchSeg=s=>useGem?asTtsFetch(s.text,asVoiceOf(s.who).voice).catch(e=>{A.ttsNote='AI 목소리를 쓰지 못해 기기 음성으로 읽었어요 ('+(e.message||e)+')';return null;}):Promise.resolve(null);
+  if(!useGem)A.ttsNote=cfg.ttsMode==='device'?'기기 음성 모드예요. 목소리 설정은 "자동"일 때 적용돼요':'Gemini 키가 없어 기기 음성으로 읽었어요. 목소리 설정은 Gemini 키가 있어야 적용돼요';
   let next=fetchSeg(merged[0]);
   for(let i=0;i<merged.length;i++){
     if(id!==_speakId)return;
     const a=await next; if(id!==_speakId)return;
     next=i+1<merged.length?fetchSeg(merged[i+1]):null;
     let ok=false; if(a){try{await asPlayPcm(a,id);ok=true;}catch(e){}}
-    if(!ok&&id===_speakId)await asSpeakDevice(merged[i].text,id,asVoiceOf(merged[i].who).pitch);
+    if(!ok&&id===_speakId){asRefreshSpeakBtn();const vo=asVoiceOf(merged[i].who);await asSpeakDevice(merged[i].text,id,vo.pitch,asGender(vo.voice));}
   }
   if(id===_speakId){A.speaking=false;asRefreshSpeakBtn();}
 }
@@ -2369,12 +2450,12 @@ function asHear(){
     if(!SR){res({err:'unsupported'});return;}
     asStopSpeak(); asStopListen();
     const r=new SR(); _rec=r; r.lang='ko-KR'; r.interimResults=true; r.continuous=false; r.maxAlternatives=1;
-    let fin='',err='',done=false; const finish=o=>{if(done)return;done=true;_hearRes=null;A.listening=false;A.interim='';_rec=null;res(o);};
+    const K=asSrKeep(r); let fin='',err='',done=false; const finish=o=>{if(done)return;done=true;_hearRes=null;A.listening=false;A.interim='';_rec=null;res(o);};
     _hearRes=()=>finish({err:'aborted'});
-    r.onstart=()=>{A.listening=true;A.stat='listening';A.interim='';asRenderSoft();};
-    r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const s=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=s;else it+=s;}A.interim=(fin+it).trim();asRenderStat();};
-    r.onerror=e=>{err=e.error==='aborted'?'':e.error;};
-    r.onend=()=>finish({text:fin.trim(),err});
+    r.onstart=()=>{if(!A.listening){A.listening=true;A.stat='listening';A.interim='';asRenderSoft();} if(!K.t)K.arm();};
+    r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const s=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=s;else it+=s;}A.interim=(fin+it).trim();asRenderStat();K.touch();};
+    r.onerror=e=>{err=(e.error==='aborted'||(K.heard&&e.error==='no-speech'))?'':e.error;};
+    r.onend=()=>{ if(!done&&!err&&K.again())return; finish({text:(fin||A.interim||'').trim(),err}); };
     try{r.start();}catch(e){finish({err:'start-failed'});}
   });
 }
@@ -2469,7 +2550,7 @@ ${A.err?`<div class="as-err">${esc(A.err)}</div>`:''}
    - 키가 주소의 쿼리(?key=)로 전달되는 방식이라 이 기기에서만, 가족끼리 쓰는 용도로 둔다 (HANDOVER 참고).
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const LV_MODELS=['gemini-3.8-live','gemini-3.1-flash-live-preview','gemini-2.5-flash-native-audio-preview-12-2025'];
-const LV={ws:null,stream:null,mctx:null,node:null,msrc:null,buf:[],playT:0,srcs:[],ok:false,closing:false,setupDone:null};
+const LV={mute:false,ws:null,stream:null,mctx:null,node:null,msrc:null,buf:[],playT:0,srcs:[],ok:false,closing:false,setupDone:null};
 const asLiveState=()=>A.live||(A.live={status:'idle',lines:[],curU:'',curM:'',newU:true,err:'',model:'',speaking:false});
 
 function lvAttempts(){
@@ -2521,7 +2602,7 @@ function lvSend(o){try{if(LV.ws&&LV.ws.readyState===1&&LV.ok)LV.ws.send(JSON.str
 
 /* 답 소리 재생 (24kHz PCM, 끊김 없이 이어 붙임) */
 function lvPlay(b64){
-  if(!_ac)return; if(_ac.state==='suspended')_ac.resume();
+  if(LV.mute||!_ac)return; if(_ac.state==='suspended')_ac.resume();
   const pcm=lvB64ToI16(b64); if(!pcm.length)return;
   const buf=_ac.createBuffer(1,pcm.length,24000), ch=buf.getChannelData(0); for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
   const sp=asSpeed(); const src=_ac.createBufferSource(); src.buffer=buf; src.playbackRate.value=sp; src.connect(_ac.destination);
@@ -2530,6 +2611,8 @@ function lvPlay(b64){
   src.onended=()=>{LV.srcs=LV.srcs.filter(x=>x!==src); if(!LV.srcs.length){L.speaking=false;asLiveStat();}};
   asLiveStat();
 }
+// 사용자가 '말 멈추기'를 누르면 지금 재생 중인 소리를 끊고, 같은 답의 남은 소리는 새 말이 시작될 때까지 버린다
+function lvStopSpeech(){LV.mute=true;lvFlush();}
 function lvFlush(){LV.srcs.forEach(s=>{try{s.onended=null;s.stop();}catch(e){}});LV.srcs=[];LV.playT=0;asLiveState().speaking=false;asLiveStat();}
 
 /* 서버 메시지 */
@@ -2540,10 +2623,11 @@ async function lvOnMsg(ev){
   if(m.setupComplete!==undefined){LV.ok=true;if(LV.setupDone){LV.setupDone();LV.setupDone=null;}return;}
   const sc=m.serverContent;
   if(sc){
-    if(sc.interrupted)lvFlush();
+    if(sc.interrupted){LV.mute=false;lvFlush();}
     const parts=(sc.modelTurn&&sc.modelTurn.parts)||[];
     parts.forEach(p=>{const d=p.inlineData||p.inline_data; if(d&&d.data)lvPlay(d.data);});
     if(sc.inputTranscription&&sc.inputTranscription.text){
+      LV.mute=false;
       if(L.newU){L.curU='';L.newU=false;}
       L.curU+=sc.inputTranscription.text; A.lastUser=L.curU.trim(); asLiveRender();
     }
@@ -2552,6 +2636,7 @@ async function lvOnMsg(ev){
       L.curM+=sc.outputTranscription.text; asLiveRender();
     }
     if(sc.turnComplete){
+      LV.mute=false;
       if(L.curU.trim()){L.lines.push({r:'u',t:L.curU.trim()});L.curU='';}
       if(L.curM.trim()){L.lines.push({r:'a',t:L.curM.trim()});L.curM='';}
       L.newU=true; A.turn++; if(L.lines.length>20)L.lines.splice(0,L.lines.length-20); asLiveRender();
@@ -2617,7 +2702,7 @@ function lvTeardown(){
 }
 function asLiveStop(){lvTeardown();if(A.live)A.live.status='idle';A.mode='chat';asEnterChat();}
 function asLiveEnded(why){const L=asLiveState();lvTeardown();L.status='ended';L.err=why;if(A.open&&A.mode==='live')asRender();}
-function asLiveStat(){const el=document.getElementById('lv-orb'); if(el){const L=asLiveState();el.className='lv-orb'+(L.speaking?' sp':'')+(L.status==='live'&&!L.speaking?' li':'');}}
+function asLiveStat(){asSpeakFloat();const el=document.getElementById('lv-orb'); if(el){const L=asLiveState();el.className='lv-orb'+(L.speaking?' sp':'')+(L.status==='live'&&!L.speaking?' li':'');}}
 function asLiveRender(){if(A.open&&A.mode==='live'){asRender();const b=document.getElementById('lv-lines');if(b)b.scrollTop=b.scrollHeight;}}
 function asLiveBody(){
   const L=asLiveState(), nm=asName();
@@ -2658,7 +2743,7 @@ function asWakeStart(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!asCfg().wakeWord||!SR||_wk.on)return; _wk.on=true; _wk.errs=0; asWakeLoop();
 }
-function asWakeStop(){_wk.on=false; clearTimeout(_wk.timer); try{if(_wk.rec){_wk.rec.onend=null;_wk.rec.abort();}}catch(e){} _wk.rec=null;}
+function asWakeStop(){asWakeDot(false);_wk.on=false; clearTimeout(_wk.timer); try{if(_wk.rec){_wk.rec.onend=null;_wk.rec.abort();}}catch(e){} _wk.rec=null;}
 function asWakeLoop(){
   if(!_wk.on)return; clearTimeout(_wk.timer);
   // 대화 중이거나 화면이 가려져 있으면 쉰다
@@ -2675,8 +2760,13 @@ function asWakeLoop(){
     if(e.error==='not-allowed'||e.error==='service-not-allowed'){_wk.on=false;asSetCfg({wakeWord:false});}
     else _wk.errs++;
   };
-  r.onend=()=>{_wk.rec=null; if(_wk.on&&!_wk.hit)_wk.timer=setTimeout(asWakeLoop,_wk.errs>3?15000:700);};
+  r.onend=()=>{_wk.rec=null; asWakeDot(false); if(_wk.on&&!_wk.hit)_wk.timer=setTimeout(asWakeLoop,_wk.errs>3?15000:700);};
+  r.onstart=()=>asWakeDot(true);
   try{r.start();}catch(e){_wk.rec=null;_wk.timer=setTimeout(asWakeLoop,3000);}
+}
+function asWakeDot(on){
+  let el=document.getElementById('as-wakedot'); if(!el){el=document.createElement('div');el.id='as-wakedot';el.className='as-wakedot';document.body.appendChild(el);}
+  el.textContent='🎙 '+asName()+'야 대기 중'; el.style.display=on&&asCfg().wakeWord?'block':'none';
 }
 function asWakeFire(){
   const f=asWakeFind(_wk.txt); _wk.hit=''; try{if(_wk.rec){_wk.rec.onend=null;_wk.rec.abort();}}catch(e){} _wk.rec=null;
@@ -3626,7 +3716,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.0';
+const APP_VER='v4.4';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

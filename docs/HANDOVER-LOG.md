@@ -213,3 +213,18 @@
 - **왼쪽 메뉴(C안)**: `@media (min-width:1000px) and (orientation:landscape)`에서 `.bot-nav`를 왼쪽 84px 레일로, `.app-wrap`에 `margin-left:84px`. `.screen` 아래 여백(기존 `!important` 100px)과 FAB·FAB 메뉴 위치도 같은 조건에서 조정. 벽걸이(`?view=wall`)는 메뉴가 없어 영향 없음.
 - **테스트**: `dev/assist-test.js`에 메뉴 5개·옛 탭 호환·전환 막대·설정 이동 검사 추가. `dev/members-test.js`의 "1280x800 한 화면에 잘림 없이 들어감"은 가끔 실패하는(타이밍·날씨 로딩에 따라 달라지는) 항목이라 반복 실행으로 확인한다.
 - **미검증**: 실기기의 왼쪽 메뉴 사용감, 폰 하단 메뉴 5개 배치, 일정·수행평가 하위 전환 막대 위치(헤더의 월 표시 바로 아래).
+
+## 말 멈추기 버튼 (v4.1)
+- 기존: 멈추기(`asStopSpeak`)는 결과 시트의 `#as-speak` 버튼과 대화의 마이크 버튼에만 있어서, 우리집 브리핑·벽걸이 🔊·실시간 대화 중에는 멈출 방법이 없었다.
+- 추가: `#as-stopfab`(`body`에 붙는 떠 있는 버튼 "⏹ 말 멈추기")를 `asSpeakFloat()`가 관리. `A.speaking`(Gemini/기기 음성) 또는 실시간 대화 재생 중(`asLiveState().speaking && !LV.mute`)일 때만 보이고, `asRefreshSpeakBtn()`·`asLiveStat()`에서 갱신. 누르면 `asStopAll()` = `asStopSpeak()` + `lvStopSpeech()`.
+- 실시간 대화: `LV.mute`를 켜서 재생 중인 소리를 끊고 같은 답의 남은 소리(`lvPlay`)는 버린다. 사용자가 다시 말하기 시작(`inputTranscription`)하거나 `interrupted`/`turnComplete`가 오면 해제. 서버 쪽 생성은 막지 않는다(로컬 재생만 중단).
+- 위치: 폰은 하단 메뉴 위 가운데, 가로 태블릿은 왼쪽 메뉴를 피해 아래 가운데, 벽걸이는 아래 70px. 테스트: `dev/assist-test.js [2c]`. 실기기 미검증.
+
+## 목소리 반영·도장 10개·다크 모드·음성 인식 개선 (v4.2~v4.4)
+- **목소리 설정이 무시되던 원인(v4.2)**: Gemini 공식 문서(aistudio.google.com/docs/speech-generation)의 3.8 TTS는 `POST /v1beta/interactions`(`input[].content[].annotations:[{type:'speech_metadata',style}]`, `generation_config.speech_config:[{voice}]`, 응답 `steps[].content[]{type:'audio',data}`)인데, 예전 코드는 3.8 모델에 `generateContent`로 맞지 않는 모양을 보내 목소리가 무시되고(기본 여성 목소리), 스타일에 "older sister"까지 넣었다. 지금은 3.8은 Interactions, 3.1/2.5는 `generateContent`+`prebuiltVoiceConfig.voiceName`. 저장된 소리(IndexedDB) 키를 `v2|`로 바꿔 예전 소리를 쓰지 않게 했다. Gemini 키가 없으면 기기 음성(목소리 설정 무관)으로 읽으므로 설정 화면과 결과 화면에 어떤 엔진이 읽었는지(`AI 목소리: 모델 · 목소리` 또는 사유)를 표시한다. 기기 음성은 남성 목소리를 우선 찾고 없으면 톤을 낮춘다.
+- **도장 10개(v4.3)**: `STAMPS_PER_COUPON` 5→10. 이미 모은 도장은 그대로 이어서 센다(예: 7개면 7/10, 구입권은 10의 배수에서 발급). 새 컬렉션 없음.
+- **우리집 도장 카드 축소, 다크 모드(v4.3)**: 도장 카드(링 76px, 큰 글씨 19px)를 줄이고, 가로 태블릿 한 화면 배치는 1열 날씨·도장·구입권 / 2열 루틴 / 3열 수행평가·준비물. 다크 모드에서 흰 카드가 남던 `.sec`, `.bf-*`, `.rt-*`, `.ticket`, `.prep-row` 등에 `[data-theme=dark]` 규칙 추가.
+- **음성 인식(v4.4)**: 브라우저는 말이 1초쯤 끊기면 인식을 끝낸다 → `asSrKeep()`이 끝나면 다시 시작하고 마지막 말소리 뒤 `AS_SILENCE`(2초)가 지나야 끝낸다(말이 없으면 `AS_IDLE` 7초). `asListen`(말로 등록)과 `asHear`(대화)에 적용. 테스트는 `window.__AS_SILENCE/__AS_IDLE`로 줄여 쓰고, 가짜 음성 인식은 첫 start에서만 말하고 stop()이 onend를 낸다.
+- **말로 등록 소리 확인(v4.4)**: 확인 카드가 뜨면 `asVoiceConfirmDraft()`가 내용을 읽고 "등록할까요?" → "응/네"면 등록, "아니"면 취소(화면의 버튼도 그대로). 못 알아들은 칸이 있으면 소리 확인 없이 화면에서 고치게 둔다. 쓰기는 확인 뒤에만 한다는 규칙은 그대로.
+- **호출어**: 기본 꺼짐(설정에서 켜야 함), 이 기기 화면이 켜져 있고 앱이 열린 상태에서만 동작(실험). 대기 중이면 왼쪽 아래에 "🎙 루미야 대기 중" 표시(`asWakeDot`). 실기기 미검증.
+- **미검증**: 실제 Gemini 3.8 Interactions 응답(여기서 Google 서버에 접속 불가), 실기기 음성 인식 끊김 개선, 호출어.

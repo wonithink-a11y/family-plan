@@ -34,15 +34,17 @@ const MOCK=`
     const J=(o,s)=>new Response(JSON.stringify(o),{status:s||200,headers:{'Content-Type':'application/json'}});
     if(url.includes('apis.data.go.kr'))return J({response:{header:{resultCode:'00',resultMsg:'OK'},body:{items:{item:kma()}}}});
     if(url.includes('open-meteo'))return J({},500);
-    if(url.includes('generativelanguage')&&/tts/.test(url)){
+    if(url.includes('generativelanguage')&&(/tts/.test(url)||url.includes('/interactions'))){
       // 0.3초짜리 WAV(24kHz 16bit mono) — 헤더 있는 형식
       const n=7200,buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);
       const w=(o,s)=>[...s].forEach((c,i)=>dv.setUint8(o+i,c.charCodeAt(0)));
       w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,24000,true);dv.setUint32(28,48000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
       for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.round(Math.sin(i/12)*8000),true);
       let b='';new Uint8Array(buf).forEach(x=>b+=String.fromCharCode(x));
-      window.__ttsBody=JSON.parse(opt.body); window.__ttsUrl=url;
-      if(url.includes('3.8')&&window.__tts38fail)return J({error:{message:'nf'}},404);
+      window.__ttsBody=JSON.parse(opt.body); window.__ttsUrl=url; (window.__ttsLog=window.__ttsLog||[]).push({url,body:window.__ttsBody});
+      const is38=url.includes('/interactions');
+      if(is38&&window.__tts38fail)return J({error:{message:'nf'}},404);
+      if(is38)return J({steps:[{type:'model_output',content:[{type:'audio',data:btoa(b)}]}]});
       return J({candidates:[{content:{parts:[{inlineData:{mimeType:'audio/wav',data:btoa(b)}}]}}]});
     }
     if(url.includes('generativelanguage')){
@@ -52,9 +54,10 @@ const MOCK=`
     return real(url,opt);
   };
   // 음성 인식 가짜: start() 하면 window.__say 를 말한 것처럼 돌려준다
-  window.SpeechRecognition=function(){this.start=()=>{setTimeout(()=>{this.onstart&&this.onstart();
-    setTimeout(()=>{this.onresult&&this.onresult({resultIndex:0,results:[Object.assign([{transcript:window.__say||''}],{isFinal:true})]});
-      setTimeout(()=>this.onend&&this.onend(),30);},60);},10);};this.stop=()=>{};this.abort=()=>{};};
+  window.__AS_SILENCE=150; window.__AS_IDLE=500;
+  window.SpeechRecognition=function(){this.__n=0;this.start=()=>{const n=++this.__n;setTimeout(()=>{this.onstart&&this.onstart();
+    setTimeout(()=>{if(n===1)this.onresult&&this.onresult({resultIndex:0,results:[Object.assign([{transcript:window.__say||''}],{isFinal:true})]});
+      setTimeout(()=>this.onend&&this.onend(),30);},60);},10);};this.stop=()=>{setTimeout(()=>this.onend&&this.onend(),5);};this.abort=()=>{};};
   window.webkitSpeechRecognition=window.SpeechRecognition;
   // 기기 음성 가짜
   window.SpeechSynthesisUtterance=function(t){this.text=t;};
@@ -123,6 +126,18 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(tabs.home,'우리집 탭에서는 설정·PIN 버튼을 뺌');
   ok(await page.evaluate(()=>{const b=document.querySelector('.app-ver');return !!b&&b.textContent===APP_VER&&/^v\d+\.\d+$/.test(APP_VER);}),'헤더 오른쪽 위에 버전 표시');
 
+  console.log('\n[2c] 말 멈추기 버튼');
+  const stp=await page.evaluate(()=>{const r={};
+    A.speaking=true;asRefreshSpeakBtn();const b=document.getElementById('as-stopfab');r.show=!!b&&getComputedStyle(b).display!=='none';
+    const id0=_speakId;b.click();r.after=A.speaking;r.id=_speakId>id0;r.hide=getComputedStyle(document.getElementById('as-stopfab')).display==='none';
+    LV.mute=false;asLiveState().speaking=true;asSpeakFloat();r.live=getComputedStyle(document.getElementById('as-stopfab')).display!=='none';
+    lvStopSpeech();r.mute=LV.mute;r.liveHide=getComputedStyle(document.getElementById('as-stopfab')).display==='none';
+    const n0=LV.srcs.length;lvPlay(btoa(String.fromCharCode(1,0,2,0)));r.dropped=LV.srcs.length===n0;LV.mute=false;asLiveState().speaking=false;asSpeakFloat();return r;});
+  ok(stp.show,'말하는 중이면 떠 있는 멈추기 버튼이 보임');
+  ok(stp.after===false&&stp.id&&stp.hide,'누르면 말이 멈추고(A.speaking=false, 재생 번호 증가) 버튼이 사라짐');
+  ok(stp.live,'실시간 대화가 말하는 중에도 버튼이 보임');
+  ok(stp.mute&&stp.liveHide&&stp.dropped,'실시간 대화: 멈추면 남은 소리를 버리고 버튼이 사라짐');
+
   console.log('\n[3] 기상청 응답 해석·옷차림');
   await page.evaluate(()=>{localStorage.removeItem('fp_wx');S.wx=null;});
   await page.evaluate(()=>fetchWeather(true)); await page.waitForTimeout(400);
@@ -167,8 +182,38 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(after.saved===4&&after.last&&after.last.subject==='수학'&&after.last.dueDate==='2026-11-27'||(after.saved===4&&after.last&&after.last.subject==='수학'),'Firestore(스텁)에 저장됨, 수행 내용 보존');
   await page.waitForTimeout(600);
   const spoke=await page.evaluate(()=>({tts:window.__ttsUrl,model:localStorage.getItem('fp_tts_model'),body:window.__ttsBody}));
-  ok(/tts/.test(spoke.tts||'')&&spoke.model==='gemini-3.8-flash-tts','음성 입력으로 한 일은 Gemini 3.8 TTS로 읽어 줌 ('+spoke.model+')');
-  ok(spoke.body&&spoke.body.generationConfig.speechConfig.voiceConfig.voice==='Kore'&&spoke.body.contents[0].parts[0].speech_metadata,'새 TTS 요청 형식(voiceConfig.voice + speech_metadata)');
+  ok(/tts|interactions/.test(spoke.tts||'')&&spoke.model==='gemini-3.8-flash-tts','음성 입력으로 한 일은 Gemini 3.8 TTS로 읽어 줌 ('+spoke.model+')');
+  ok(spoke.body&&spoke.body.generation_config.speech_config[0].voice==='Kore'&&spoke.body.input[0].content[0].annotations[0].type==='speech_metadata'&&/\/interactions$/.test(spoke.tts),'3.8 TTS는 공식 Interactions 형식(speech_config:[{voice}] + speech_metadata)');
+
+  console.log('\n[7b] 목소리 설정이 요청에 반영됨');
+  const vz=await page.evaluate(async()=>{window.__ttsLog=[];window.__tts38fail=false;const r={};
+    for(const v of ['Charon','Aoede']){await asTtsFetch('목소리 구분 테스트 '+v,v);}
+    r.log=window.__ttsLog.map(x=>x.body.generation_config&&x.body.generation_config.speech_config[0].voice);
+    window.__tts38fail=true;localStorage.removeItem('fp_tts_model');window.__ttsLog=[];await asTtsFetch('폴백 형식 테스트','Charon');
+    const g=window.__ttsLog.find(x=>!/interactions/.test(x.url));r.fallback=g&&g.body.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName;
+    window.__tts38fail=false;localStorage.setItem('fp_tts_model','gemini-3.8-flash-tts');return r;});
+  ok(vz.log[0]==='Charon'&&vz.log[1]==='Aoede','선택한 목소리 이름이 요청마다 다르게 전달됨: '+vz.log.join(','));
+  ok(vz.fallback==='Charon','3.1/2.5 폴백은 prebuiltVoiceConfig.voiceName 으로 목소리 지정');
+
+  console.log('\n[7b2] 말이 잠깐 끊겨도 바로 끝내지 않음 / 소리로 확인');
+  const sil=await page.evaluate(async()=>{const r={};window.__say='';asBack();window.__say='안녕하세요 오늘 날씨';A.text='';A.err='';asOpen('listen');
+    await new Promise(x=>setTimeout(x,110)); r.t110=A.listening;        // 인식이 한 번 끝났어도(30ms 뒤) 아직 듣는 중
+    await new Promise(x=>setTimeout(x,700)); r.late=A.listening; return r;});
+  ok(sil.t110===true,'인식이 끊겨도 다시 시작해서 계속 듣는 중(말 사이 쉼 허용)');
+  ok(sil.late===false,'마지막 말소리 뒤 일정 시간이 지나면 끝냄');
+  const conf=await page.evaluate(async()=>{const r={};asBack();const n0=S.items.length;
+    window.__say='영어 수행평가 다음 주 월요일까지 발표 준비';asOpen('listen');
+    for(let i=0;i<60&&A.mode!=='draft';i++)await new Promise(x=>setTimeout(x,25));
+    r.draft=A.mode==='draft';window.__say='응';
+    for(let i=0;i<80&&A.mode==='draft';i++)await new Promise(x=>setTimeout(x,25));
+    await new Promise(x=>setTimeout(x,300)); r.mode=A.mode; r.added=S.items.length-n0;
+    asBack();const n1=S.items.length;window.__say='국어 수행평가 다음 주 화요일까지 감상문';asOpen('listen');
+    for(let i=0;i<60&&A.mode!=='draft';i++)await new Promise(x=>setTimeout(x,25));
+    window.__say='아니';for(let i=0;i<80&&A.mode==='draft';i++)await new Promise(x=>setTimeout(x,25));
+    await new Promise(x=>setTimeout(x,200)); r.noAdded=S.items.length-n1; r.noMode=A.mode; return r;});
+  ok(conf.draft,'말로 등록하면 확인 카드가 뜸');
+  ok(conf.mode==='result'&&conf.added===1,'"응"이라고 답하면 버튼 없이 등록됨: mode='+conf.mode+' 추가='+conf.added);
+  ok(conf.noAdded===0&&conf.noMode!=='draft','"아니"라고 답하면 등록하지 않고 닫음: 추가='+conf.noAdded+' mode='+conf.noMode);
 
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);

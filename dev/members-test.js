@@ -33,12 +33,13 @@ const MOCK=`
     url=String(url); window.__calls.push(url.slice(0,300));
     if(url.includes('apis.data.go.kr'))return J({response:{header:{resultCode:'00',resultMsg:'OK'},body:{items:{item:kma()}}}});
     if(url.includes('open-meteo'))return J({},500);
-    if(url.includes('generativelanguage')&&/tts/.test(url)){
-      {const b=JSON.parse(opt.body),sc=(b.generationConfig||{}).speechConfig||{},vc=sc.voiceConfig||{};window.__ttsVoices.push(vc.voice||(vc.prebuiltVoiceConfig||{}).voiceName);}
+    if(url.includes('generativelanguage')&&(/tts/.test(url)||url.includes('/interactions'))){
+      {const b=JSON.parse(opt.body),sc=(b.generationConfig||{}).speechConfig||{},vc=sc.voiceConfig||{};window.__ttsVoices.push(((b.generation_config||{}).speech_config||[{}])[0].voice||vc.voice||(vc.prebuiltVoiceConfig||{}).voiceName);}
       const n=7200,buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);const w=(o,s)=>[...s].forEach((c,i)=>dv.setUint8(o+i,c.charCodeAt(0)));
       w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,24000,true);dv.setUint32(28,48000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
       for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.round(Math.sin(i/12)*8000),true);
       let b='';new Uint8Array(buf).forEach(x=>b+=String.fromCharCode(x));
+      if(url.includes('/interactions'))return J({steps:[{type:'model_output',content:[{type:'audio',data:btoa(b)}]}]});
       return J({candidates:[{content:{parts:[{inlineData:{mimeType:'audio/wav',data:btoa(b)}}]}}]});
     }
     if(url.includes('generativelanguage')){const body=JSON.parse(opt.body);window.__gemLog.push(body);return J(window.__gemHandler(body));}
@@ -46,11 +47,12 @@ const MOCK=`
   };
   // 음성 인식: 한 번짜리는 __sayQ 에서 꺼내 말하고, continuous(호출어)는 테스트가 직접 결과를 밀어 넣는다
   window.__recs=[]; window.__sayQ=[];
+  window.__AS_SILENCE=150;window.__AS_IDLE=500;
   window.SpeechRecognition=function(){window.__recs.push(this);
     this.start=()=>{ if(this.continuous){this.__active=true;return;}
-      setTimeout(()=>{this.onstart&&this.onstart();const say=window.__sayQ.length?window.__sayQ.shift():'';
+      setTimeout(()=>{this.onstart&&this.onstart();const say=((this.__n=(this.__n||0)+1)===1&&window.__sayQ.length)?window.__sayQ.shift():'';
         setTimeout(()=>{if(say)this.onresult&&this.onresult({resultIndex:0,results:[Object.assign([{transcript:say}],{isFinal:true})]});setTimeout(()=>this.onend&&this.onend(),30);},60);},10);};
-    this.stop=()=>{};this.abort=()=>{this.__active=false;};};
+    this.stop=()=>{setTimeout(()=>this.onend&&this.onend(),5);};this.abort=()=>{this.__active=false;};};
   window.webkitSpeechRecognition=window.SpeechRecognition;
   window.SpeechSynthesisUtterance=function(t){this.text=t;};
   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[],cancel(){},speak(u){window.__spoken.push(u.text);setTimeout(()=>u.onend&&u.onend(),5);}}});

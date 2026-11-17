@@ -5,7 +5,7 @@
 ## 1. 지금 어디까지 왔나
 - 저장소: `wonithink-a11y/family-plan` (공개). 운영 주소 `https://wonithink-a11y.github.io/family-plan/`
 - **`main`에 모든 작업이 병합돼 있다** (우리집 탭·벽걸이·루미, 성적 분석·반복 일정·다크모드·이미지 동기화, 보안 작업). `feature/stamp-coupon`, `claude/serene-thompson-mu5lk4` 브랜치는 병합이 끝났다. 새 작업은 기능 브랜치에서 하고 PR로 병합한다.
-- 서비스워커 캐시 `family-plan-v17`, 앱 버전 v4.9. **Firebase 프로젝트는 family-plan 전용 `family-plan-11d44`** (SRF 관리시스템이 쓰는 `rosegarden-4937c`와 분리됨. 이 프로젝트의 규칙을 바꿔도 SRF에 영향이 없다).
+- 서비스워커 캐시 `family-plan-v18`, 앱 버전 v4.10. **Firebase 프로젝트는 family-plan 전용 `family-plan-11d44`** (SRF 관리시스템이 쓰는 `rosegarden-4937c`와 분리됨. 이 프로젝트의 규칙을 바꿔도 SRF에 영향이 없다).
 - 로그인은 Firebase **익명 인증**이고 Firestore 규칙은 `request.auth != null`을 요구한다. 가족 코드는 새로 만들 때 8자 이상(기존 저장 코드는 유지).
 - 주소로 처음 열면 **우리집 탭**이 첫 화면이다.
 - **디자인 방향은 A(앱 화면 "벤토 다크 글라스") + C(벽걸이·루미 "보이스 퍼스트 앰비언트")로 정했다**(허남원님 선택). 시안 캔버스 `https://claude.ai/artifact/EbABNSiwVAvJRs5TDNyMjN`, 규칙은 `.claude/skills/family-plan-design/SKILL.md`. **우리집 탭에는 적용했다(v4.8, 큰 시계·날씨 지금/오늘·루미 구슬·도장 동그라미)**. 일정·수행평가·설정 탭과 벽걸이(C안)는 아직 적용 전(다음 작업 후보).

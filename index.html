@@ -463,10 +463,10 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 .sec{border-radius:24px}
 header.hh>*{max-width:none;margin:0}
 header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 16px 6px;background:transparent;box-shadow:none}
-.hh-clock{display:flex;align-items:flex-end;gap:16px;min-width:0}
-.hh-time{font-size:56px;font-weight:200;letter-spacing:-2px;line-height:.95;font-variant-numeric:tabular-nums;color:var(--text)}
-.hh-meta{padding-bottom:5px;min-width:0}
-.hh-date{font-size:16px;font-weight:500;color:var(--text)}
+.hh-left{min-width:0}
+.hh-clock{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:clamp(16px,2.2vw,28px);min-width:0}
+.hh-time,.hh-date{font-size:clamp(32px,5.6vw,64px);font-weight:200;letter-spacing:-.04em;line-height:1.02;color:var(--text);white-space:nowrap}
+.hh-time{font-variant-numeric:tabular-nums}
 .hh-leave{font-size:13px;color:#5B6396;margin-top:2px;min-height:1.2em}
 .hh-right{display:flex;align-items:center;gap:8px;padding-bottom:4px;flex-shrink:0}
 .hh-ic{width:44px;height:44px;border-radius:14px;background:rgba(91,127,255,.12);color:#3B55C8;display:inline-flex;align-items:center;justify-content:center}
@@ -492,22 +492,30 @@ header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-
 .lm-s{font-size:13px;color:#5B6396;margin-top:2px}
 .lm-act{display:flex;gap:8px;margin-top:10px}
 .lm-act button{min-height:44px;flex:1;border-radius:14px;border:1px solid var(--border);background:transparent;font-size:13px;font-weight:700;color:var(--text)}
-.st-open{display:block;width:100%;padding:0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.wx-hrs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:8px}
+.wx-hr{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:12px;background:rgba(91,127,255,.06);font-size:12px}
+.wx-hh{font-size:11px;font-weight:700;color:#5B6396;white-space:nowrap}
+.wx-hi{font-size:20px;line-height:1.1}
+.wx-ht{font-size:15px;font-weight:700}
+.wx-hp{font-size:11px;color:#5B6396}
+.st-card{flex-direction:row!important;align-items:center;gap:12px}
+.st-open{display:block;flex:1;min-width:0;padding:0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.st-sec-t b{font-weight:700}
 .st-open:active{opacity:.85}
-.st-open .sec-h{margin-bottom:6px}
-.st-dots{display:flex;gap:6px;align-items:center;min-height:44px}
-.st-dot{flex:1;min-width:0;max-width:28px;aspect-ratio:1;border-radius:50%;border:1.5px dashed #7A84B5;box-sizing:border-box}
+.st-open .sec-h{margin-bottom:2px}
+.st-open .sec-t b{font-size:15px;letter-spacing:0;margin-left:6px;color:var(--text)}
+.st-dots{display:flex;gap:4px;align-items:center;min-height:30px}
+.st-dot{flex:1;min-width:0;max-width:20px;aspect-ratio:1;border-radius:50%;border:1.5px dashed #7A84B5;box-sizing:border-box}
 .st-dot.on{border:0;background:var(--p)}
-.st-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
-.st-txt{font-size:14px}.st-txt b{font-size:18px;font-weight:700}
 .st-btn{min-height:44px;padding:0 20px;border-radius:14px;background:#3B55C8;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
-@media (max-width:767px){.hh-time{font-size:44px}.hh-clock{gap:10px}.hh-date{font-size:13px;white-space:nowrap}.hh-leave{white-space:nowrap}.hh-ic{display:none}.hh-right{gap:6px}}
+@media (max-width:767px){.hh-ic{display:none}.hh-right{gap:6px}header.hh{flex-wrap:wrap}.hh-leave{white-space:nowrap}}
 /* 다크 모드: 반투명 유리 카드 + 은은한 빛 번짐 */
 [data-theme=dark] .sec{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 [data-theme=dark] .app-wrap:has(.home-fit){background:radial-gradient(700px 420px at 85% -10%,rgba(129,140,248,.28),transparent 60%),radial-gradient(600px 400px at 0% 110%,rgba(34,197,94,.10),transparent 60%),#0A0E1F}
 [data-theme=dark] .hh-leave,[data-theme=dark] .wx-k,[data-theme=dark] .wx-s,[data-theme=dark] .lm-s{color:#A9B1D6}
 [data-theme=dark] .hh-ic{background:rgba(129,140,248,.2);color:#C7D0FF}
-[data-theme=dark] .wx-now,[data-theme=dark] .wx-day{background:rgba(255,255,255,.06)}
+[data-theme=dark] .wx-now,[data-theme=dark] .wx-day,[data-theme=dark] .wx-hr{background:rgba(255,255,255,.06)}
+[data-theme=dark] .wx-hh,[data-theme=dark] .wx-hp{color:#A9B1D6}
 [data-theme=dark] .bf-chip{background:rgba(255,255,255,.1);color:#ECEEF8}
 [data-theme=dark] .bf-chip.rain{background:#818CF8;color:#0A0E1F}
 [data-theme=dark] .lm-act button{border-color:rgba(255,255,255,.16)}
@@ -521,20 +529,20 @@ header.hh,[data-theme=dark] header.hh{display:flex;align-items:flex-end;justify-
   .screen.home-fit>*{max-width:1500px}
   header .hd-row{margin-bottom:4px!important}
   .home-fit .home-cols{column-count:auto;display:grid;flex:1;min-height:0;width:100%;gap:10px;
-    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1.05fr) minmax(0,.7fr) minmax(0,1fr)}
+    grid-template-columns:1.05fr 1fr 1fr;grid-template-rows:minmax(0,1fr) auto auto}
   .home-fit .home-cols>*{margin:0!important;min-height:0;min-width:0}
   .home-fit .sec{overflow:auto;scrollbar-width:none}
   .home-fit .sec::-webkit-scrollbar{display:none}
   .home-fit .sec{padding:12px 16px;border-radius:24px;display:flex;flex-direction:column}
   .home-fit .lm-card{flex-direction:row}
-  header.hh{padding:10px 22px 4px}.hh-time{font-size:72px}.hh-clock{gap:20px}.hh-date{font-size:18px}
+  header.hh{padding:10px 22px 4px}
   .home-fit .sec-h{margin-bottom:6px}
   .home-fit .note{margin-top:4px;font-size:10px;line-height:1.4}
   .home-fit .home-cols>:nth-child(1){grid-column:1;grid-row:1}          /* 날씨·브리핑 */
   .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2}          /* 루미 */
   .home-fit .home-cols>:nth-child(4){grid-column:2;grid-row:1 / span 3} /* 아침 루틴 */
-  .home-fit .home-cols>:nth-child(2){grid-column:3;grid-row:1 / span 2}  /* 수행평가 */
-  .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:3}          /* 준비물 */
+  .home-fit .home-cols>:nth-child(2){grid-column:3;grid-row:1}          /* 수행평가 */
+  .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2 / span 2}  /* 준비물 */
   .home-fit .home-cols>:nth-child(6){grid-column:1;grid-row:3}          /* 도장·구입권 */
   .home-fit .home-cols>:nth-child(7){display:none}                      /* 최근 도장(공간 부족) */
   .home-fit .ghost-btn{margin:0!important;padding:7px;font-size:12px}
@@ -1489,7 +1497,7 @@ function wxFromKma(items,now){
   const tr=range(tomorrow); const trNoon=tomorrow.find(e=>e.t==='1500')||tomorrow[0];
   const [lb,ic]=wxKma(parseInt(cur.SKY||1),parseInt(cur.PTY||0));
   const r=range(today);
-  const hours=all.filter(e=>(e.d+e.t)>=(td+hh)).filter(e=>parseInt(e.t.slice(0,2))%3===0).slice(0,6).map(e=>({h:parseInt(e.t.slice(0,2)),temp:Math.round(num(e.TMP)||0),icon:wxKma(parseInt(e.SKY||1),parseInt(e.PTY||0))[1],pop:parseInt(e.POP||0)}));
+  const hours=all.filter(e=>(e.d+e.t)>=(td+hh)).filter(e=>parseInt(e.t.slice(0,2))%3===0).slice(0,6).map(e=>({d:e.d,h:parseInt(e.t.slice(0,2)),temp:Math.round(num(e.TMP)||0),icon:wxKma(parseInt(e.SKY||1),parseInt(e.PTY||0))[1],pop:parseInt(e.POP||0)}));
   return{src:'KMA',at:Date.now(),date:asYmd(now),
     now:{temp:Math.round(num(cur.TMP)||0),icon:ic,label:lb,pop:parseInt(cur.POP||0),hum:parseInt(cur.REH||0),wind:Math.round(num(cur.WSD)||0)},
     min:r.min,max:r.max,popMax:popArr.length?Math.max(...popArr):0,rainy,
@@ -1515,12 +1523,15 @@ async function wxFetchOm(now){
   const d=await res.json(); const c=d.current, dl=d.daily;
   const [lb,ic]=WX_WMO(c.weathercode);
   const td=asYmd(now); const idx=d.hourly.time.findIndex(t=>t===td+'T08:00');
+  // 지금 이후 3시간 간격 6칸(약 15~18시간)
+  const nowKey=td+'T'+asPad(now.getHours())+':00', hours=[];
+  d.hourly.time.forEach((t,i)=>{const hr=+t.slice(11,13); if(t>nowKey&&hr%3===0&&hours.length<6)hours.push({d:t.slice(0,10).replace(/-/g,''),h:hr,temp:Math.round(d.hourly.temperature_2m[i]),icon:WX_WMO(d.hourly.weathercode[i])[1],pop:d.hourly.precipitation_probability[i]||0});});
   const rainy=d.hourly.time.some((t,i)=>t.startsWith(td)&&+t.slice(11,13)>=6&&+t.slice(11,13)<=21&&d.hourly.weathercode[i]>=51&&d.hourly.weathercode[i]<=86);
   return{src:'OM',at:Date.now(),date:td,
     now:{temp:Math.round(c.temperature_2m),icon:ic,label:lb,pop:dl.precipitation_probability_max[0]||0,hum:c.relative_humidity_2m,wind:Math.round(c.wind_speed_10m/3.6)},
     min:Math.round(dl.temperature_2m_min[0]),max:Math.round(dl.temperature_2m_max[0]),popMax:dl.precipitation_probability_max[0]||0,rainy,
     morn:idx>=0?Math.round(d.hourly.temperature_2m[idx]):null,
-    tmr:{min:Math.round(dl.temperature_2m_min[1]),max:Math.round(dl.temperature_2m_max[1]),icon:WX_WMO(dl.weathercode[1])[1],label:WX_WMO(dl.weathercode[1])[0],pop:dl.precipitation_probability_max[1]||0},hours:[]};
+    tmr:{min:Math.round(dl.temperature_2m_min[1]),max:Math.round(dl.temperature_2m_max[1]),icon:WX_WMO(dl.weathercode[1])[1],label:WX_WMO(dl.weathercode[1])[0],pop:dl.precipitation_probability_max[1]||0},hours};
 }
 let _wxBusy=false;
 async function fetchWeather(force){
@@ -2853,6 +2864,12 @@ function wxLine(w){
   if(!w)return S.wxErr?'날씨를 불러오지 못했어요':'날씨 불러오는 중…';
   return (w.min!==null?'최저 '+w.min+'° · 최고 '+w.max+'°':'')+(w.popMax?' · 강수 '+w.popMax+'%':'');
 }
+// 3시간 간격 예보(지금 이후 6칸, 12시간 이상). 내일로 넘어가는 칸에는 '내일' 표시
+function wxHoursHtml(w){
+  const hs=(w&&w.hours)||[]; if(!hs.length)return'';
+  const td=asYmd(new Date()).replace(/-/g,'');
+  return`<div class="wx-hrs" role="list" aria-label="3시간 간격 예보">${hs.map(x=>`<div class="wx-hr" role="listitem"><span class="wx-hh">${x.d&&x.d!==td?'내일 ':''}${x.h}시</span><span class="wx-hi" aria-hidden="true">${x.icon}</span><span class="wx-ht">${x.temp}°</span><span class="wx-hp">${x.pop?x.pop+'%':'-'}</span></div>`).join('')}</div>`;
+}
 function buildBriefCard(){
   const w=S.wx; const o=wxOutfit(w); const um=wxUmbrella(w);
   const body=w?`<div class="wx2">
@@ -2862,6 +2879,7 @@ function buildBriefCard(){
       <div class="wx-row">강수 <b>${w.popMax||0}%</b></div>
       ${w.morn!==null&&w.morn!==undefined?`<div class="wx-row">등교 시간 <b>${w.morn}°</b></div>`:''}</div>
   </div>
+  ${wxHoursHtml(w)}
   <div class="bf-tips"><span class="bf-chip">${esc(o)}</span>${um?'<span class="bf-chip rain">우산 챙기기</span>':'<span class="bf-chip">우산 없어도 돼요</span>'}</div>
   ${w.tmr?`<div class="note">내일 ${w.tmr.icon} ${esc(w.tmr.label)} ${w.tmr.min!==null?w.tmr.min+'° / '+w.tmr.max+'°':''}${w.tmr.pop?' · 강수 '+w.tmr.pop+'%':''}</div>`:''}
   ${w.note?`<div class="note">${esc(w.note)}</div>`:''}`
@@ -2887,11 +2905,11 @@ function buildLumiCard(){
 function buildStampCard(cnt,total,open){
   const dots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<i class="st-dot${i<cnt?' on':''}"></i>`).join('');
   return`<div class="sec st-card">
-  <button class="st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 책 구입권 ${open.length}장. 눌러서 구입권 보기">
-    <span class="sec-h"><span class="sec-t">칭찬 도장</span><span class="sec-pill">책 구입권 ${open.length}장</span></span>
+  <button class="st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 누적 ${total}개, 책 구입권 ${open.length}장. 눌러서 구입권 보기">
+    <span class="sec-h"><span class="sec-t">칭찬 도장 <b>${cnt} / ${STAMPS_PER_COUPON}</b></span><span class="sec-pill">책 구입권 ${open.length}장</span></span>
     <span class="st-dots" aria-hidden="true">${dots}</span>
   </button>
-  <div class="st-row"><div class="st-txt"><b>${cnt} / ${STAMPS_PER_COUPON}</b> · 누적 ${total}개</div><button class="st-btn" onclick="stampFlow()">도장 찍기</button></div>
+  <button class="st-btn" onclick="stampFlow()">도장 찍기</button>
 </div>`;
 }
 // 책 구입권은 도장 동그라미를 눌렀을 때만 보인다 (사용하기는 부모 PIN 확인)
@@ -2908,8 +2926,7 @@ function buildClockHeader(){
   const now=new Date(); const DOW=['일','월','화','수','목','금','토'];
   const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0');
   return`<header class="hh">
-  <div class="hh-clock"><div class="hh-time" id="fp-time">${hh}:${mm}</div>
-    <div class="hh-meta"><div class="hh-date" id="fp-date">${now.getMonth()+1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일</div><div class="hh-leave" id="fp-leave">${asLeaveText(now)}</div></div></div>
+  <div class="hh-left"><div class="hh-clock"><span class="hh-time" id="fp-time">${hh}:${mm}</span><span class="hh-date" id="fp-date">${now.getMonth()+1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일</span></div><div class="hh-leave" id="fp-leave">${asLeaveText(now)}</div></div>
   <div class="hh-right">
     <button class="hh-ic" onclick="asBrief()" aria-label="오늘 브리핑 듣기"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
     <button class="hh-ic" onclick="asOpen('listen')" aria-label="말하기"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
@@ -3802,7 +3819,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.9';
+const APP_VER='v4.10';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

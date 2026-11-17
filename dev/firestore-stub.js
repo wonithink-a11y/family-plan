@@ -1,5 +1,5 @@
 (function(){
-  const store={}; const listeners=[];
+  const store=window.__seed||{}; const listeners=[];
   const today=new Date(); const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
   const T=iso(today);

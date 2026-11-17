@@ -5,7 +5,7 @@
 ## 1. 지금 어디까지 왔나
 - 저장소: `wonithink-a11y/family-plan` (공개). 운영 주소 `https://wonithink-a11y.github.io/family-plan/`
 - **메인 브랜치는 초기 버전(`edd7b23`) 그대로**이고, 모든 신규 작업은 `feature/stamp-coupon` 브랜치(최신 `01c5bca`)에 있다. 기록상 PR #1이 열려 있으나 병합 여부는 GitHub에서 직접 확인해야 한다.
-- 서비스워커 캐시 `family-plan-v4`. Firestore 프로젝트 `rosegarden-4937c`.
+- 서비스워커 캐시 `family-plan-v4`. Firestore 프로젝트 `family-plan-11d44`.
 
 ### 구현 완료 (가짜 서버·메모리 Firestore 테스트 통과)
 1. 우리집 탭: 칭찬 도장, 책 구입권(도장 5개마다 자동 발급), 아침 루틴(전부 체크하면 하루 한 번 도장 +1), 준비물 요청, D-day

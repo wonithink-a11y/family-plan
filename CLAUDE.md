@@ -23,7 +23,7 @@
 
 ## 구조
 - 빌드 없음. 단일 `index.html`(바닐라 JS + CSS, 약 4,150줄) + `sw.js`(서비스워커) + `manifest.json`.
-- 데이터: Firebase Firestore compat SDK 10.12.2. 프로젝트 `rosegarden-4937c`. 가족 코드로 공유 (`families/{코드}/...`).
+- 데이터: Firebase Firestore compat SDK 10.12.2. 프로젝트 `family-plan-11d44`. 가족 코드로 공유 (`families/{코드}/...`).
 - 배포: GitHub Pages. 주소 `https://wonithink-a11y.github.io/family-plan/` (경로에 저장소 이름이 붙는다).
 - `functions/` — FCM 푸시용 Cloud Function(`notifyPrep`). **미배포** (Blaze 요금제 필요).
 - `dev/` — 테스트 스크립트, `docs/` — 스크린샷과 문서.
@@ -47,7 +47,7 @@
 새 컬렉션을 추가하면 Firestore 규칙 허용이 필요하다. **규칙은 허남원님이 직접 고치므로** 컬렉션을 추가한 작업은 결과에 "규칙 추가 필요"를 반드시 적는다.
 
 ## 지켜야 할 규칙 (과거에 실제로 사고가 난 것들)
-1. **`sw.js`의 `CACHE_NAME`을 올린다.** 화면이 바뀌는 변경은 캐시 이름을 올려야 설치된 앱에 반영된다. 지금 `family-plan-v4`.
+1. **`sw.js`의 `CACHE_NAME`을 올린다.** 화면이 바뀌는 변경은 캐시 이름을 올려야 설치된 앱에 반영된다. 지금 `family-plan-v6`.
 2. **날짜는 `toISOString()`으로 만들지 않는다.** UTC로 바뀌어 한국에서 하루 일찍 표시된다. 로컬 연·월·일을 직접 꺼내 쓴다.
 3. **`KR_HOL`(공휴일 2025–2031)과 `EVT_CATS` 상수를 지우지 않는다.** 통계 화면을 리팩터링하다 지워서 흰 화면이 난 적이 있다.
 4. **중요한 기록은 localStorage에만 두지 않는다.** 삼성 One UI의 기기 관리가 Chrome 저장소를 주기적으로 지운다. 도장·루틴·구성원은 Firestore, 가족 코드는 Firestore 백업/복원 경로를 쓴다.

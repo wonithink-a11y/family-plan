@@ -5,7 +5,7 @@
 > **먼저 읽기.** 아래 "현재 상태 요약"과 "허남원님이 직접 할 일"만 보면 됩니다. 그 아래 섹션은 작업 순서대로 쌓인 상세 기록입니다.
 
 ## 현재 상태 요약
-- 저장소 `wonithink-a11y/family-plan`, 브랜치 `feature/stamp-coupon`, PR #1(메인 병합 전). 최신 커밋 `10b369d`. 단일 파일 `index.html`(바닐라 JS) + `sw.js`(v4), Firestore 프로젝트 `rosegarden-4937c`, GitHub Pages 배포.
+- 저장소 `wonithink-a11y/family-plan`, 브랜치 `feature/stamp-coupon`, PR #1(메인 병합 전). 최신 커밋 `10b369d`. 단일 파일 `index.html`(바닐라 JS) + `sw.js`(v4), Firestore 프로젝트 `family-plan-11d44`, GitHub Pages 배포.
 - 구현 완료(테스트 통과: `dev/smoke.js`, `assist-test.js`, `lumi-test.js`, `members-test.js`):
   1. 도장·책 구입권·아침 루틴(완료 시 하루 1회 도장 +1)·준비물 요청·D-day (우리집 탭)
   2. 벽걸이 화면 `?view=wall`: 기본은 **아빠/엄마/딸 3칸**(공통 일정 띠 + 칸별 🔊), 카드형으로 전환 가능, 07:40~08:30만 화면 유지(그 밖엔 어둡게)

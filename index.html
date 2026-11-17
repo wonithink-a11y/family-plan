@@ -560,6 +560,19 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
   .stat-val{display:inline;font-size:calc(20px*var(--fs))}.stat-lbl{font-size:calc(12px*var(--fs))}
 }
 
+/* 설정·가이드 화면: A안 */
+.bk-section,.guide-card,.guide-common-btn{border-radius:24px;border:1px solid var(--border)}
+.bk-section{padding:16px 18px}
+.bk-btn{border-radius:16px}
+.bk-ico{width:40px;height:40px;border-radius:12px;background:rgba(91,127,255,.12);display:inline-flex;align-items:center;justify-content:center;font-size:calc(20px*var(--fs));flex-shrink:0}
+.guide-card{padding:16px 10px}
+.guide-card-accent{display:none}
+.guide-card-ico{width:52px;height:52px;border-radius:16px;margin:0 auto 8px;background:rgba(91,127,255,.12);display:flex;align-items:center;justify-content:center}
+.guide-card-name{font-size:calc(14px*var(--fs))}.guide-card-cnt{font-size:calc(12px*var(--fs));color:#5B6396}
+[data-theme=dark] .bk-section,[data-theme=dark] .guide-card,[data-theme=dark] .guide-common-btn{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);box-shadow:none;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+[data-theme=dark] .bk-btn{background:rgba(255,255,255,.05)}
+[data-theme=dark] .bk-ico,[data-theme=dark] .guide-card-ico{background:rgba(129,140,248,.2)}
+[data-theme=dark] .guide-card-cnt{color:#A9B1D6}
 /* 가로 태블릿(1000px↑): 우리집 탭을 스크롤 없이 한 화면에 배치 (갤럭시 탭 S8+ 1138×712 기준) */
 @media (min-width:1000px) and (orientation:landscape){
   .screen.home-fit{overflow:hidden;display:flex;flex-direction:column;padding:10px 18px calc(66px + var(--safe-bot))!important}
@@ -624,6 +637,9 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
   .scr-list,.scr-evt{column-count:2;column-gap:16px}
   .scr-list>*,.scr-evt>*{break-inside:avoid}
   .scr-list>.wk-card,.scr-evt>.sec-label{column-span:all}
+  .guide-grid{grid-template-columns:repeat(4,1fr)}.guide-card{padding:12px 8px}
+  .scr-set{column-count:2;column-gap:16px}
+  .scr-set>*{break-inside:avoid}
   .scr-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
   .scr-stats>*{margin:0!important;min-width:0}
   .scr-stats>:first-child{grid-column:1 / -1}
@@ -911,6 +927,8 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 .ch-t{fill:var(--muted)}
 .ch-v{fill:var(--text)}
 [data-theme=dark] .sc-track{background:#2E3248}
+/* 다크 유리 카드 우선순위 보정(앞쪽 다크 규칙이 같은 선택자 점수로 이기던 문제) */
+:root[data-theme=dark] .card,:root[data-theme=dark] .evt-card,:root[data-theme=dark] .stat-section,:root[data-theme=dark] .wk-card,:root[data-theme=dark] .cal-popup,:root[data-theme=dark] .cal-wrap,:root[data-theme=dark] .stat,:root[data-theme=dark] .bk-section,:root[data-theme=dark] .guide-card,:root[data-theme=dark] .guide-common-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);box-shadow:none;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 </style>
 </head>
 <body>
@@ -3865,7 +3883,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.13';
+const APP_VER='v4.14';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -4648,7 +4666,7 @@ function buildGuideView(){
     <div><div class="hd-sub">📚 빛가람중학교 1학년</div><div class="hd-title">수행평가 가이드</div></div>
   </div>
 </header>
-<div class="screen">
+<div class="screen scr-guide">
   <div class="guide-common-btn" onclick="openGuideDetail('common',0)">
     <div style="width:44px;height:44px;border-radius:12px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:calc(22px*var(--fs));flex-shrink:0">⭐</div>
     <div style="flex:1">
@@ -4779,7 +4797,7 @@ function toggleGuideCheck(key, idx, color){
 function buildBackupView(){
   return`
 <header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">⚙️ 관리</div><div class="hd-title">백업 &amp; 설정</div></div><div class="hd-right">${syncBadge()}</div></div></header>
-<div class="screen">
+<div class="screen scr-set">
   <div class="bk-section">
     <div class="bk-title">👨‍👩‍👧 가족 동기화</div>
     <div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:10px">

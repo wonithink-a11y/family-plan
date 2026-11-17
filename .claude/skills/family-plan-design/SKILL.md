@@ -14,7 +14,7 @@ description: 패밀리 플랜(family-plan) 화면의 모양·배치·색·글자
 - **벽걸이(`?view=wall`)와 루미 음성 화면**은 같은 A안 토큰을 쓰되 **멀리서 읽히는 큰 글자와 3칸 배치**만 다르다(스타일이 아니라 용도 차이). 스타일을 따로 만들지 않는다.
 - 시안은 캔버스(`https://claude.ai/artifact/EbABNSiwVAvJRs5TDNyMjN`, 작성자만 열람)에 있다. 접근할 수 없으면 아래 토큰만으로 만든다.
 - 라이트 모드도 지원한다(자동 전환). 라이트는 기존 `:root` 변수(`--bg`, `--card`, `--text`, `--muted`, `--border`)를 따르고 다크는 `[data-theme=dark]`로 덮는다.
-- 적용 현황: 우리집, 일정(달력·목록), 수행평가(목록·통계)는 A안 적용 완료. 설정·가이드·벽걸이·루미 시트는 아직(다음 작업).
+- 적용 현황: 우리집, 일정(달력·목록), 수행평가(목록·통계), 설정, 가이드는 A안 적용 완료. 벽걸이·루미 시트·웰컴 화면은 진행 중.
 - 방향을 바꾸려면 먼저 허남원님께 묻는다(`CLAUDE.md` 제품 결정).
 
 ## 1. 먼저 정할 것 (코드 전에 한 줄씩)
@@ -60,6 +60,7 @@ description: 패밀리 플랜(family-plan) 화면의 모양·배치·색·글자
 - **실제 `<button>`, `<a href>`**. `div`에 `onclick`만 붙여 버튼처럼 쓰지 않는다(기존 코드는 인라인 `onclick`이 많으므로 새 코드부터).
 - **다크 모드를 같이 만든다**: 새 컴포넌트는 `var(--card)`, `var(--text)`, `var(--border)` 같은 변수를 쓰거나 `[data-theme=dark]` 규칙을 함께 추가한다. 한 번 흰 카드가 남아 글자가 안 보인 적이 있다.
 - **`!important` 주의**: `.screen`의 아래 여백이 `!important`라 덮을 때 같은 우선순위가 필요하다.
+- **다크 모드 규칙 순서**: 앞쪽에 `[data-theme=dark] .bk-section,.evt-card,...{background:var(--card)}` 같은 옛 규칙이 있어, 같은 점수의 새 규칙을 앞에 쓰면 진다. 새 다크 규칙은 `:root[data-theme=dark] ...`로 쓰거나 파일 끝 보정 블록에 둔다.
 - 날짜는 `toISOString()` 금지(CLAUDE.md 규칙 2). `KR_HOL`, `EVT_CATS` 삭제 금지.
 - 서비스워커 캐시 이름(`sw.js` `CACHE_NAME`)과 `APP_VER`를 올린다.
 

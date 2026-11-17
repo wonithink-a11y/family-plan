@@ -604,7 +604,7 @@ async function restoreFamilyCode(){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function setFamilyCode(code){
   const c=code.trim();
-  if(c.length<2){alert('코드를 2자 이상 입력해주세요.');return;}
+  if(c.length<8&&c!==S.familyCode){alert('보안을 위해 코드를 8자 이상 입력해주세요.\n(기존 코드를 쓰는 기기는 그대로 사용 가능)');return;}
   localStorage.setItem('fc',c);
   S.familyCode=c;
   backupFamilyCode(c); // Firebase에도 백업
@@ -689,7 +689,7 @@ function buildWelcome(){
     <input id="fc-input" class="f-input" style="margin-top:6px;font-size:18px;text-align:center;font-weight:800;letter-spacing:1px"
       placeholder="예: 우리가족2025" maxlength="20"
       onkeydown="if(event.key==='Enter')startWithCode()">
-    <div class="welcome-hint">가족 모두가 <b>같은 코드</b>를 입력하면<br>실시간으로 데이터가 공유됩니다 🔄<br>영어/한글/숫자 모두 가능 (2자 이상)</div>
+    <div class="welcome-hint">가족 모두가 <b>같은 코드</b>를 입력하면<br>실시간으로 데이터가 공유됩니다 🔄<br>영어/한글/숫자 모두 가능 (8자 이상)</div>
     <button class="welcome-start-btn" onclick="startWithCode()">시작하기 →</button>
   </div>
   ${S.syncStatus==='error'?`<div class="welcome-err">⚠️ ${esc(S.syncError||'오류')}<br><small>Firebase 콘솔 → 데이터베이스 및 스토리지 → Firestore Database를 먼저 활성화해주세요.</small></div>`:''}
@@ -1548,7 +1548,7 @@ function buildBackupView(){
       <button class="bk-btn bk-danger" onclick="clearAll()"><span class="bk-ico">⚠️</span><div><div>전체 초기화</div><div class="bk-btn-desc">모든 데이터 삭제 (복구 불가)</div></div></button>
     </div>`:''}
   </div>
-  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.3 Anonymous-Auth Edition</p>
+  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.4 Anonymous-Auth Edition</p>
 </div>`;
 }
 

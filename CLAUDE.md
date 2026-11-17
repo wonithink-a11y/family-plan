@@ -23,7 +23,7 @@
 
 ## 구조
 - 빌드 없음. 단일 `index.html`(바닐라 JS + CSS, 약 4,150줄) + `sw.js`(서비스워커) + `manifest.json`.
-- 데이터: Firebase Firestore compat SDK 10.12.2. 프로젝트 `rosegarden-4937c`. 가족 코드로 공유 (`families/{코드}/...`).
+- 데이터: Firebase Firestore compat SDK 10.12.2. 프로젝트 `family-plan-11d44`. 가족 코드로 공유 (`families/{코드}/...`).
 - 배포: GitHub Pages. 주소 `https://wonithink-a11y.github.io/family-plan/` (경로에 저장소 이름이 붙는다).
 - `functions/` — FCM 푸시용 Cloud Function(`notifyPrep`). **미배포** (Blaze 요금제 필요).
 - `dev/` — 테스트 스크립트, `docs/` — 스크린샷과 문서.

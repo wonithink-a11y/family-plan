@@ -1,0 +1,41 @@
+rules_version = '2';
+// Firebase 콘솔 → Firestore Database → 규칙 탭에 붙여넣고 게시하세요.
+// 인증(Auth)이 없으므로 '가족코드를 아는 사람'만 접근 가능한 구조는 유지하되,
+// 컬렉션 열거(코드 수집)와 비정상 쓰기를 차단합니다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 기기ID(24자 난수)가 비밀키 역할: 단건 get/create/update만 허용, list 금지
+    match /_device_codes/{did} {
+      allow get: if did.size() >= 20;
+      allow create, update: if did.size() >= 20
+        && request.resource.data.keys().hasOnly(['familyCode','savedAt'])
+        && request.resource.data.familyCode is string
+        && request.resource.data.familyCode.size() >= 2
+        && request.resource.data.familyCode.size() <= 20;
+      allow list, delete: if false;
+    }
+
+    // families/{code} 루트 문서는 접근 불가 (코드 열거 방지)
+    match /families/{code} {
+      allow read, write: if false;
+
+      match /items/{id} {
+        allow read, delete: if code.size() >= 2 && code.size() <= 20;
+        allow create, update: if code.size() >= 2 && code.size() <= 20
+          && request.resource.data.id == id
+          && request.resource.size() < 500000;
+      }
+      match /events/{id} {
+        allow read, delete: if code.size() >= 2 && code.size() <= 20;
+        allow create, update: if code.size() >= 2 && code.size() <= 20
+          && request.resource.data.id == id
+          && request.resource.size() < 500000;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

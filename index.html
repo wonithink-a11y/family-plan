@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#5B7FFF">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>패밀리 플랜 📚</title>
 <!-- Firebase SDK (CDN - 인터넷 연결 시 자동 캐시됨) -->
 <script>
@@ -24,17 +24,6 @@ window.addEventListener('unhandledrejection',function(e){
 });
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script>
-window.onerror=function(msg,src,line,col,err){
-  var app=document.getElementById('app');
-  if(app)app.innerHTML='<div style="padding:20px;color:red;font-size:13px;background:#fff;min-height:100vh"><b>오류 발생:</b><br>'+msg+'<br><br><b>위치:</b> 줄 '+line+'<br><br><b>상세:</b><br>'+(err?err.stack||err:'없음')+'</div>';
-  return true;
-};
-window.addEventListener('unhandledrejection',function(e){
-  var app=document.getElementById('app');
-  if(app)app.innerHTML='<div style="padding:20px;color:red;font-size:13px;background:#fff;min-height:100vh"><b>Promise 오류:</b><br>'+(e.reason||'알 수 없음')+'</div>';
-});
-</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root{
@@ -559,7 +548,12 @@ function startEventsSync(code){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function getDeviceId(){
   let id=localStorage.getItem('_did');
-  if(!id){id=Math.random().toString(36).slice(2,12);localStorage.setItem('_did',id);}
+  if(!id){
+    // 규칙상 이 ID가 비밀키 역할 → 암호학적 난수 24자
+    const b=crypto.getRandomValues(new Uint8Array(12));
+    id=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+    localStorage.setItem('_did',id);
+  }
   return id;
 }
 async function backupFamilyCode(code){

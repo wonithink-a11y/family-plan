@@ -242,6 +242,7 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 .attach-txt-preview{font-size:calc(11px*var(--fs));color:#444;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .attach-add-btn{width:68px;height:68px;border-radius:10px;border:2px dashed #CCC;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:calc(22px*var(--fs));color:#CCC;cursor:pointer;flex-shrink:0}
 .attach-add-btn span{font-size:calc(10px*var(--fs));font-weight:700;margin-top:2px}
+.attach-local{position:absolute;left:3px;bottom:2px;font-size:calc(11px*var(--fs));filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}
 .attach-local-note{font-size:calc(10px*var(--fs));color:#BBB;margin-bottom:6px}
 #attach-file{display:none}
 
@@ -555,7 +556,7 @@ let S={
   members:[],templates:[],goals:[],statsView:lsGet('statsView','progress'),scoreSem:'auto',scoreSubj:'',personFilter:null,searchOpen:false,weekOpen:lsGet('weekOpen','1')==='1',
   theme:lsGet('theme','auto'),fs:lsGet('fs','md'), // 이 기기의 화면 설정
   showBanner:true,deferredPrompt:null,
-  attachTargetId:null,imgViewSrc:null,txtAttachTargetId:null,
+  attachTargetId:null,imgViewSrc:null,imgViewId:null,txtAttachTargetId:null,
   trend:[],
 };
 let unsubFS=null; // Firestore 구독 해제 함수
@@ -564,18 +565,26 @@ function setState(p){Object.assign(S,p);render();}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    Firestore 헬퍼
-   이미지 첨부는 Firestore 용량 초과 방지를 위해
-   각 기기 로컬에만 저장하고, 텍스트만 동기화
+   이미지 첨부(동기화): 수행평가 문서에는 썸네일(160px)만 넣고,
+   원본(최대 1000px 압축본)은 families/{코드}/images/{id} 에 따로 저장 →
+   목록 로딩은 가볍고, 원본은 탭할 때만 읽음.
+   (이전 버전의 '이 기기에만 저장된' 이미지는 localStorage img_<id> 에 남아 있음 = legacy)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const MAX_IMG=6; // 수행평가당 이미지 최대 장수
+function legacyImgs(id){
+  try{return JSON.parse(localStorage.getItem('img_'+id)||'[]').filter(a=>a.type==='img'&&a.data&&!a.cloud);}catch(e){return[];}
+}
 function toFSDoc(item){
-  // Firestore 저장 시 이미지 base64 제외
-  return{...item, attachments:(item.attachments||[]).filter(a=>a.type==='txt')};
+  // 텍스트 + 클라우드 이미지 메타(썸네일)만 저장. legacy(기기 로컬) 이미지 base64는 제외
+  return{...item, attachments:(item.attachments||[]).filter(a=>a.type==='txt'||(a.type==='img'&&a.cloud))};
 }
 function fromFSDoc(data){
-  // Firestore 데이터 + 로컬 이미지 합치기
-  const localImgs=JSON.parse(localStorage.getItem('img_'+data.id)||'[]');
-  return{...data, attachments:[...(data.attachments||[]),...localImgs]};
+  // Firestore 데이터 + 아직 공유되지 않은 이 기기의 로컬 이미지 합치기
+  const have=new Set((data.attachments||[]).map(a=>a.id)); // 공유 완료된 이미지와 중복 방지
+  return{...data, attachments:[...(data.attachments||[]),...legacyImgs(data.id).filter(a=>!have.has(a.id))]};
 }
+const imgCol=()=>db.collection('families').doc(S.familyCode).collection('images');
+const imgIdsOf=item=>(item.attachments||[]).filter(a=>a.type==='img'&&a.cloud).map(a=>a.id);
 function colRef(){
   return db.collection('families').doc(S.familyCode).collection('items');
 }
@@ -583,9 +592,10 @@ function saveItemFS(item){
   if(!S.familyCode)return Promise.resolve();
   return colRef().doc(item.id).set(toFSDoc(item));
 }
-function deleteItemFS(id){
+function deleteItemFS(id,item){
   if(!S.familyCode)return Promise.resolve();
   localStorage.removeItem('img_'+id);
+  (item?imgIdsOf(item):[]).forEach(aid=>imgCol().doc(aid).delete().catch(()=>{})); // 연결된 이미지 원본도 삭제
   return colRef().doc(id).delete();
 }
 
@@ -732,12 +742,16 @@ async function copyFamilyData(from,to){
     ...(gl.exists?[b=>b.set(tr.collection('config').doc('goals'),gl.data())]:[])
   ];
   await batchWrite(ops);
+  // 이미지 원본은 용량이 커서(요청당 10MiB 제한) 소량씩 복사
+  const im=await fr.collection('images').get();
+  await batchWrite(im.docs.map(d=>b=>b.set(tr.collection('images').doc(d.id),d.data())),15);
   return{items:it.size,events:ev.size};
 }
 async function deleteFamilyData(code){
   const fr=db.collection('families').doc(code);
-  const [it,ev]=await Promise.all([fr.collection('items').get(),fr.collection('events').get()]);
+  const [it,ev,im]=await Promise.all([fr.collection('items').get(),fr.collection('events').get(),fr.collection('images').get()]);
   await batchWrite([
+    ...im.docs.map(d=>b=>b.delete(d.ref)),
     ...it.docs.map(d=>b=>b.delete(d.ref)),
     ...ev.docs.map(d=>b=>b.delete(d.ref)),
     b=>b.delete(fr.collection('config').doc('members')),
@@ -2388,6 +2402,11 @@ function buildBackupView(){
     <button class="bk-btn" onclick="exportAllEvtICS()"><span class="bk-ico">📆</span><div><div>가족 일정 → 캘린더 (.ics)</div><div class="bk-btn-desc">다가오는 일정을 기본 캘린더에 추가 (종일: 전날 09:00 / 시간 지정: 30분 전 알림)</div></div></button>
   </div>
   <div class="bk-section">
+    <div class="bk-title">🖼️ 이미지 첨부</div>
+    <div style="font-size:calc(12px*var(--fs));color:var(--muted);line-height:1.6;margin-bottom:${localImgInfo().n?'10px':'0'}">수행평가에 첨부한 이미지는 압축(최대 1000px)되어 가족 모든 기기와 동기화돼요. 수행평가당 최대 ${MAX_IMG}장입니다.</div>
+    ${localImgInfo().n?`<button class="bk-btn" onclick="migrateLocalImages()"><span class="bk-ico">📱</span><div><div>이 기기의 이미지 ${localImgInfo().n}장 공유하기</div><div class="bk-btn-desc">이전 버전에서 이 기기에만 저장된 이미지를 가족과 공유</div></div></button>`:''}
+  </div>
+  <div class="bk-section">
     <div class="bk-title">💾 데이터 백업</div>
     <button class="bk-btn" onclick="exportJSON()"><span class="bk-ico">📤</span><div><div>JSON으로 내보내기</div><div class="bk-btn-desc">전체 데이터를 파일로 저장</div></div></button>
     <button class="bk-btn" onclick="document.getElementById('import-file').click()"><span class="bk-ico">📥</span><div><div>JSON 불러오기</div><div class="bk-btn-desc">저장된 파일로 복원 (Firestore에 업로드됨)</div></div></button>
@@ -2456,13 +2475,15 @@ ${item.memo?`<div class="det-memo">📌 ${esc(item.memo)}</div>`:''}
   <span style="font-size:calc(13px*var(--fs));color:#555;font-weight:600"> / ${item.maxScore}점</span>
   <span class="score-pct" id="score-pct" style="background:${sc.accent};display:${sp!==null?'inline-block':'none'}">${sp!==null?sp+'%':''}</span>
 </div>
-<div class="det-sec">첨부 파일 <span style="font-weight:400;color:#BBB;font-size:calc(9px*var(--fs))">(이미지는 이 기기에만 저장)</span></div>
+<div class="det-sec">첨부 파일 <span style="font-weight:400;color:#BBB;font-size:calc(9px*var(--fs))">(이미지는 가족과 동기화 · 최대 ${MAX_IMG}장)</span></div>
+${atts.some(a=>a.type==='img'&&!a.cloud)?`<div class="attach-local-note">📱 표시된 이미지는 이 기기에만 있어요 → 설정 › 이미지 공유에서 가족과 공유할 수 있어요</div>`:''}
 <div class="attach-grid">
-  ${atts.map(a=>a.type==='img'?
-    `<div class="attach-card" onclick="viewImg('${esc(a.data)}')"><img src="${a.data}" alt="${esc(a.name)}"><div class="attach-rm" onclick="event.stopPropagation();removeAttach('${item.id}','${a.id}')">✕</div></div>`:
+  ${atts.map(a=>a.type==='img'?(a.cloud
+    ?`<div class="attach-card" onclick="viewCloudImg('${item.id}','${a.id}')"><img src="${a.thumb||''}" alt="${esc(a.name)}"><div class="attach-rm" onclick="event.stopPropagation();removeAttach('${item.id}','${a.id}')">✕</div></div>`
+    :`<div class="attach-card" onclick="viewImg('${esc(a.data)}')"><img src="${a.data}" alt="${esc(a.name)}"><span class="attach-local">📱</span><div class="attach-rm" onclick="event.stopPropagation();removeAttach('${item.id}','${a.id}')">✕</div></div>`):
     `<div class="attach-txt-card"><div class="attach-txt-preview">${esc(a.data)}</div><div class="attach-rm" onclick="removeAttach('${item.id}','${a.id}')">✕</div></div>`
   ).join('')}
-  <div class="attach-add-btn" onclick="openAttach('${item.id}')"><span>📎</span><span>이미지</span></div>
+  ${atts.filter(a=>a.type==='img').length<MAX_IMG?`<div class="attach-add-btn" onclick="openAttach('${item.id}')"><span>📎</span><span>이미지</span></div>`:''}
   <div class="attach-add-btn" onclick="openTxtAttach('${item.id}')"><span>📝</span><span>텍스트</span></div>
 </div>
 <div class="act-row" style="margin-top:14px">
@@ -2554,7 +2575,7 @@ function render(){
   if(S.overlay==='detail'){const item=S.items.find(i=>i.id===S.activeId);if(item)ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildDetailSheet(item)}</div></div>`;}
   else if(S.overlay==='form')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildFormSheet()}</div></div>`;
   else if(S.overlay==='txt-attach')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()"><div class="drag-handle"></div><div class="form-title" style="font-size:calc(16px*var(--fs))">📝 텍스트 메모 추가</div><textarea class="f-input" id="txt-area" placeholder="참고 내용, 필기 메모 등..." style="min-height:120px;resize:vertical"></textarea><div class="form-btns" style="margin-top:12px"><button class="cancel-btn" onclick="closeOverlay()">취소</button><button class="save-btn" style="background:var(--p)" onclick="saveTxtAttach()">추가하기</button></div></div></div>`;
-  else if(S.overlay==='img-view')ov=`<div class="img-viewer" onclick="closeOverlay()"><img src="${S.imgViewSrc}" alt="첨부 이미지"></div>`;
+  else if(S.overlay==='img-view')ov=`<div class="img-viewer" onclick="closeImgView()"><img src="${S.imgViewSrc}" alt="첨부 이미지"></div>`;
   const nav=`<nav class="bot-nav">
   <button class="nav-btn${S.tab==='cal'?' active':''}" onclick="setTab('cal')"><svg class="nav-svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="17" rx="3" fill="#5B7FFF" fill-opacity=".18" stroke="#5B7FFF" stroke-width="1.8"/><rect x="2" y="9" width="20" height="3.2" fill="#5B7FFF" fill-opacity=".35"/><line x1="7.5" y1="2" x2="7.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><line x1="16.5" y1="2" x2="16.5" y2="7" stroke="#5B7FFF" stroke-width="2.3" stroke-linecap="round"/><circle cx="7.5" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="12" cy="16.5" r="1.4" fill="#5B7FFF"/><circle cx="16.5" cy="16.5" r="1.4" fill="#5B7FFF"/></svg>달력</button>
   <button class="nav-btn${S.tab==='list'?' active':''}" onclick="setTab('list')"><span class="nav-ico">📋</span>수행평가</button>
@@ -2616,9 +2637,10 @@ function updScorePct(inp,max){const el=document.getElementById('score-pct');if(!
 // 삭제 → Firestore (모든 가족 기기에서 사라짐)
 function deleteItem(id){
   if(!confirm('삭제할까요?\n(모든 가족 기기에서 삭제됩니다)'))return;
+  const it0=S.items.find(i=>i.id===id);
   S.items=S.items.filter(i=>i.id!==id);
   setState({overlay:null,activeId:null});
-  deleteItemFS(id);
+  deleteItemFS(id,it0);
 }
 
 function openEdit(id){
@@ -2631,7 +2653,20 @@ function shareItem(id){
   if(navigator.share)navigator.share({title:`${item.subject} 수행평가`,text});
   else navigator.clipboard.writeText(text).then(()=>alert('클립보드에 복사됐어요!'));
 }
-function viewImg(src){setState({overlay:'img-view',imgViewSrc:src})}
+function viewImg(src){setState({overlay:'img-view',imgViewSrc:src,imgViewId:null})}
+function closeImgView(){setState({overlay:S.activeId?'detail':null,imgViewSrc:null,imgViewId:null});}
+// 클라우드 이미지: 썸네일을 먼저 보여주고 원본을 읽어와 교체
+function viewCloudImg(itemId,attId){
+  const item=S.items.find(i=>i.id===itemId);
+  const att=(item?.attachments||[]).find(a=>a.id===attId);if(!att)return;
+  setState({overlay:'img-view',imgViewSrc:att.thumb||'',imgViewId:attId,activeId:itemId});
+  imgCol().doc(attId).get().then(snap=>{
+    if(S.imgViewId!==attId)return; // 그 사이 닫았으면 무시
+    if(!snap.exists){alert('원본 이미지를 찾을 수 없어요. (다른 기기에서 삭제됐을 수 있어요)');return;}
+    S.imgViewSrc=snap.data().data;
+    const el=document.querySelector('.img-viewer img');if(el)el.src=S.imgViewSrc;
+  }).catch(e=>{if(S.imgViewId===attId)alert('이미지를 불러오지 못했어요: '+e.message);});
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    첨부 액션
@@ -2654,44 +2689,115 @@ function removeAttach(itemId,attachId){
   const removing=att.find(a=>a.id===attachId);
   const newAtts=att.filter(a=>a.id!==attachId);
   if(removing?.type==='img'){
-    // 로컬 이미지 목록 업데이트
-    const localImgs=newAtts.filter(a=>a.type==='img');
-    localStorage.setItem('img_'+itemId,JSON.stringify(localImgs));
+    if(removing.cloud)imgCol().doc(attachId).delete().catch(()=>{}); // 원본 문서 삭제
+    else localStorage.setItem('img_'+itemId,JSON.stringify(newAtts.filter(a=>a.type==='img'&&!a.cloud))); // 기기 로컬 이미지
   }
   const updated={...item,attachments:newAtts};
   S.items=S.items.map(i=>i.id!==itemId?i:updated);
   saveItemFS(updated);
   render();
 }
+// 원본 업로드는 기다리지 않음(오프라인이면 연결 시 자동 전송). 실패하면 첨부를 되돌림
+function uploadImage(doc){
+  imgCol().doc(doc.id).set(doc).catch(err=>{
+    alert('이미지 업로드 실패: '+err.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)');
+    const it=S.items.find(i=>i.id===doc.itemId);if(!it)return;
+    const upd={...it,attachments:(it.attachments||[]).filter(a=>a.id!==doc.id)};
+    S.items=S.items.map(i=>i.id!==upd.id?i:upd);saveItemFS(upd);render();
+  });
+}
 document.getElementById('attach-file').addEventListener('change',async e=>{
-  const id=S.attachTargetId;if(!id)return;
-  const files=Array.from(e.target.files);
-  const item=S.items.find(i=>i.id===id);if(!item)return;
-  const newAtts=[];
+  const id=S.attachTargetId;
+  const files=Array.from(e.target.files);e.target.value='';
+  if(!id||!files.length)return;
+  const base=S.items.find(i=>i.id===id);if(!base)return;
+  let imgCount=(base.attachments||[]).filter(a=>a.type==='img').length;
+  const added=[];
   for(const file of files){
     if(file.type.startsWith('image/')){
-      const data=await compressImg(file,600,600,.75);
-      newAtts.push({id:uid(),type:'img',name:file.name,data});
-    } else {
+      if(imgCount>=MAX_IMG){alert(`이미지는 수행평가당 최대 ${MAX_IMG}장까지 첨부할 수 있어요.`);break;}
+      try{
+        const {data,thumb}=await makeCloudImage(file);
+        const aid=uid();
+        uploadImage({id:aid,itemId:id,data,createdAt:Date.now()});
+        added.push({id:aid,type:'img',name:file.name.slice(0,40),thumb,cloud:true});
+        imgCount++;
+      }catch(err){alert('이미지를 처리하지 못했어요: '+err.message);}
+    }else{
       const text=await file.text();
-      newAtts.push({id:uid(),type:'txt',name:file.name,data:text.slice(0,500)});
+      added.push({id:uid(),type:'txt',name:file.name,data:text.slice(0,500)});
     }
   }
-  const allAtts=[...(item.attachments||[]),...newAtts];
-  const localImgs=allAtts.filter(a=>a.type==='img');
-  localStorage.setItem('img_'+id,JSON.stringify(localImgs)); // 이미지는 로컬에만
-  const updated={...item,attachments:allAtts};
+  const item=S.items.find(i=>i.id===id);if(!item||!added.length)return; // 처리 중 변경된 최신 상태 기준
+  const updated={...item,attachments:[...(item.attachments||[]),...added]};
   S.items=S.items.map(i=>i.id!==id?i:updated);
   setState({overlay:'detail',activeId:id});
-  saveItemFS(updated); // 텍스트 첨부만 Firestore에
-  e.target.value='';
+  saveItemFS(updated);
 });
-function compressImg(file,mw,mh,q){
-  return new Promise(res=>{
-    const c=document.createElement('canvas'),img=new Image();
-    img.onload=()=>{let w=img.width,h=img.height;if(w>mw){h=h*mw/w;w=mw}if(h>mh){w=w*mh/h;h=mh}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',q));};
-    img.src=URL.createObjectURL(file);
-  });
+function imgFrom(src){
+  return new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=()=>rej(new Error('읽을 수 없는 이미지예요'));img.src=src;});
+}
+function drawScaled(img,mw,mh,q){
+  const r=Math.min(1,mw/img.width,mh/img.height),w=Math.max(1,Math.round(img.width*r)),h=Math.max(1,Math.round(img.height*r));
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h); // 투명 PNG는 흰 배경
+  return c.toDataURL('image/jpeg',q);
+}
+// 원본(≤1000px, Firestore 문서 한도를 넘지 않게 단계적 압축) + 썸네일(160px)
+async function makeCloudImage(file){
+  const u=URL.createObjectURL(file);
+  try{
+    const img=await imgFrom(u);
+    let data=drawScaled(img,1000,1000,.72);
+    if(data.length>450000)data=drawScaled(img,800,800,.6);
+    if(data.length>450000)data=drawScaled(img,640,640,.5);
+    return{data,thumb:drawScaled(img,160,160,.6)};
+  }finally{URL.revokeObjectURL(u);}
+}
+// 이전 버전에서 이 기기에만 저장된 이미지 → 가족과 공유
+function localImgInfo(){
+  const ids=[];let n=0;
+  for(let k=0;k<localStorage.length;k++){
+    const key=localStorage.key(k);
+    if(key&&key.startsWith('img_')){
+      const id=key.slice(4),l=legacyImgs(id);
+      if(l.length&&S.items.some(i=>i.id===id)){n+=l.length;ids.push(id);}
+    }
+  }
+  return{n,ids};
+}
+async function migrateLocalImages(){
+  const {n,ids}=localImgInfo();
+  if(!n){alert('공유할 이미지가 없어요.');return;}
+  if(!confirm(`이 기기에만 저장된 이미지 ${n}장을 가족과 공유할까요?\n(수행평가당 최대 ${MAX_IMG}장, 업로드 후 이 기기의 로컬 사본은 삭제돼요)`))return;
+  let ok=0,fail=0;
+  for(const id of ids){
+    const item=S.items.find(i=>i.id===id);if(!item)continue;
+    const legacy=legacyImgs(id);
+    const room=Math.max(0,MAX_IMG-(item.attachments||[]).filter(a=>a.type==='img'&&a.cloud).length);
+    const metas=[],done=new Set();
+    for(const a of legacy.slice(0,room)){
+      try{
+        const img=await imgFrom(a.data);
+        const data=a.data.length>450000?drawScaled(img,800,800,.6):a.data;
+        const thumb=drawScaled(img,160,160,.6);
+        // 서버 확정을 기다림(15초 제한) — 실패 시 로컬 사본 유지
+        await Promise.race([imgCol().doc(a.id).set({id:a.id,itemId:id,data,createdAt:Date.now()}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('시간 초과')),15000))]);
+        metas.push({id:a.id,type:'img',name:(a.name||'image').slice(0,40),thumb,cloud:true});done.add(a.id);ok++;
+      }catch(err){fail++;}
+    }
+    fail+=Math.max(0,legacy.length-room); // 한도 초과분
+    if(metas.length){
+      const latest=S.items.find(i=>i.id===id)||item;
+      await saveItemFS({...latest,attachments:[...(latest.attachments||[]).filter(a=>!done.has(a.id)),...metas]}).catch(()=>{});
+    }
+    const rest=legacy.filter(a=>!done.has(a.id));
+    if(rest.length)localStorage.setItem('img_'+id,JSON.stringify(rest));else localStorage.removeItem('img_'+id);
+    // 메모리 상의 목록에서도 공유 완료된 로컬 사본 제거
+    S.items=S.items.map(i=>i.id!==id?i:{...i,attachments:(i.attachments||[]).filter(a=>a.cloud||a.type!=='img').concat(rest)});
+  }
+  render();
+  alert(`✅ ${ok}장 공유 완료${fail?`\n⚠️ ${fail}장은 공유하지 못해 이 기기에 남아 있어요`:''}`);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2768,24 +2874,28 @@ document.getElementById('import-file').addEventListener('change',e=>{
 });
 function clearDone(){
   if(!confirm('완료된 수행평가를 모두 삭제할까요?\n(모든 가족 기기에 반영됩니다)'))return;
-  const ids=S.items.filter(i=>i.tasks.length>0&&i.tasks.every(t=>t.done)).map(i=>i.id);
-  ids.forEach(id=>localStorage.removeItem('img_'+id));
-  batchWrite(ids.map(id=>b=>b.delete(colRef().doc(id)))).catch(e=>alert('오류: '+e.message));
+  const targets=S.items.filter(i=>i.tasks.length>0&&i.tasks.every(t=>t.done));
+  targets.forEach(i=>localStorage.removeItem('img_'+i.id));
+  batchWrite([
+    ...targets.map(i=>b=>b.delete(colRef().doc(i.id))),
+    ...targets.flatMap(i=>imgIdsOf(i).map(aid=>b=>b.delete(imgCol().doc(aid))))
+  ]).catch(e=>alert('오류: '+e.message));
 }
 function clearAll(){
   if(!confirm('모든 데이터(수행평가+일정)를 삭제할까요?\n(모든 가족 기기에서 삭제됩니다. 복구 불가)'))return;
   S.items.forEach(i=>localStorage.removeItem('img_'+i.id));
   const ops=[
     ...S.items.map(i=>b=>b.delete(colRef().doc(i.id))),
+    ...S.items.flatMap(i=>imgIdsOf(i).map(aid=>b=>b.delete(imgCol().doc(aid)))),
     ...S.events.map(e=>b=>b.delete(evtColRef().doc(e.id)))
   ];
   batchWrite(ops).catch(e=>alert('오류: '+e.message));
 }
 // Firestore 배치는 500건 제한 → 400건씩 나눠 커밋
-async function batchWrite(ops){
-  for(let i=0;i<ops.length;i+=400){
+async function batchWrite(ops,size=400){
+  for(let i=0;i<ops.length;i+=size){
     const b=db.batch();
-    ops.slice(i,i+400).forEach(op=>op(b));
+    ops.slice(i,i+size).forEach(op=>op(b));
     await b.commit();
   }
 }

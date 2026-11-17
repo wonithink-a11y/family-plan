@@ -33,6 +33,16 @@ service cloud.firestore {
           && request.resource.size() < 500000;
       }
 
+      // 첨부 이미지 원본 (JPEG dataURL, 수행평가 문서에는 썸네일만 저장)
+      match /images/{id} {
+        allow read, delete: if code.size() >= 2 && code.size() <= 20;
+        allow create, update: if code.size() >= 2 && code.size() <= 20
+          && request.resource.data.id == id
+          && request.resource.data.keys().hasOnly(['id', 'itemId', 'data', 'createdAt'])
+          && request.resource.data.data is string
+          && request.resource.size() < 700000;
+      }
+
       // 가족 구성원/템플릿/목표점수 목록 (config/members, templates, goals 문서만 허용)
       match /config/{id} {
         allow read, delete: if code.size() >= 2 && code.size() <= 20 && id in ['members', 'templates', 'goals'];

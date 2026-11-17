@@ -169,7 +169,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   console.log('\n[6] 화면');
   await page.evaluate(()=>setTab('stamp')); await page.waitForTimeout(300);
   await page.screenshot({path:path.join(tmp,'as_home_tablet.png')});
-  ok(await page.evaluate(()=>!!document.querySelector('.bf-wx')&&document.querySelectorAll('.as-row').length>=2),'우리집 탭에 날씨 카드와 수행평가 목록이 보임');
+  ok(await page.evaluate(()=>!!document.querySelector('.wx2')&&document.querySelectorAll('.as-row').length>=2),'우리집 탭에 날씨 카드와 수행평가 목록이 보임');
 
   console.log('\n[7] 말로 수행평가 등록 (가짜 음성 인식)');
   await page.evaluate(()=>{window.__say='수학 수행평가 다음 주 금요일까지 서술형 문제 풀이';asOpen('listen');}); await page.waitForTimeout(500);
@@ -247,6 +247,23 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   const q=await page.evaluate(async()=>{window.__ttsLog=[];let act=0,max=0;const of=window.fetch;window.fetch=async(u,o)=>{if(String(u).includes('generativelanguage')){act++;max=Math.max(max,act);await new Promise(x=>setTimeout(x,40));const r=await of(u,o);act--;return r;}return of(u,o);};
     await Promise.all([1,2,3].map(i=>asTtsFetch('동시 요청 테스트 '+i+Date.now(),'Kore')));window.fetch=of;return max;});
   ok(q===1,'음성 요청은 동시에 여러 개 보내지 않고 한 줄로 보냄(최대 동시 '+q+'개)');
+
+  console.log('\n[7e] 우리집 화면 구성(A안 카드 + C안 시계·음성 구슬·도장 줄)');
+  const hm=await page.evaluate(async()=>{setTab('stamp');await new Promise(x=>setTimeout(x,150));const r={};
+    r.time=/^\d\d:\d\d$/.test((document.getElementById('fp-time')||{}).textContent||'');
+    document.getElementById('fp-time').textContent='00:00';fpClockTick();r.tick=document.getElementById('fp-time').textContent!=='00:00';
+    r.date=/\d+월 \d+일 .요일/.test((document.getElementById('fp-date')||{}).textContent||'');
+    S.wx={src:'KMA',at:Date.now(),date:asYmd(new Date()),now:{temp:12,label:'구름 조금',icon:'x'},min:10,max:17,popMax:73,rainy:true,morn:11,tmr:null};render();
+    const wk=document.querySelector('.wx2');r.now=!!wk&&/지금/.test(wk.textContent)&&/12°/.test(wk.textContent);r.day=!!wk&&/오늘/.test(wk.textContent)&&/10°/.test(wk.textContent)&&/73%/.test(wk.textContent)&&/등교 시간 11°/.test(wk.textContent);
+    const orb=document.querySelector('.orb');r.orb=!!orb&&orb.getAttribute('aria-label').includes(asName());
+    r.dots=document.querySelectorAll('.st-dot').length;r.dotsOn=document.querySelectorAll('.st-dot.on').length;r.cnt=((S.reward&&S.reward.stampCount)||0)%STAMPS_PER_COUPON;
+    r.stampBtn=!!document.querySelector('.st-btn');r.hero=!!document.querySelector('.hero');
+    r.tickets=document.querySelectorAll('.st-card .ticket').length>=1;return r;});
+  ok(hm.time&&hm.tick&&hm.date,'위쪽에 큰 시계(HH:MM)와 날짜가 있고 글자만 갈아 끼움');
+  ok(hm.now&&hm.day,'날씨 카드에 지금(현재 기온·상태)과 오늘(최저·최고·강수·등교 시간 기온)이 같이 나옴');
+  ok(hm.orb,'루미 음성 구슬 버튼이 있음(말하기 시작)');
+  ok(hm.dots===10&&hm.dotsOn===hm.cnt,'도장 동그라미 10개 중 '+hm.cnt+'개가 채워짐: '+hm.dotsOn+'/'+hm.dots);
+  ok(hm.stampBtn&&hm.tickets&&!hm.hero,'도장 찍기 버튼과 구입권(사용하기)이 도장 카드 안에 있고 예전 큰 도장 카드는 없음');
 
   console.log('\n[8] 말로 준비물 요청');
   await page.evaluate(()=>{asBack();window.__say='금요일에 체육복 가져가야 돼';asListen();}); await page.waitForTimeout(500);

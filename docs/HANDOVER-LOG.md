@@ -248,3 +248,10 @@
 - 시안: UI UX Pro Max 스킬(`nextlevelbuilder/ui-ux-pro-max-skill`, MIT)의 스타일·팔레트·글꼴 자료(CSV)를 읽어 5가지 방향을 캔버스로 만듦(A 벤토 다크 글라스, B 소프트 UI 라이트, C 보이스 퍼스트 앰비언트, D 애플 네이티브, E 머티리얼 3). 이 스킬의 검색 스크립트는 실행이 막혀 자료 파일을 직접 읽었다. 허남원님이 A, C를 선택.
 - 릴스에 나온 스킬 5개(impeccable, taste-skill, unslop, ui-skills, interface-design)를 GitHub에서 확인: 앱이 제품 UI·단일 HTML이라 통째 설치는 하지 않고, 우리 전용 스킬 `.claude/skills/family-plan-design/SKILL.md` 1개로 필요한 아이디어만 우리 말로 정리(출처·라이선스 기재: unslop은 CC BY 4.0 크레딧 필요). taste-skill은 회사 소개 사이트용이고 종료 훅이 스크립트를 실행해 제외.
 - `CLAUDE.md`에 "화면 작업은 디자인 스킬로 시작" 규칙 추가. 시안의 앱 적용은 미착수.
+
+## 우리집 화면 A안 적용 + C안 요소 (v4.8)
+- 요청(허남원님): A안으로 하되 ① C안의 시계 그대로 ② 날씨는 현재 + 오늘 ③ A안의 "책 구입권까지 N개 남았어요" 자리에 C안 루미(음성 구슬) ④ 아래 책 구입권 자리에 C안의 도장 동그라미. 디자인 스킬(`family-plan-design`)을 먼저 읽고 진행.
+- 변경(`buildStampView` 주변): 위쪽 `buildClockHeader()`(큰 시계 HH:MM 200 굵기, 날짜, `asLeaveText` 등교까지 N분, 브리핑·말하기 SVG 버튼, 동기화 배지·버전) + `fpClockTick()`(10초마다 글자만 갈아 끼움). `buildBriefCard()`는 "지금"(w.now 기온·상태)과 "오늘"(최저~최고, 강수 `popMax`, 등교 시간 `morn` 기온) 두 칸 + 옷차림·우산 칩 + 내일 한 줄. `buildLumiCard()`: 음성 구슬(`.orb` 버튼 → `asOpen('listen')`), "루미야 하고 불러 보세요"(호출어 켠 기기) 또는 "루미에게 말해 보세요", 질문하기·문제은행 버튼. `buildStampCard()`: 동그라미 10개(`STAMPS_PER_COUPON`, 채운 만큼 색), `7 / 10 · 누적 7개`, 도장 찍기 버튼(`stampFlow`), 보유 구입권 카드(`사용하기`)와 사용한 구입권 3개.
+- 큰 도장 카드(`.hero`, `.ring`, `.pips`)와 옛 날씨 버튼 3개(`.bf-act`)는 삭제(루미 카드로 이동). 가로 태블릿 한 화면 그리드: 1열 날씨/루미/도장·구입권, 2열 루틴, 3열 수행평가(2행)/준비물. 다크 모드는 반투명 유리 카드(`rgba(255,255,255,.07)`+블러)와 은은한 빛 번짐(`.app-wrap:has(.home-fit)`), 라이트는 흰 카드.
+- 한계: 날씨 아이콘(`w.now.icon`)은 데이터의 이모지 그대로(SVG 교체는 후속). 확인은 가짜 Firestore + 헤드리스 Chrome 캡처(1138×712, 1280×800, 390×844, 다크·라이트). 실기기 미검증.
+- 테스트: `dev/assist-test.js [7e]`(시계·날씨 지금/오늘·구슬·도장 동그라미).

@@ -36,6 +36,7 @@ window.addEventListener('unhandledrejection',function(e){
 });
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 :root{
   --p:#5B7FFF;--bg:#F5F4FF;--card:#fff;--text:#1A1A2E;--muted:#888;
@@ -400,15 +401,18 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
    Firebase 초기화
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const firebaseConfig = {
-  apiKey: "AIzaSyDU5MJI2w8AYazPxyzukE1lWAzLXOFfr7o",
-  authDomain: "rosegarden-4937c.firebaseapp.com",
-  projectId: "rosegarden-4937c",
-  storageBucket: "rosegarden-4937c.firebasestorage.app",
-  messagingSenderId: "109165303238",
-  appId: "1:109165303238:web:db2401090c9e79a5be8ec7"
+  apiKey: "AIzaSyBkveZ9AOIWAMNvfgKlTljc6pf3xEfERd8",
+  authDomain: "family-plan-11d44.firebaseapp.com",
+  projectId: "family-plan-11d44",
+  storageBucket: "family-plan-11d44.firebasestorage.app",
+  messagingSenderId: "355808963418",
+  appId: "1:355808963418:web:60fe2cc636f174c16ae163"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+// 익명 인증: 앱을 통한 접근만 허용 (Firestore 규칙에서 request.auth != null 요구)
+const authReady = firebase.auth().signInAnonymously()
+  .catch(e=>console.warn('익명 로그인 실패:',e));
 
 // 오프라인 지원 켜기 - 인터넷 없어도 마지막 데이터 볼 수 있음
 db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
@@ -557,13 +561,19 @@ function startEventsSync(code){
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    가족코드 Firebase 백업/복원 (삼성 최적화 대응)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function _getCookie(k){const m=document.cookie.match('(?:^|; )'+k+'=([^;]*)');return m?decodeURIComponent(m[1]):null;}
+function _setCookie(k,v){document.cookie=k+'='+encodeURIComponent(v)+'; max-age=315360000; path=/; SameSite=Lax';}
 function getDeviceId(){
-  let id=localStorage.getItem('_did');
-  if(!id){id=Math.random().toString(36).slice(2,12);localStorage.setItem('_did',id);}
+  // localStorage가 지워져도 복원되도록 쿠키에 이중 저장
+  let id=localStorage.getItem('_did')||_getCookie('_did');
+  if(!id){id=Math.random().toString(36).slice(2,12);}
+  try{localStorage.setItem('_did',id);}catch(e){}
+  _setCookie('_did',id);
   return id;
 }
 async function backupFamilyCode(code){
   try{
+    await authReady;
     const did=getDeviceId();
     await db.collection('_device_codes').doc(did).set({
       familyCode:code,
@@ -573,6 +583,7 @@ async function backupFamilyCode(code){
 }
 async function restoreFamilyCode(){
   try{
+    await authReady;
     const did=getDeviceId();
     const snap=await db.collection('_device_codes').doc(did).get();
     if(snap.exists){
@@ -593,7 +604,7 @@ async function restoreFamilyCode(){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function setFamilyCode(code){
   const c=code.trim();
-  if(c.length<2){alert('코드를 2자 이상 입력해주세요.');return;}
+  if(c.length<8&&c!==S.familyCode){alert('보안을 위해 코드를 8자 이상 입력해주세요.\n(기존 코드를 쓰는 기기는 그대로 사용 가능)');return;}
   localStorage.setItem('fc',c);
   S.familyCode=c;
   backupFamilyCode(c); // Firebase에도 백업
@@ -678,7 +689,7 @@ function buildWelcome(){
     <input id="fc-input" class="f-input" style="margin-top:6px;font-size:18px;text-align:center;font-weight:800;letter-spacing:1px"
       placeholder="예: 우리가족2025" maxlength="20"
       onkeydown="if(event.key==='Enter')startWithCode()">
-    <div class="welcome-hint">가족 모두가 <b>같은 코드</b>를 입력하면<br>실시간으로 데이터가 공유됩니다 🔄<br>영어/한글/숫자 모두 가능 (2자 이상)</div>
+    <div class="welcome-hint">가족 모두가 <b>같은 코드</b>를 입력하면<br>실시간으로 데이터가 공유됩니다 🔄<br>영어/한글/숫자 모두 가능 (8자 이상)</div>
     <button class="welcome-start-btn" onclick="startWithCode()">시작하기 →</button>
   </div>
   ${S.syncStatus==='error'?`<div class="welcome-err">⚠️ ${esc(S.syncError||'오류')}<br><small>Firebase 콘솔 → 데이터베이스 및 스토리지 → Firestore Database를 먼저 활성화해주세요.</small></div>`:''}
@@ -1537,7 +1548,7 @@ function buildBackupView(){
       <button class="bk-btn bk-danger" onclick="clearAll()"><span class="bk-ico">⚠️</span><div><div>전체 초기화</div><div class="bk-btn-desc">모든 데이터 삭제 (복구 불가)</div></div></button>
     </div>`:''}
   </div>
-  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.1 Auto-Restore Edition</p>
+  <p style="text-align:center;font-size:11px;color:#CCC;margin-top:6px">v3.5 New-Project Edition</p>
 </div>`;
 }
 
@@ -2011,25 +2022,28 @@ window.addEventListener('popstate', () => {
 });
 
 
-if(S.familyCode){
-  // 저장된 가족 코드가 있으면 바로 Firestore 연결
-  startSync(S.familyCode);
-} else {
-  // localStorage에 없으면 Firebase에서 복원 시도
-  document.getElementById('app').innerHTML=`
-    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#667eea,#764ba2);">
-      <div style="font-size:40px">👨‍👩‍👧‍👦</div>
-      <div style="color:#fff;font-weight:700;font-size:16px">데이터 복원 중...</div>
-      <div style="color:rgba(255,255,255,0.7);font-size:12px">잠시만 기다려주세요</div>
-    </div>`;
-  restoreFamilyCode().then(restored=>{
-    if(restored){
-      startSync(restored);
-    } else {
-      render(); // 복원 실패 시 웰컴 화면
-    }
-  });
-}
+// 인증 완료 후 시작 (실패해도 진행: 오프라인 대응)
+authReady.then(()=>{
+  if(S.familyCode){
+    // 저장된 가족 코드가 있으면 바로 Firestore 연결
+    startSync(S.familyCode);
+  } else {
+    // localStorage에 없으면 Firebase에서 복원 시도
+    document.getElementById('app').innerHTML=`
+      <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#667eea,#764ba2);">
+        <div style="font-size:40px">👨‍👩‍👧‍👦</div>
+        <div style="color:#fff;font-weight:700;font-size:16px">데이터 복원 중...</div>
+        <div style="color:rgba(255,255,255,0.7);font-size:12px">잠시만 기다려주세요</div>
+      </div>`;
+    restoreFamilyCode().then(restored=>{
+      if(restored){
+        startSync(restored);
+      } else {
+        render(); // 복원 실패 시 웰컴 화면
+      }
+    });
+  }
+});
 
 setInterval(checkAlarms,60000);
 </script>

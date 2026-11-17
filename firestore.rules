@@ -32,6 +32,15 @@ service cloud.firestore {
           && request.resource.data.id == id
           && request.resource.size() < 500000;
       }
+
+      // 가족 구성원 목록 (config/members 문서 1개만 허용)
+      match /config/{id} {
+        allow read, delete: if code.size() >= 2 && code.size() <= 20 && id == 'members';
+        allow create, update: if code.size() >= 2 && code.size() <= 20 && id == 'members'
+          && request.resource.data.keys().hasOnly(['list'])
+          && request.resource.data.list is list
+          && request.resource.data.list.size() <= 12;
+      }
     }
 
     match /{document=**} {

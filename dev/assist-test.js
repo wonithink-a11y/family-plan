@@ -13,6 +13,7 @@ fs.writeFileSync(path.join(tmp,'index.html'),html);
 const MOCK=`
 (function(){
   localStorage.setItem('fc','TEST');
+  if(!localStorage.getItem('fp_assist_cfg'))localStorage.setItem('fp_assist_cfg',JSON.stringify({agent:false})); // 옛 흐름(말 해석 → 확인 카드) 검사용
   localStorage.setItem('kma_api_key',JSON.stringify('KMAKEY%2Babc'));   // 가든 앱 형식: JSON 문자열
   localStorage.setItem('gemini_api_key','GEMKEY123');                    // 가든 앱 형식: 그대로
   window.__calls=[]; window.__spoken=[];

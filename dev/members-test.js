@@ -162,9 +162,12 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await page.screenshot({path:path.join(tmp,'mb_wall_portrait.png')});
   await page.setViewportSize({width:1280,height:800});
 
-  console.log('\n[5b] 우리집 탭 가족별 3칸 (가로 태블릿)');
+  console.log('\n[5b] 우리집 탭 "전체" 보기: 가족별 3칸 (가로 태블릿)');
   await page.goto('file://'+path.join(tmp,'index_mb.html')); await page.waitForTimeout(900);
   await ev(SEED); await ev(()=>{S.events=S.events.map(e=>e.id==='x1'?{...e,person:'아버지'}:e);setTab('stamp');render();}); await page.waitForTimeout(300);
+  ok(await ev(()=>homeView())==='kid'&&await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')),'기본은 딸 기준(예전 기능별 한 화면)');
+  ok(await ev(()=>[...document.querySelectorAll('.hh-who button')].map(b=>b.textContent).join('|'))==='서연|아버지|엄마|전체'&&await ev(()=>document.querySelector('.hh-who .sel').textContent)==='서연','머리에 보기 선택(딸·아빠·엄마·전체), 지금은 딸');
+  await page.click('.hh-who button:last-child'); await page.waitForTimeout(300);
   ok(await ev(()=>document.querySelectorAll('.hf-lane').length)===3&&await ev(()=>!document.querySelector('.home-cols')),'가족별 3칸(아빠·엄마·딸), 기능별 칸은 안 나옴');
   const hl=await ev(()=>[...document.querySelectorAll('.hf-lane')].map(l=>l.textContent));
   ok(hl[0].includes('아버지')&&hl[0].includes('회의')&&hl[0].includes('출장'),'아빠 칸: 회의·출장');
@@ -194,22 +197,28 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(await ev(()=>{const b=document.querySelector('.hf-kid .hf-cp');return !!b&&/구입권 \d+장/.test(b.textContent)&&b.getBoundingClientRect().height>=36;}),'딸 칸 머리에 책 구입권 개수(누르면 구입권 보기)');
   ok(await ev(()=>[...document.querySelectorAll('.hf-lane button')].every(b=>b.getBoundingClientRect().height>=36)),'칸 안 버튼 높이 36px 이상(머리 버튼·도장 버튼은 44px)');
   ok(await ev(()=>[...document.querySelectorAll('.hf-ib:not(.sm)')].every(b=>b.getBoundingClientRect().width>=44&&b.getAttribute('aria-label'))),'칸 머리 버튼은 44px 이상 + aria-label');
-  // 설정에서 기능별로 되돌리기, 폰·세로 화면은 예전 배치
-  await ev(()=>setTab('backup')); await page.waitForTimeout(250);
-  ok(await ev(()=>/가족별 3칸/.test(document.body.innerText)&&/기능별/.test(document.body.innerText)),'설정 탭에 "우리집 배치"(가족별 3칸/기능별) 선택이 있음');
-  await ev(()=>{setHomeLayout('function');setTab('stamp');}); await page.waitForTimeout(250);
-  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')&&JSON.parse(localStorage.getItem('fp_assist_cfg')).homeLayout==='function'),'"기능별"로 바꾸면 예전 배치(이 기기에만 저장)');
-  await ev(()=>setHomeLayout('family')); await page.waitForTimeout(250);
-  ok(await ev(()=>!!document.querySelector('.home-fam')),'다시 "가족별 3칸"');
+  // 아빠·엄마 보기: 선택했을 때만 그 사람 일정이 넓게 나옴
+  await ev(SEED); await ev(()=>{S.events=S.events.map(e=>e.id==='x1'?{...e,person:'아버지'}:e);render();}); await page.waitForTimeout(250);   // 앞 단계가 길어지면 스텁 구독이 일정을 덮어쓰므로 다시 심는다
+  await page.click('.hh-who button:nth-child(2)'); await page.waitForTimeout(300);
+  const dv=await ev(()=>({lanes:document.querySelectorAll('.hf-lane').length,txt:document.querySelector('.hf-lane').textContent,sel:document.querySelector('.hh-who .sel').textContent,stored:JSON.parse(localStorage.getItem('fp_assist_cfg')).homeView}));
+  ok(dv.lanes===1&&dv.txt.includes('아버지')&&dv.txt.includes('회의')&&dv.txt.includes('출장')&&!dv.txt.includes('아침 루틴'),'아빠를 고르면 아빠 일정만 넓게(루틴·수행평가는 안 나옴)');
+  ok(dv.sel==='아버지'&&dv.stored==='dad','선택이 표시되고 이 기기에 저장됨(homeView=dad)');
+  await page.screenshot({path:path.join(tmp,'mb_home_dad.png')});
+  await page.click('.hh-who button:nth-child(3)'); await page.waitForTimeout(300);
+  ok(await ev(()=>document.querySelector('.hf-lane').textContent.includes('치과')&&!document.querySelector('.hf-lane').textContent.includes('회의')),'엄마를 고르면 엄마 일정(치과)만');
+  await page.click('.hh-who button:first-child'); await page.waitForTimeout(300);
+  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.hf-lane')&&JSON.parse(localStorage.getItem('fp_assist_cfg')).homeView==='kid'),'딸을 고르면 딸 기준 한 화면으로 돌아옴');
+  ok(await ev(()=>!/아빠·엄마 일정/.test('')&&!document.body.innerText.includes('회의')),'딸 기준에서는 아빠·엄마 일정이 화면에 안 나옴(선택했을 때만)');
+  await ev(()=>setHomeView('all')); await page.waitForTimeout(250);
   await page.setViewportSize({width:390,height:844}); await page.waitForTimeout(400);
-  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')),'폰(390px)은 예전 1열 배치');
+  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')&&!document.querySelector('.hh-who')),'폰(390px)은 딸 기준 1열 배치(보기 선택 없음)');
   await page.setViewportSize({width:820,height:1180}); await page.waitForTimeout(400);
-  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')),'세로 태블릿도 예전 배치');
+  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')&&!document.querySelector('.hh-who')),'세로 태블릿도 딸 기준 배치');
   await page.setViewportSize({width:1280,height:800}); await page.waitForTimeout(400);
-  ok(await ev(()=>!!document.querySelector('.home-fam')),'다시 가로로 돌리면 가족별 3칸으로 자동 전환');
+  ok(await ev(()=>!!document.querySelector('.home-fam')&&!!document.querySelector('.hh-who')),'다시 가로로 돌리면 고른 보기(전체)로 자동 전환, 선택 칩도 다시 나옴');
 
   console.log('\n[5c] 기능별 배치: 도장은 루틴 아래, 루미 카드는 아래 끝까지 / 머리 오른쪽 아이콘은 화면 모드');
-  await ev(()=>{setHomeLayout('function');setTab('stamp');}); await page.waitForTimeout(300);
+  await ev(()=>{setHomeView('kid');setTab('stamp');}); await page.waitForTimeout(300);
   const gm=await ev(()=>{const R=s=>{const e=document.querySelector(s);return e&&e.getBoundingClientRect();};const cols=[...document.querySelectorAll('.home-cols>*')];
     const rt=cols.find(c=>/오늘 아침 루틴/.test(c.textContent)&&!c.classList.contains('st-card')), st=document.querySelector('.st-card'), lm=document.querySelector('.lm-card'), wx=document.querySelector('.bf');
     const a=rt.getBoundingClientRect(), b=st.getBoundingClientRect(), c=lm.getBoundingClientRect(), d=wx.getBoundingClientRect();
@@ -219,12 +228,12 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(gm.page,'기능별 배치도 한 화면에 들어감');
   await page.screenshot({path:path.join(tmp,'mb_home_function.png')});
   await ev(()=>{window.__briefN=0;const o=asBrief;window.asBrief=function(){window.__briefN++;return o.apply(this,arguments);};S.theme='auto';applyPrefs();render();});
-  const seq=[]; for(let i=0;i<3;i++){ await page.click('.hh-right .hh-ic:first-child'); await page.waitForTimeout(150); seq.push(await ev(()=>S.theme+'|'+document.querySelector('.hh-right .hh-ic').getAttribute('aria-label'))); }
+  const seq=[]; for(let i=0;i<3;i++){ await page.locator('.hh-right .hh-ic').first().click(); await page.waitForTimeout(150); seq.push(await ev(()=>S.theme+'|'+document.querySelector('.hh-right .hh-ic').getAttribute('aria-label'))); }
   ok(seq[0].startsWith('light|')&&seq[1].startsWith('dark|')&&seq[2].startsWith('auto|'),'머리 오른쪽 아이콘을 누를 때마다 자동 → 라이트 → 다크 → 자동: '+seq.join(' / '));
   ok(/화면 모드: 자동/.test(seq[2])&&/화면 모드: 라이트/.test(seq[0])&&/화면 모드: 다크/.test(seq[1]),'버튼 이름에 현재 모드가 나옴(aria-label)');
   ok(await ev(()=>window.__briefN)===0,'그 아이콘은 더 이상 브리핑을 읽지 않음(마이크와 다른 기능)');
   ok(await ev(()=>/브리핑 듣기/.test(document.querySelector('.bf').textContent)),'브리핑은 날씨 카드의 "브리핑 듣기"로 계속 가능');
-  await ev(()=>{S.theme='auto';applyPrefs();setHomeLayout('family');});
+  await ev(()=>{S.theme='auto';applyPrefs();setHomeView('all');});
 
   console.log('\n[6] 루미 대화: 한 사람 일정 → 그 사람 목소리, 일정 등록');
   await ev(SEED); await ev(()=>{S.events=S.events.map(e=>e.id==='x1'?{...e,person:'아버지'}:e);});   // 앞 단계가 오래 걸리면 스텁 구독이 일정을 덮어쓰므로 다시 심는다

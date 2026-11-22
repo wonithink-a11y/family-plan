@@ -249,7 +249,6 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(q===1,'음성 요청은 동시에 여러 개 보내지 않고 한 줄로 보냄(최대 동시 '+q+'개)');
 
   console.log('\n[7e] 우리집 화면 구성(A안 카드 + C안 시계·음성 구슬·도장 줄)');
-  await page.evaluate(()=>{asSetCfg({homeLayout:'function'});});   // 이 블록은 기능별(카드) 배치를 검사한다. 가족별 3칸은 members-test [5b]
   const hm=await page.evaluate(async()=>{setTab('stamp');await new Promise(x=>setTimeout(x,150));const r={};
     r.time=/^\d\d:\d\d$/.test((document.getElementById('fp-time')||{}).textContent||'');
     document.getElementById('fp-time').textContent='00:00';fpClockTick();r.tick=document.getElementById('fp-time').textContent!=='00:00';
@@ -275,7 +274,6 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(hm.stampBtn&&hm.noTicket&&!hm.hero,'도장 카드에는 도장 찍기 버튼만 있고 구입권 사용하기는 보이지 않음');
   ok(hm.sheet&&hm.closed,'도장 동그라미를 누르면 구입권 시트(사용하기)가 열리고 닫힘');
 
-  await page.evaluate(()=>{asSetCfg({homeLayout:'family'});});
   console.log('\n[7f] 일정·수행평가 화면 A안 스타일');
   const st=await page.evaluate(async()=>{const r={};document.documentElement.setAttribute('data-theme','dark');
     setTab('list');setLsSub('list');await new Promise(x=>setTimeout(x,150));

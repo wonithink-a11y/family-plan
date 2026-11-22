@@ -384,3 +384,11 @@
 - 테스트: `dev/members-test.js` [5c](도장이 루틴 바로 아래·같은 세로줄, 루미 카드 아래 끝이 도장 카드 아래 끝과 같음·날씨 아래·더 큼, 한 화면, 머리 아이콘 3번 눌러 순환·aria-label·브리핑 호출 0회). 가짜 서버 기준.
 - `docs/DEVICE-CHECKLIST.md`: A 화면 · B 입력·알림 · C 소리·마이크 · D 벽걸이 · E 동기화(각 항목 = 확인 방법 + 기대 + 결과 칸), F 만들지 않은 것, 결과 정리 순서. 새 기능을 만들면 여기에 항목을 추가한다(`CLAUDE.md`에 기록).
 
+## 보상 상점(구입권 종류 고르기) + 우리집 보기 선택 (v4.28, 캐시 v37, 2026-11-22)
+- 선택: 허남원님이 상점 방식 세 가지 중 "구입권 종류 고르기"를 골랐다(도장 규칙 불변, 종류만 선택). 나머지 두 안(도장을 써서 교환, 종류별 도장 수)은 하지 않았다.
+- 데이터: `meta/shop` = `{items:[{id,text}]}`(없으면 `defaultShopItems()` 3종). 구입권 문서에 `pick`(고르기 대기)·`kindId` 추가, 이름은 고르기 전 `구입권`. `applyStamp`(트랜잭션 안)이 `shopKinds()`로 종류 수를 보고 하나뿐이면 바로 그 이름·`pick:false`, 둘 이상이면 `pick:true`로 발급한다(상점 목록은 화면 상태 `S.shopItems`를 쓰며 `meta/shop` 구독으로 갱신). 예전 구입권은 `pick` 없음 = 그대로 사용 가능.
+- 동작: `couponTicket`(고르기 대기면 "종류를 골라 주세요"+[종류 고르기]), `pickCoupon`(`askChoice` → 트랜잭션으로 `pick`이 아직 true일 때만 `title`·`kindId` 기록 → 이미 정해졌으면 안내만), `useCoupon`(`pick`이면 막고 안내, 그 외 PIN+확인, 확인 문구에 구입권 이름), `editShop`(PIN → `askList` → `meta/shop`, 바뀐 게 없으면 저장 안 함). 우리집 알약은 `구입권 N장 · 고르기`(대기가 있을 때), 큰 안내는 종류가 둘 이상이면 "종류를 골라 보세요"를 덧붙인다. `COUPON_TITLE`은 `구입권`으로 바꿨고 화면의 "책 구입권" 고정 글자를 없앴다.
+- 우리집 보기(가로 태블릿): `homeView`('kid'|'dad'|'mom'|'all', 기본 kid), `homeWho()` 칩(머리 `.hh-who`, 이름은 구성원 설정을 따름), `buildHomeMember`(아빠·엄마 한 사람, `.home-solo` + `.hf-two` 두 줄), `buildHomeFamily`(전체), kid는 예전 `.home-cols`. `homeLaneHead`를 분리해 전체·한 사람 보기가 같이 쓴다. 칩은 `isHomeWide()`일 때만 그리고 방향이 바뀌면 다시 그린다. 설정의 "우리집 배치"와 `setHomeLayout`·`homeLayout`은 없앴다(옛 값은 무시됨).
+- 시험 중 발견: 가짜 Firestore 트랜잭션에 `tx.update`가 없어 `dev/firestore-stub.js`에 추가했다(진짜 Firestore에는 있음). `members-test`의 `SEED`는 앞 단계가 길면 스텁 구독이 덮어쓰므로 필요한 곳에서 다시 심는다.
+- 테스트: 새 `dev/shop-test.js`(기본 3종, 발급 pick, 안내·알약, 티켓, 고르기 시트·저장·토스트, 나중에, 사용 차단, 다른 기기 선행, 사용, 1종이면 즉시 확정, 편집·PIN·변경 없음, 설정 버튼, 4개 화면 크기·테마 캡처), `members-test` [5b](기본 딸, 칩, 아빠·엄마 선택 시에만 그 일정, 저장, 폰·세로 칩 없음, 가로 복귀)·[5c]. 가짜 서버 기준.
+

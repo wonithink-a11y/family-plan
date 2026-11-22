@@ -346,3 +346,11 @@
 - 호출 교체: 도장(`stampFlow`)·루틴 완료는 `big`, 목소리 확인(`asVoiceToast`)은 경고/정보, 구성원 브리핑 읽기(`asSpeakMember`)·푸시 포그라운드 수신은 정보 토스트. 표시 시간은 예전 고정 7초 대신 글자 수에 따라(최대 12초).
 - 테스트: `dev/ask-test.js` [8h](소스에 옛 이름이 없음, 같은 문구 합치기, 도장 축하가 가운데·이모지 없음·`role=status`, 루미 시트가 열리면 위쪽). `lumi-test`·`members-test`·`assist-test`의 `#as-toast` 검사는 `.nt-t` 텍스트 검사로 바꿨다. 가짜 서버 기준.
 
+## 루틴 항목별 편집 (v4.23, 캐시 v32, 2026-11-22)
+- 문제(코드로 확인): 예전 `editRoutine`은 쉼표 한 줄을 풀어 **글자가 같은 항목만** 옛 `id`로 이었다. 이름을 고치면 새 `id`가 생겨 오늘 체크가 사라졌고, 쉼표를 항목에 못 썼으며, 마지막 미체크 항목을 지우면 그날 도장이 안 찍혔다(도장은 체크를 누를 때만 판정).
+- `askList({title,desc,items,max,maxLen,noun,placeholder,emptyMsg,extra:[{label,set()}]})`: `_askRun`의 목록 종류. 행 = 번호 + 입력칸 + 위/아래/삭제(44px, `aria-label` "N번 항목 …", SVG). 이동·추가·삭제 뒤 포커스를 유지하고 `aria-live`로 읽어 준다. Enter는 다음 칸으로(마지막이면 새 행), Ctrl+Enter는 저장. 빈 줄은 저장 때 조용히 버리고 0개면 시트 안 안내. 바꾼 내용이 있으면 취소·Esc·바깥 누르기를 **두 번**(첫 번째는 안내만). 확인 모달은 다른 시트가 열려 있으면 기다리는 구조라 이 시트 안에서 쓸 수 없어서 이렇게 했다. 폰(<480px)은 버튼 줄이 입력칸 아래로 내려간다.
+- `editRoutine`: 부모 PIN → `askList` → (열어 둔 사이 `S.routineItems`가 바뀌었으면 `askConfirm` 덮어쓰기) → 바뀐 게 없으면 쓰지 않음 → `routineRef().set({items})` → 저장 토스트 → `stampIfRoutineDone(items)`.
+- `stampIfRoutineDone`: `db.runTransaction` 안에서 `routine/{오늘}`의 `done`으로 모든 항목이 체크됐고 `stamped`가 아니면 `applyStamp`(id `rt_날짜`)로 도장 +1, `stamped:true`를 기록한다. 하루 한 번 규칙은 `toggleRoutine`과 같다. 실패하면 경고 토스트만 띄우고 저장 성공은 유지한다.
+- 하지 않은 것: 드래그 정렬, 항목별 시간·아이콘, 요일별·자녀별 루틴, 루미가 루틴을 고치는 도구.
+- 테스트: `dev/ask-test.js` [8i](askList 단독: 이동·추가·삭제·Enter·두 번 취소·한도·기본 항목·훅), [8j](이름을 고쳐도 체크 유지, 순서 변경, 변경 없음, 지워서 도장, 중복 지급 없음, 다른 기기 충돌 취소·덮어쓰기, 쉼표 방식 제거), [9] 화면 크기·테마별 목록 시트가 화면 안. 가짜 서버 기준.
+

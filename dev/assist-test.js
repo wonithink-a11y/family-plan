@@ -64,7 +64,7 @@ const MOCK=`
   window.SpeechSynthesisUtterance=function(t){this.text=t;};
   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[],cancel(){},speak(u){window.__spoken.push(u.text);setTimeout(()=>u.onend&&u.onend(),5);}}});
   window.__wl=0; Object.defineProperty(navigator,'wakeLock',{value:{request:async()=>{window.__wl++;return{release:async()=>{window.__wl--;},addEventListener(){}};}}});
-  window.prompt=()=>'1234';window.confirm=()=>true;
+  window.prompt=()=>'1234';window.__askAuto=()=>'1234';window.confirm=()=>true;
 })();`;
 
 let fails=0; const errs=[];

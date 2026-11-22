@@ -305,3 +305,21 @@
 - 적용: 우리집 지금 날씨, 3시간 단위 줄, 내일 안내, 벽걸이 날씨. 색은 해·번개 노랑, 구름 회청, 비 파랑, 눈 하늘색(다크는 밝은 톤, 벽걸이는 항상 밝은 톤).
 - 구성원 아이콘(`m.icon`)과 입력 시트 라벨 이모지는 그대로(후속).
 - 테스트: `dev/assist-test.js [7j]`(9종 SVG·서로 다름·대체 아이콘·카드에 이모지 없음·3시간 줄). 확인은 가짜 서버 기준 캡처(다크·라이트)이며 실기기 미확인.
+
+## 루미 도구 노출 분리 (2026-11-22, PR #26, 캐시 v27)
+- 계기: OpenJarvis(스킬=도구 카탈로그, 도구 없는 simple 모드)를 참고. 도구가 15개뿐이라 토큰 절감보다 **안전**이 목적이다.
+- `AS_GROUPS`(read 8 / write 5 / confirm 2), `asToolNames(live)`, `asToolDecls(live)`. REST 대화(`asAgentTurn`)는 `A.pending`이 있을 때만 confirm 그룹을 보여 준다(없으면 13개). Live `setup`은 연결 때 고정이라 항상 포함(15개) — 기존 "다음 턴 + 사용자 동의" 검사가 확정을 막는다.
+- `asTool` 첫 줄 방어: `asToolNames(true)`에 없는 이름은 거부(조회 전용 모드에서 모델이 쓰기 도구를 불러도 실행·확인 대기 모두 안 생김). 확인 대기 여부로는 막지 않는다(기존 "확인할 내용이 없어요" 흐름 유지).
+- 설정: `lumiMode` `full`(기본)|`readonly`, 설정 탭 "대화 모드 권한". 기기별 `fp_assist_cfg`에만 저장(Firestore 없음, 규칙 추가 없음). `readonly`면 `asSys`가 "조회만 가능, 등록은 앱에서"로 바뀐다.
+- 하지 않은 것: 질문 키워드로 도구를 고르는 라우팅(오분류 위험), 구성원별 자동 분기(기기 단위만 가능), 벽걸이 기본값 변경(허남원님 결정 필요, 지금은 `full`).
+- 테스트: `dev/lumi-test.js` [3] 도구 개수 13, [11] 조회 전용 6항목. 가짜 서버 기준. 실제 Gemini·Live·태블릿 화면은 미검증.
+
+## prompt() → 앱 안 입력 시트 (v4.19, 캐시 v28, 2026-11-22)
+- `askSheet(o)`(필드 text·number·textarea, 검증, 보조 버튼), `askText(title,o)`, `askPin({title,desc,again,verify})`. 값 또는 `null`(취소)을 돌려주고 한 번에 하나만 연다(열려 있으면 `null`).
+- **`render()`와 분리**: `#ask-ov`를 body에 직접 붙이고 `S`에 넣지 않아서 `onSnapshot` 재렌더에도 입력이 유지된다(테스트 [4]). z-index 1000. `visualViewport`로 높이를 맞춰 가상 키보드 대응(실기기 미확인).
+- PIN: 직접 만든 키패드(키 높이 60px)라 OS 키보드가 안 뜬다. 물리 키보드 숫자·Backspace도 된다. 틀리면 시트 유지+흔들림, 5회 틀리면 30초 잠금(`_pinFails`, `_pinLockUntil`, 모듈 변수라 새로고침하면 풀림). `parentAuth`의 5분 유지(`_pinUntil`)와 해시 저장 방식은 그대로 → Firestore 규칙 변경 없음.
+- 교체한 곳: `parentAuth`(설정·입력), `changePin`(한 번 더 확인 추가), `stampFlow`, `editRoutine`(쉼표 한 줄 유지, 항목별 편집은 후속), `changeFamilyCode`("자동 생성" 버튼), `addMember`, `saveAsTemplate`, `setGoal`("목표 삭제" 버튼, 시트 안 1~100 검증). 함수들이 async가 됐다.
+- 테스트 훅: `window.__askAnswer`(큐, `null`=취소)와 `window.__askAuto()`(항상 같은 답). 기존 4개 테스트의 `prompt` 가짜는 `__askAuto`로 함께 바꿨다. `askPin`은 훅 답에도 `verify`를 적용한다.
+- 테스트: `dev/ask-test.js`(시트 동작·PIN 잠금·실제 흐름·화면 캡처 12장). 가짜 서버 기준.
+- 남은 것: `alert()`/`confirm()` 약 70곳(후속), 루틴 항목별 편집, 구성원 아이콘 SVG.
+

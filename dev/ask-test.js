@@ -215,11 +215,68 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(await ev(()=>document.querySelector('.ask-t').textContent)==='모든 데이터(수행평가+일정)를 삭제할까요?'&&await ev(()=>document.activeElement.classList.contains('ask-cancel')),'PIN 통과 후 위험 확인(기본 포커스 취소)');
   await page.keyboard.press('Escape'); await page.waitForTimeout(300);
   ok(await ev(()=>S.items.length)>0,'확인에서 취소하면 삭제 안 됨');
-  // 검증 경고는 토스트(시트를 막지 않음)
-  await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();S.members=[];addMember();window.__askAnswer=[];});
-  await ev(()=>{window.__askAnswer=['민수'];return addMember();}); await ev(()=>{window.__askAnswer=['민수'];return addMember();}); await page.waitForTimeout(100);
-  ok(await ev(()=>[...document.querySelectorAll('.nt-warn .nt-t')].some(e=>e.textContent.includes('이미 있는 이름'))),'중복 구성원은 경고 토스트');
-  await ev(()=>{S.reward=Object.assign({},S.reward);}); await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();});
+  console.log('\n[8g] 폼 검증: 입력칸 아래 인라인 오류');
+  const nt0=await ev(()=>document.querySelectorAll('.nt').length);
+  // 수행평가 등록 폼
+  await ev(()=>{openAdd();}); await page.waitForTimeout(200);
+  const n0=await ev(()=>S.items.length);
+  await ev(()=>{saveForm();}); await page.waitForTimeout(100);
+  ok(await ev(()=>['f-subj','f-date'].every(id=>document.getElementById(id+'-err')&&document.getElementById(id).getAttribute('aria-invalid')==='true')&&!!document.querySelector('#ftl+.f-err')),'빈 폼: 과목·제출일·수행 내용 칸마다 오류가 붙음');
+  ok(await ev(()=>document.activeElement.id)==='f-subj','첫 오류 칸(과목)에 포커스');
+  ok(await ev(()=>document.getElementById('f-subj').getAttribute('aria-describedby')==='f-subj-err'&&document.getElementById('f-subj-err').getAttribute('role')==='alert'),'오류 문구와 입력칸이 aria 로 연결됨');
+  ok(await ev(()=>document.querySelectorAll('.nt').length)===nt0&&await ev(()=>S.items.length)===n0,'토스트는 안 뜨고 저장도 안 됨');
+  await page.screenshot({path:path.join(tmp,'form_errors_1138_light.png')});
+  await page.fill('#f-subj','수학');
+  ok(await ev(()=>!document.getElementById('f-subj-err')&&!document.getElementById('f-subj').classList.contains('f-bad')&&!!document.getElementById('f-date-err')),'고치기 시작하면 그 칸의 오류만 사라짐');
+  await page.fill('#f-date',await ev(()=>todayStr())); await ev(()=>{const i=document.querySelector('#ftl input');i.value='1단계';i.dispatchEvent(new Event('input',{bubbles:true}));});
+  ok(await ev(()=>!document.querySelector('.f-err')),'모두 고치면 오류가 없음');
+  await ev(()=>{saveForm();}); await page.waitForTimeout(200);
+  ok(await ev(()=>S.items.length)===n0+1,'통과하면 저장됨');
+  // 템플릿 저장: 수행 내용 비었을 때
+  await ev(()=>{openAdd();}); await page.waitForTimeout(200); await page.fill('#f-subj','과학');
+  const tp0=await ev(()=>S.templates.length);
+  await ev(()=>{saveAsTemplate();}); await page.waitForTimeout(150);
+  ok(await ev(()=>!document.getElementById('f-date-err')&&!!document.querySelector('#ftl+.f-err'))&&await ev(()=>S.templates.length)===tp0,'템플릿 저장: 제출일은 묻지 않고 수행 내용만 오류');
+  await ev(()=>closeOverlay());
+  // 일정 폼
+  await ev(()=>{openEvtAdd();}); await page.waitForTimeout(250);
+  await ev(()=>{saveEvtForm();}); await page.waitForTimeout(100);
+  ok(await ev(()=>!!document.getElementById('ef-title-err')),'일정: 제목 비면 인라인 오류');
+  await page.fill('#ef-title','시험'); await ev(()=>{const a=document.getElementById('ef-start-date'),b=document.getElementById('ef-end-date');a.value='2026-12-10';b.value='2026-12-01';});
+  await ev(()=>{saveEvtForm();}); await page.waitForTimeout(100);
+  ok(await ev(()=>!document.getElementById('ef-title-err')&&/이후/.test((document.getElementById('ef-end-date-err')||{}).textContent||'')),'일정: 종료일이 시작일보다 빠르면 종료일 칸에 오류');
+  await ev(()=>closeEvtOverlay());
+  // 준비물 요청
+  await ev(()=>{openPrep();}); await page.waitForTimeout(200);
+  await ev(()=>{savePrep();}); await page.waitForTimeout(100);
+  ok(await ev(()=>!!document.getElementById('prep-text-err')&&!document.getElementById('prep-date-err')),'준비물: 비어 있는 칸에만 오류');
+  await ev(()=>closeOverlay());
+  // 입력 시트의 검증(구성원 중복, 루틴, 가족 코드)
+  await ev(()=>{S.members=[{name:'민수',color:'#5B7FFF'}];addMember();}); await page.waitForTimeout(200);
+  await page.fill('#ask-f0','민수'); await page.keyboard.press('Enter'); await page.waitForTimeout(80);
+  ok(await open()&&await ev(()=>document.querySelector('.ask-err').textContent)==='이미 있는 이름이에요.'&&await ev(()=>document.getElementById('ask-f0').getAttribute('aria-invalid'))==='true','구성원 중복: 시트 안에서 안내');
+  await page.fill('#ask-f0','영희'); await page.keyboard.press('Enter'); await wait();
+  ok(await ev(()=>S.members.some(m=>m.name==='영희')),'고쳐서 확인하면 추가됨');
+  await ev(()=>{_pinUntil=Date.now()+100000;editRoutine();}); await page.waitForTimeout(200);
+  await page.fill('#ask-f0',' , , '); await page.click('.ask-ok'); await page.waitForTimeout(80);
+  ok(await open()&&await ev(()=>document.querySelector('.ask-err').textContent.includes('한 개 이상')),'루틴: 빈 항목은 시트 안에서 안내');
+  await page.keyboard.press('Escape'); await wait();
+  await ev(()=>{window.__fhd=familyHasData;familyHasData=async()=>false;});  // 가짜 Firestore 는 빈 결과를 '데이터 있음'으로 읽으므로 새 코드로 가정
+  await ev(()=>{changeFamilyCode();}); await page.waitForTimeout(200);
+  await page.fill('#ask-f0','abc'); await page.keyboard.press('Enter'); await page.waitForTimeout(250);
+  ok(await open()&&await ev(()=>document.querySelector('.ask-err').textContent.includes('8자 이상')),'가족 코드: 약한 코드는 (비동기 검사 후) 시트 안에서 안내');
+  const cur=await ev(()=>S.familyCode); await page.fill('#ask-f0',cur); await page.keyboard.press('Enter'); await page.waitForTimeout(250);
+  ok(await open()&&await ev(()=>document.querySelector('.ask-err').textContent)==='현재 코드와 같아요.','가족 코드: 현재 코드와 같으면 안내');
+  await page.keyboard.press('Escape'); await wait();
+  await ev(()=>{familyHasData=window.__fhd;familyHasData=async()=>false;});
+  // 시작 화면의 가족 코드 칸
+  await ev(()=>{const i=document.createElement('input');i.id='fc-input';i.className='f-input';document.body.appendChild(i);startWithCode();}); await page.waitForTimeout(250);
+  ok(await ev(()=>/입력/.test((document.getElementById('fc-input-err')||{}).textContent||'')),'시작 화면: 빈 코드는 인라인 오류');
+  await ev(()=>{const i=document.getElementById('fc-input');i.value='abc';startWithCode();}); await page.waitForTimeout(300);
+  ok(await ev(()=>/8자 이상/.test((document.getElementById('fc-input-err')||{}).textContent||'')),'시작 화면: 약한 코드는 인라인 오류');
+  await ev(()=>{clearFieldErr('fc-input');document.getElementById('fc-input').remove();});
+  ok(await ev(()=>document.querySelectorAll('.nt-warn').length)===0,'폼 검증 때문에 경고 토스트가 뜬 곳이 없음');
+  await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();});
 
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];
@@ -244,6 +301,16 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     await page.screenshot({path:path.join(tmp,`confirm_${w}_${th}.png`)});
     ok(await ev(()=>{const b=document.querySelector('.ask-box').getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0&&b.right<=innerWidth;}),`확인 시트가 화면 안 ${w}×${h} ${th}`);
     await page.keyboard.press('Escape'); await wait();
+  }
+
+  console.log('\n[10] 폼 오류 화면 (가짜 서버 기준 캡처)');
+  for(const [w,h,th] of [[1138,712,'dark'],[390,844,'light'],[390,844,'dark']]){
+    await page.setViewportSize({width:w,height:h}); await ev(t=>{S.theme=t;applyPrefs();},th); await page.waitForTimeout(400);
+    await ev(()=>{openAdd();}); await page.waitForTimeout(350); await ev(()=>{saveForm();}); await page.waitForTimeout(350);
+    await page.screenshot({path:path.join(tmp,`form_errors_${w}_${th}.png`)});
+    const m=await ev(()=>{const all=[...document.querySelectorAll('.f-err')],e=all[0],r=e.getBoundingClientRect(),c=getComputedStyle(e).color,bg=getComputedStyle(document.querySelector('.sheet')).backgroundColor;return{vis:r.top>=0&&r.bottom<=innerHeight&&all.every(x=>x.getBoundingClientRect().height>0),c,bg,n:all.length};});
+    ok(m.vis&&m.n===3,`오류 문구 3개가 그려지고 첫 오류가 화면 안에 보임 ${w}×${h} ${th} (글자 ${m.c} / 바탕 ${m.bg})`);
+    await ev(()=>closeOverlay()); await page.waitForTimeout(150);
   }
 
   console.log(errs.length?'\n페이지 오류:\n  '+errs.join('\n  '):'\n페이지 오류: 없음');

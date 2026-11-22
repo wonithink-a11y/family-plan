@@ -1307,7 +1307,7 @@ let S={
   showBanner:true,deferredPrompt:null,
   attachTargetId:null,imgViewSrc:null,imgViewId:null,txtAttachTargetId:null,
   trend:[],
-  reward:{stampCount:0,couponsIssued:0,pinHash:null},stamps:[],coupons:[],
+  reward:{stampCount:0,couponsIssued:0,pinHash:null},shopItems:null,stamps:[],coupons:[],
   routineItems:null,routineDay:{done:{},stamped:false},routineDate:null,preps:[],rewardErr:null,
 };
 let unsubFS=null; // Firestore 구독 해제 함수
@@ -1387,7 +1387,7 @@ function startSync(code){
 
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   우리집: 아침 루틴 · 칭찬 도장 · 책 구입권 · 준비물 요청
+   우리집: 아침 루틴 · 칭찬 도장 · 구입권 · 준비물 요청
    families/{code}/meta/reward   : {stampCount, couponsIssued, pinHash}
    families/{code}/meta/routine  : {items:[{id,text}]}
    families/{code}/routine/{날짜}: {date, done:{항목id:true}, stamped}
@@ -1398,8 +1398,15 @@ function startSync(code){
    구입권이 중복 발급되지 않도록 한다 (구입권 id = cp{발급순번},
    루틴 도장 id = rt_{날짜} 라서 하루 한 번만 찍힌다).
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const STAMPS_PER_COUPON=10;   // 도장 10개마다 책 구입권 (기존 5개에서 변경: 이미 모은 도장은 그대로 이어서 센다)
-const COUPON_TITLE='책 구입권';
+const STAMPS_PER_COUPON=10;   // 도장 10개마다 구입권 (기존 5개에서 변경: 이미 모은 도장은 그대로 이어서 센다)
+const COUPON_TITLE='구입권';
+/* ── 보상 상점: 구입권 종류 고르기 ──
+   도장 10개마다 구입권 1장이 나오는 규칙은 그대로. 종류가 둘 이상이면 구입권은 "종류 고르기" 상태(pick:true)로 나오고,
+   아이가 목록에서 하나를 골라 정한다. 종류 목록은 부모가 PIN으로 고치며 meta/shop 에 저장한다(없으면 기본 3종). */
+const DEFAULT_SHOP=['책 구입권','영화 관람권','외식 쿠폰'];
+const defaultShopItems=()=>DEFAULT_SHOP.map((t,i)=>({id:'k'+i,text:t}));
+const shopKinds=()=>(S.shopItems&&S.shopItems.length?S.shopItems:defaultShopItems());
+const couponPending=()=>(S.coupons||[]).filter(c=>c.pick&&!c.usedAt).length;
 const DEFAULT_ROUTINE=['기상 · 이불 정리','세안 · 스킨케어 · 선크림','양치','교복 입고 머리 단장','아침 식사','오늘 시간표 · 준비물 챙기기','수행평가 · 제출물 확인'];
 const KIOSK=new URLSearchParams(location.search).get('view')==='wall'; // 벽걸이 화면
 let unsubReward=[];
@@ -1410,6 +1417,7 @@ let _prepsLoaded=false; // 첫 로딩 때는 새 요청 알림을 띄우지 않�
 function newId(){ return Date.now().toString(36)+uid(); }
 function rewardBase(){ return db.collection('families').doc(S.familyCode); }
 function rewardRef(){ return rewardBase().collection('meta').doc('reward'); }
+function shopRef(){ return rewardBase().collection('meta').doc('shop'); }
 function routineRef(){ return rewardBase().collection('meta').doc('routine'); }
 function routineDayRef(d){ return rewardBase().collection('routine').doc(d); }
 function stampsCol(){ return rewardBase().collection('stamps'); }
@@ -1446,6 +1454,10 @@ function startRewardSync(code){
   },onRewardErr));
   unsubReward.push(base.collection('meta').doc('members').onSnapshot(s=>{
     S.mbCfg=s.exists?s.data():null; rewardRefresh();
+  },onRewardErr));
+  unsubReward.push(base.collection('meta').doc('shop').onSnapshot(s=>{
+    const it=s.exists&&s.data()&&Array.isArray(s.data().items)?s.data().items:[];
+    S.shopItems=it.length?it:null; rewardRefresh();
   },onRewardErr));
   unsubReward.push(base.collection('meta').doc('routine').onSnapshot(s=>{
     const items=s.exists&&s.data()&&Array.isArray(s.data().items)?s.data().items:[];
@@ -1760,7 +1772,8 @@ function applyStamp(tx,r,stampId,reason){
   if(stampCount%STAMPS_PER_COUPON===0){
     couponsIssued++;
     const cid='cp'+couponsIssued;
-    tx.set(couponsCol().doc(cid),{id:cid,no:couponsIssued,title:COUPON_TITLE,issuedAt:Date.now(),usedAt:null});
+    const kinds=shopKinds(), one=kinds.length===1?kinds[0].text:null;   // 종류가 하나뿐이면 바로 정해짐, 둘 이상이면 아이가 고름
+    tx.set(couponsCol().doc(cid),{id:cid,no:couponsIssued,title:one||COUPON_TITLE,pick:!one,issuedAt:Date.now(),usedAt:null});
     issued=true;
   }
   tx.set(rewardRef(),{stampCount,couponsIssued},{merge:true});
@@ -1778,7 +1791,7 @@ async function addStamp(reason){
 }
 
 function stampMsgFor(issued,prefix){
-  return issued?'도장 '+STAMPS_PER_COUPON+'개 완성!\n'+COUPON_TITLE+'이 생겼어요':prefix;
+  return issued?'도장 '+STAMPS_PER_COUPON+'개 완성!\n'+COUPON_TITLE+'이 생겼어요'+(shopKinds().length>1?'\n종류를 골라 보세요':''):prefix;
 }
 
 async function stampFlow(){
@@ -1794,8 +1807,10 @@ async function stampFlow(){
 }
 
 async function useCoupon(id){
+  const cp=(S.coupons||[]).find(x=>x.id===id);
+  if(cp&&cp.pick){notify('먼저 구입권 종류를 골라 주세요.',{kind:'warn'});return;}
   if(!(await parentAuth()))return;
-  if(!(await askConfirm({title:'이 '+COUPON_TITLE+'을 사용 처리할까요?',ok:'사용 처리'})))return;
+  if(!(await askConfirm({title:'이 '+(cp&&cp.title?cp.title:COUPON_TITLE)+'을 사용 처리할까요?',ok:'사용 처리'})))return;
   try{ await couponsCol().doc(id).update({usedAt:Date.now()}); }
   catch(e){ notify('저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); }
 }
@@ -1928,7 +1943,31 @@ function routineProgress(){
   return{items,done,n,total:items.length,all:items.length>0&&n===items.length};
 }
 
-function couponTicket(c){return `<div class="ticket${c.usedAt?' used':''}"><div class="ticket-l"><b>${c.no}</b><small>TICKET</small></div><div class="ticket-b"><div class="ticket-i"><div class="ticket-t">${esc(c.title)}</div><div class="ticket-s">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':`<button class="use-btn" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div></div>`;}
+function couponTicket(c){
+  const pend=!!c.pick&&!c.usedAt;
+  return `<div class="ticket${c.usedAt?' used':''}"><div class="ticket-l"><b>${c.no}</b><small>TICKET</small></div><div class="ticket-b"><div class="ticket-i"><div class="ticket-t">${pend?'종류를 골라 주세요':esc(c.title)}</div><div class="ticket-s">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':pend?`<button class="use-btn" onclick="pickCoupon('${esc(c.id)}')">종류 고르기</button>`:`<button class="use-btn" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div></div>`;}
+// 구입권 종류 정하기(한 번 정하면 바꾸지 않는다). 다른 기기에서 먼저 정했으면 덮어쓰지 않도록 트랜잭션으로 확인
+async function pickCoupon(id){
+  const kinds=shopKinds();
+  const v=await askChoice({title:'어떤 구입권으로 할까요?',desc:'한 번 고르면 바꿀 수 없어요.',cancel:'나중에',choices:kinds.map(k=>({label:k.text,value:k.id}))});
+  if(v===null||v===undefined)return;
+  const k=kinds.find(x=>x.id===v); if(!k)return;
+  try{
+    let done=false;
+    await db.runTransaction(async tx=>{const ref=couponsCol().doc(id), snap=await tx.get(ref); if(!snap.exists||!snap.data().pick)return; tx.update(ref,{title:k.text,pick:false,kindId:k.id}); done=true;});
+    notify(done?k.text+'으로 정했어요.':'이미 종류가 정해진 구입권이에요.',{kind:done?'ok':'info'});
+  }catch(e){ notify('저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); }
+}
+// 부모가 구입권 종류 목록을 고친다(부모 PIN). 이미 받은 구입권은 바뀌지 않는다
+async function editShop(){
+  if(!(await parentAuth()))return;
+  const old=shopKinds();
+  const items=await askList({title:'구입권 종류',desc:'도장 '+STAMPS_PER_COUPON+'개를 모으면 아이가 이 중에서 하나를 골라요. 이미 받은 구입권은 바뀌지 않아요.',items:old,max:10,maxLen:16,noun:'구입권',placeholder:'예: 영화 관람권',emptyMsg:'종류를 한 개 이상 적어 주세요.',extra:[{label:'기본 종류로',set:()=>defaultShopItems()}]});
+  if(items===null)return;
+  if(JSON.stringify(items)===JSON.stringify(old))return;
+  try{ await shopRef().set({items}); notify('구입권 종류를 저장했어요.',{kind:'ok'}); }
+  catch(e){ notify('저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); }
+}
 function prepRowHtml(p){const d=getDays(p.date);const act=d!==null&&d>=0&&!p.done;return`<div class="prep-row${p.done?' done':''}"><div class="prep-dd" style="background:${act?ddColor(d,'#5B7FFF'):'#C5C9DD'}">${act?ddLabel(d):p.done?'완료':'지남'}</div><div class="prep-i"><div class="prep-t">${esc(p.text)}</div><div class="prep-s">${fmt(p.date)}</div></div><button class="mini-btn" style="background:#E3F7EE;color:#0F9D6B" onclick="togglePrep('${esc(p.id)}')">${p.done?'되돌리기':'챙김'}</button><button class="mini-btn" style="background:#F3F4FA;color:#9AA0BD" onclick="deletePrep('${esc(p.id)}')">삭제</button></div>`;}
 /* ── 우리집 가족별 3칸 (가로 태블릿 1000px↑, 설정 "우리집 배치"에서 기능별로 되돌릴 수 있다) ── */
 const isHomeWide=()=>!!(window.matchMedia&&matchMedia('(min-width:1000px) and (orientation:landscape)').matches);
@@ -1944,11 +1983,11 @@ function homeTopStrip(){
 }
 function homeStampRow(cnt,total,open){
   const dots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<i class="st-dot${i<cnt?' on':''}"></i>`).join('');
-  return`<div class="hf-stamp"><button class="hf-st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 누적 ${total}개, 책 구입권 ${open.length}장. 눌러서 구입권 보기"><span class="hf-st-t">칭찬 도장 <b>${cnt} / ${STAMPS_PER_COUPON}</b></span><span class="st-dots" aria-hidden="true">${dots}</span></button><button class="st-btn" onclick="stampFlow()">도장 찍기</button></div>`;
+  return`<div class="hf-stamp"><button class="hf-st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 누적 ${total}개, 구입권 ${open.length}장${couponPending()?'(종류 고르기 필요)':''}. 눌러서 구입권 보기"><span class="hf-st-t">칭찬 도장 <b>${cnt} / ${STAMPS_PER_COUPON}</b></span><span class="st-dots" aria-hidden="true">${dots}</span></button><button class="st-btn" onclick="stampFlow()">도장 찍기</button></div>`;
 }
 function buildHomeFamily(c){
   const ms=members(), g=asAssessGroups();
-  const head=m=>`<div class="hf-lh"><span class="hf-ic" style="background:${m.color}33">${mbIcon(m,22)}</span><b>${esc(m.name)}</b>${m.id==='kid'&&c.open.length?`<button class="hf-cp" onclick="openCoupons()" aria-label="책 구입권 ${c.open.length}장, 눌러서 보기">구입권 ${c.open.length}장</button>`:''}<span class="hf-lh-act"><button class="hf-ib" onclick="asSpeakMember('${m.id}')" aria-label="${esc(m.name)} 일정 듣기">${uiIco('speaker',18)}</button><button class="hf-ib" onclick="openEvtAdd('${esc(m.name)}')" aria-label="${esc(m.name)} 일정 추가">${uiIco('plus',18)}</button></span></div>`;
+  const head=m=>`<div class="hf-lh"><span class="hf-ic" style="background:${m.color}33">${mbIcon(m,22)}</span><b>${esc(m.name)}</b>${m.id==='kid'&&c.open.length?`<button class="hf-cp" onclick="openCoupons()" aria-label="구입권 ${c.open.length}장${couponPending()?', 종류 고르기 필요':''}, 눌러서 보기">구입권 ${c.open.length}장${couponPending()?' · 고르기':''}</button>`:''}<span class="hf-lh-act"><button class="hf-ib" onclick="asSpeakMember('${m.id}')" aria-label="${esc(m.name)} 일정 듣기">${uiIco('speaker',18)}</button><button class="hf-ib" onclick="openEvtAdd('${esc(m.name)}')" aria-label="${esc(m.name)} 일정 추가">${uiIco('plus',18)}</button></span></div>`;
   const lane=m=>{
     const evs=mbEvents(m.id,14);
     if(m.id!=='kid')return`<div class="sec hf-lane" style="--mc:${m.color}">${head(m)}<div class="hf-h">오늘 · 다가오는 일정</div><div class="hf-col">${evs.length?evs.slice(0,8).map(homeEvRow).join(''):'<div class="no-data">예정된 일정이 없어요</div>'}</div></div>`;
@@ -3565,8 +3604,8 @@ function buildLumiCard(){
 function buildStampCard(cnt,total,open){
   const dots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<i class="st-dot${i<cnt?' on':''}"></i>`).join('');
   return`<div class="sec st-card">
-  <button class="st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 누적 ${total}개, 책 구입권 ${open.length}장. 눌러서 구입권 보기">
-    <span class="sec-h"><span class="sec-t">칭찬 도장 <b>${cnt} / ${STAMPS_PER_COUPON}</b></span><span class="sec-pill">책 구입권 ${open.length}장</span></span>
+  <button class="st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 누적 ${total}개, 구입권 ${open.length}장${couponPending()?'(종류 고르기 필요)':''}. 눌러서 구입권 보기">
+    <span class="sec-h"><span class="sec-t">칭찬 도장 <b>${cnt} / ${STAMPS_PER_COUPON}</b></span><span class="sec-pill">구입권 ${open.length}장${couponPending()?' · 고르기':''}</span></span>
     <span class="st-dots" aria-hidden="true">${dots}</span>
   </button>
   <button class="st-btn" onclick="stampFlow()">도장 찍기</button>
@@ -5425,6 +5464,7 @@ function buildBackupView(){
   <div class="bk-section">
     <div class="bk-title">${uiIco('mic',16)} 음성 · AI · 날씨 · 보안</div>
     <button class="bk-btn" onclick="asOpen('settings')"><span class="bk-ico">${uiIco('mic',22)}</span><div><div>음성 · AI · 날씨 설정</div><div class="bk-btn-desc">기상청·Gemini 키, 말하는 속도, 목소리, 벽걸이 시간 (이 기기에 저장)</div></div></button>
+    <button class="bk-btn" onclick="editShop()"><span class="bk-ico">${uiIco('star',22)}</span><div><div>구입권 종류 편집</div><div class="bk-btn-desc">도장 ${STAMPS_PER_COUPON}개마다 받는 구입권의 종류를 정해요 (부모 PIN)</div></div></button>
     <button class="bk-btn" onclick="changePin()"><span class="bk-ico">${uiIco('lock',22)}</span><div><div>부모 PIN 변경</div><div class="bk-btn-desc">칭찬 도장·루틴 편집을 아이 혼자 못 하게 하는 가벼운 잠금</div></div></button>
   </div>
   <div class="bk-section">

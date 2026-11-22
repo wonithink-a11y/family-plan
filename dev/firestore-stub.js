@@ -29,7 +29,7 @@
     onSnapshot(cb){const f=()=>{const docs=snapDocs(path);cb({docs,metadata:{fromCache:false},docChanges:()=>[]});};listeners.push(f);setTimeout(f,0);return()=>{const i=listeners.indexOf(f);if(i>=0)listeners.splice(i,1);};},
     get:async()=>({docs:snapDocs(path)})};return q;};
   const db={collection:c=>mkCol(c),enablePersistence:()=>Promise.resolve(),
-    runTransaction:async fn=>{const w=[];const tx={get:async ref=>({exists:store[ref.path]!==undefined,data:()=>store[ref.path]}),set:(ref,d,o)=>w.push([ref,d,o])};await fn(tx);for(const [ref,d,o] of w)await ref.set(d,o);}};
+    runTransaction:async fn=>{const w=[];const tx={get:async ref=>({exists:store[ref.path]!==undefined,data:()=>store[ref.path]}),set:(ref,d,o)=>w.push([ref,d,o]),update:(ref,d)=>w.push([ref,d,{merge:true}])};await fn(tx);for(const [ref,d,o] of w)await ref.set(d,o);}};
   window.firebase={initializeApp(){},firestore:()=>db,auth:()=>({signInAnonymously:()=>Promise.resolve({})})};
   window.__store=store;
 })();

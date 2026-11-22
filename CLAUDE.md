@@ -48,14 +48,14 @@
 새 컬렉션을 추가하면 Firestore 규칙 허용이 필요하다. **규칙은 허남원님이 직접 고치므로** 컬렉션을 추가한 작업은 결과에 "규칙 추가 필요"를 반드시 적는다.
 
 ## 지켜야 할 규칙 (과거에 실제로 사고가 난 것들)
-1. **`sw.js`의 `CACHE_NAME`을 올린다.** 화면이 바뀌는 변경은 캐시 이름을 올려야 설치된 앱에 반영된다. 지금 `family-plan-v30`.
+1. **`sw.js`의 `CACHE_NAME`을 올린다.** 화면이 바뀌는 변경은 캐시 이름을 올려야 설치된 앱에 반영된다. 지금 `family-plan-v31`.
 2. **날짜는 `toISOString()`으로 만들지 않는다.** UTC로 바뀌어 한국에서 하루 일찍 표시된다. 로컬 연·월·일을 직접 꺼내 쓴다.
 3. **`KR_HOL`(공휴일 2025–2031)과 `EVT_CATS` 상수를 지우지 않는다.** 통계 화면을 리팩터링하다 지워서 흰 화면이 난 적이 있다.
 4. **중요한 기록은 localStorage에만 두지 않는다.** 삼성 One UI의 기기 관리가 Chrome 저장소를 주기적으로 지운다. 도장·루틴·구성원은 Firestore, 가족 코드는 Firestore 백업/복원 경로를 쓴다.
 5. **API 키(기상청·Gemini)와 기기별 설정은 localStorage(`fp_assist_cfg`)에만** 저장하고 Firestore에 올리지 않는다. 코드·커밋·문서에 키를 적지 않는다.
 6. 동기화 배지가 초록이어도 `events` 구독은 따로 실패할 수 있다. 동기화 문제는 컬렉션별로 확인한다.
 7. **Gemini 모델 이름은 자주 바뀐다.** TTS·Live는 여러 모델·요청 형식을 차례로 시도하는 폴백 구조이고, 성공한 조합을 기억한다. 이름을 하나로 고정하지 않는다.
-8. **`prompt()`·`alert()`·`confirm()`은 쓰지 않는다.** 입력은 `askText`·`askPin`, 확인은 `askConfirm`(예/아니오)·`askChoice`(3지선다)·`askInfo`(읽고 닫는 안내), 알림은 `notify(msg,{kind:'ok'|'info'|'warn'|'error'})` 토스트를 쓴다. 시트는 `render()`와 별개로 body에 붙으므로 재렌더에 안 사라진다. 폼의 필드 오류는 토스트가 아니라 `formCheck([{id,bad,msg,after?}])`로 입력칸 아래에 붙인다. `dev/ask-test.js`가 소스에 `alert(`·`confirm(`·`prompt(` 호출이 남았는지 검사한다.
+8. **`prompt()`·`alert()`·`confirm()`은 쓰지 않는다.** 입력은 `askText`·`askPin`, 확인은 `askConfirm`(예/아니오)·`askChoice`(3지선다)·`askInfo`(읽고 닫는 안내), 알림은 `notify(msg,{kind:'ok'|'info'|'warn'|'error'})` 토스트를 쓴다(도장·구입권 같은 보상 순간은 `{big:true}`로 가운데에 크게. 예전 `asToast`·`flashStamp`는 없앴다). 시트는 `render()`와 별개로 body에 붙으므로 재렌더에 안 사라진다. 폼의 필드 오류는 토스트가 아니라 `formCheck([{id,bad,msg,after?}])`로 입력칸 아래에 붙인다. `dev/ask-test.js`가 소스에 `alert(`·`confirm(`·`prompt(` 호출이 남았는지 검사한다.
 
 ## 화면(디자인) 작업 방식
 - **화면의 모양·배치·색·글자·아이콘·문구·애니메이션이 바뀌는 작업은 코드를 쓰기 전에 `.claude/skills/family-plan-design/SKILL.md`를 먼저 읽고 그 순서로 한다.** Skill 도구에 있으면 `family-plan-design`을 불러온다. 백엔드·Firestore 규칙·데이터 로직만 바꾸는 작업에는 적용하지 않는다.

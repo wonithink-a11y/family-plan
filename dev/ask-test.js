@@ -301,6 +301,69 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await ev(()=>{asClose();}); await page.waitForTimeout(200);
   await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});
 
+  console.log('\n[8i] askList: 항목별 목록 편집');
+  const L3=()=>[{id:'a',text:'양치'},{id:'b',text:'세수'},{id:'c',text:'가방'}];
+  const openList=()=>ev(l=>{window.__r=undefined;askList({title:'아침 루틴 편집',desc:'항목을 고치고 순서를 바꿔요.',items:l,max:10,maxLen:20,noun:'항목',placeholder:'예: 양치하기',extra:[{label:'기본 항목으로',set:()=>[{id:'d0',text:'기본1'},{id:'d1',text:'기본2'}]}]}).then(v=>{window.__r=v;});},L3());
+  const rowTxt=()=>ev(()=>[...document.querySelectorAll('.ask-rowin')].map(e=>e.value).join('|'));
+  await openList(); await page.waitForTimeout(250);
+  ok(await rowTxt()==='양치|세수|가방'&&await ev(()=>document.getElementById('ask-cnt').textContent)==='3/10','행이 항목으로 채워지고 개수 3/10 표시');
+  ok(await ev(()=>document.activeElement.classList.contains('ask-rowin')),'열면 첫 입력칸에 포커스');
+  ok(await ev(()=>document.querySelector('[data-l="up"][data-i="0"]').disabled&&document.querySelector('[data-l="down"][data-i="2"]').disabled),'맨 위는 위로, 맨 아래는 아래로 이동 불가');
+  ok(await ev(()=>[...document.querySelectorAll('.ask-row button')].every(b=>b.getAttribute('aria-label')&&b.getBoundingClientRect().width>=44&&b.getBoundingClientRect().height>=44)),'행 버튼은 모두 aria-label + 44px 이상');
+  ok(await ev(()=>document.querySelector('[data-l="down"][data-i="0"]').getAttribute('aria-label'))==='1번 항목 아래로 이동','버튼 이름: 1번 항목 아래로 이동');
+  await page.screenshot({path:path.join(tmp,'list_1138_light.png')});
+  // 이름 고치기 → id 유지
+  await page.fill('.ask-rowin[data-r="1"]','세수하기');
+  // 이동
+  await page.click('[data-l="down"][data-i="0"]');
+  ok(await rowTxt()==='세수하기|양치|가방','아래로 이동하면 순서가 바뀜(고친 글자 유지)');
+  ok(await ev(()=>document.activeElement.dataset.l==='down'&&document.activeElement.dataset.i==='1'),'이동 뒤에도 같은 방향 버튼에 포커스');
+  ok(await ev(()=>document.getElementById('ask-live').textContent)==='1번 항목을 2번으로 옮겼어요.','이동을 읽어 주는 안내(aria-live)');
+  await page.click('[data-l="up"][data-i="2"]'); ok(await rowTxt()==='세수하기|가방|양치','위로 이동');
+  // 추가·삭제
+  await page.click('[data-l="add"]');
+  ok(await ev(()=>document.activeElement.dataset.r)==='3'&&await ev(()=>document.getElementById('ask-cnt').textContent)==='4/10','추가하면 새 행에 포커스, 4/10');
+  await page.keyboard.type('책 챙기기');
+  await page.click('[data-l="del"][data-i="1"]'); ok(await rowTxt()==='세수하기|양치|책 챙기기','삭제');
+  // Enter: 다음 칸으로, 마지막 칸에서는 새 행
+  await page.focus('.ask-rowin[data-r="0"]'); await page.keyboard.press('Enter');
+  ok(await ev(()=>document.activeElement.dataset.r)==='1','Enter = 다음 칸으로 이동(저장하지 않음)');
+  await page.focus('.ask-rowin[data-r="2"]'); await page.keyboard.press('Enter');
+  ok(await ev(()=>document.querySelectorAll('.ask-rowin').length)===4&&await ev(()=>window.__r)===undefined,'마지막 칸에서 Enter = 새 행 추가');
+  // 빈 줄은 저장할 때 버려짐(새 행이 비어 있음) + 결과 id 유지
+  await page.click('.ask-ok'); await wait();
+  const got=await ev(()=>window.__r);
+  ok(JSON.stringify(got)===JSON.stringify([{id:'b',text:'세수하기'},{id:'a',text:'양치'},{id:got[2]&&got[2].id,text:'책 챙기기'}])&&got[2].id&&got[2].id!=='c','저장: 빈 줄은 버리고, 기존 항목은 id 유지·새 항목은 새 id');
+  // 10개 한도
+  await openList(); await page.waitForTimeout(250);
+  for(let i=0;i<7;i++)await page.click('[data-l="add"]');
+  ok(await ev(()=>document.getElementById('ask-cnt').textContent)==='10/10'&&await ev(()=>document.querySelector('[data-l="add"]').disabled),'10개가 되면 추가 버튼이 꺼짐');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+  ok(await open()&&/바꾼 내용/.test(await ev(()=>document.querySelector('.ask-err').textContent)),'바꾼 내용이 있으면 첫 Esc 는 안내만');
+  await page.keyboard.press('Escape'); await wait(); ok(await ev(()=>window.__r)===null,'두 번째 Esc 에 닫힘(null)');
+  // 안 바꿨으면 바로 닫힘
+  await openList(); await page.waitForTimeout(250); await page.keyboard.press('Escape'); await wait(); ok(await ev(()=>window.__r)===null,'바꾸지 않았으면 한 번에 닫힘');
+  // 고치면 경고 해제 후 다시 한 번 더 눌러야 함
+  await openList(); await page.waitForTimeout(250); await page.fill('.ask-rowin[data-r="0"]','x'); await page.keyboard.press('Escape'); await page.fill('.ask-rowin[data-r="0"]','xy');
+  ok(await ev(()=>document.querySelector('.ask-err').textContent)==='','다시 고치면 닫기 안내가 지워짐');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(100); ok(await open(),'(다시 처음부터) 한 번 더 눌러야 닫힘'); await page.keyboard.press('Escape'); await wait();
+  // 전부 비우면 저장 불가
+  await openList(); await page.waitForTimeout(250);
+  for(let i=0;i<3;i++)await page.fill(`.ask-rowin[data-r="${i}"]`,'  ');
+  await page.click('.ask-ok'); await page.waitForTimeout(80);
+  ok(await open()&&/한 개 이상/.test(await ev(()=>document.querySelector('.ask-err').textContent)),'전부 비우면 저장 안 되고 안내');
+  // 기본 항목으로
+  await page.click('[data-x="0"]'); ok(await rowTxt()==='기본1|기본2','"기본 항목으로"가 목록을 바꿈');
+  await page.keyboard.press('Control+Enter'); await wait();
+  ok(JSON.stringify(await ev(()=>window.__r))===JSON.stringify([{id:'d0',text:'기본1'},{id:'d1',text:'기본2'}]),'Ctrl+Enter 로 저장, 기본 항목 id 유지');
+  // 20자 제한
+  await openList(); await page.waitForTimeout(250);
+  ok(await ev(()=>document.querySelector('.ask-rowin').maxLength)===20,'글자 수 제한 20자');
+  await page.keyboard.press('Escape'); await wait();
+  // 테스트 훅
+  await ev(()=>{window.__askAnswer=[[{id:'q',text:'가'}],null];});
+  ok(JSON.stringify(await ev(l=>askList({items:l}),L3()))==='[{"id":"q","text":"가"}]'&&await ev(l=>askList({items:l}),L3())===null,'테스트 훅: 큐의 배열은 그대로, null 은 취소');
+
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];
   for(const [w,h,th] of shots){
@@ -315,6 +378,10 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     await page.screenshot({path:path.join(tmp,`ask_pin_${w}_${th}.png`)});
     const m2=await ev(()=>{const b=document.querySelector('.ask-box').getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0;});
     ok(m2,`PIN 시트가 화면 안 ${w}×${h} ${th}`);
+    await page.keyboard.press('Escape'); await wait();
+    await ev(()=>{askList({title:'아침 루틴 편집',desc:'항목을 고치고 순서를 바꿔요.',items:['양치하기','세수하기','교복 입기','아침 먹기','가방 챙기기','약 먹기'].map((t,i)=>({id:'r'+i,text:t})),max:10,maxLen:20,noun:'항목',extra:[{label:'기본 항목으로',set:()=>[]}]});}); await page.waitForTimeout(350);
+    await page.screenshot({path:path.join(tmp,`list_${w}_${th}.png`)});
+    ok(await ev(()=>{const b=document.querySelector('.ask-box').getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0&&b.right<=innerWidth&&b.left>=0;})&&await ev(()=>[...document.querySelectorAll('.ask-act button')].every(x=>{const r=x.getBoundingClientRect();return r.bottom<=innerHeight&&r.height>=44;})),`목록 시트와 저장·취소 버튼이 화면 안 ${w}×${h} ${th}`);
     await page.keyboard.press('Escape'); await wait();
     await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();notify('저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\npermission-denied',{kind:'error',ms:6000});notify('가족 코드를 복사했어요.',{kind:'ok',ms:6000});}); await page.waitForTimeout(350);
     await page.screenshot({path:path.join(tmp,`toast_${w}_${th}.png`)});

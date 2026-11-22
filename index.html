@@ -1040,6 +1040,9 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 .ask-ok.ask-danger{background:var(--ask-danger);color:var(--ask-danger-t)}
 .ask-err.good{color:var(--ask-sub)}
 @media (prefers-reduced-motion:reduce){.nt{transition:none}}
+.f-input.f-bad,.f-select.f-bad,.f-input.f-bad:focus,:root[data-theme=dark] .f-input.f-bad,:root[data-theme=dark] .f-select.f-bad,:root[data-theme=dark] .f-input.f-bad:focus{border-color:var(--ask-err)}
+.f-err{display:flex;align-items:flex-start;gap:6px;margin-top:6px;font-size:13px;line-height:1.5;color:var(--ask-err)}
+.f-err svg{flex:none;margin-top:2px}
 </style>
 </head>
 <body>
@@ -1325,6 +1328,33 @@ function notify(msg,o={}){
   return el;
 }
 
+/* ── 폼 검증: 입력칸 아래 인라인 오류 ──
+   rules:[{id,bad,msg,after?}] 를 한꺼번에 검사한다. 틀린 칸마다 오류 문구를 붙이고(aria-invalid·aria-describedby),
+   첫 칸으로 스크롤·포커스한다. 고치기 시작하면(input/change) 그 오류가 사라진다. 모두 통과하면 true.
+   칸을 못 찾으면 토스트로 대신 알린다. */
+const FERR_ICO='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
+function clearFieldErr(id){
+  const e=document.getElementById(id+'-err'); if(e)e.remove();
+  const el=document.getElementById(id); if(el){el.classList.remove('f-bad');el.removeAttribute('aria-invalid');el.removeAttribute('aria-describedby');}
+}
+function formCheck(rules){
+  rules.forEach(r=>clearFieldErr(r.id));
+  let first=null;
+  for(const r of rules){
+    if(!r.bad)continue;
+    const el=document.getElementById(r.id);
+    if(!el){notify(r.msg,{kind:'warn'});continue;}
+    el.classList.add('f-bad'); el.setAttribute('aria-invalid','true'); el.setAttribute('aria-describedby',r.id+'-err');
+    const err=document.createElement('div'); err.className='f-err'; err.id=r.id+'-err'; err.setAttribute('role','alert');
+    err.innerHTML=FERR_ICO+'<span></span>'; err.lastChild.textContent=r.msg;
+    const host=r.after?document.getElementById(r.after):el; (host||el).insertAdjacentElement('afterend',err);
+    const clear=()=>clearFieldErr(r.id); (host||el).addEventListener('input',clear,{once:true}); (host||el).addEventListener('change',clear,{once:true});
+    if(!first)first=el;
+  }
+  if(first){first.focus({preventScroll:true});first.scrollIntoView({block:'center'});return false;}
+  return true;
+}
+
 /* ── 앱 안 입력 시트 (prompt() 대체) ──
    render() 와 무관하게 body 에 직접 붙여서 onSnapshot 재렌더에도 입력이 사라지지 않는다. 한 번에 하나만 열고,
    값(없으면 null=취소)을 돌려준다. 테스트는 window.__askAnswer 큐로 답을 미리 넣는다(null=취소). */
@@ -1360,15 +1390,20 @@ ${choices?(o.stack
     const close=v=>{if(done)return;done=true;document.removeEventListener('keydown',onKey,true);clearTimeout(lockTimer);
       if(vv){vv.removeEventListener('resize',fit);vv.removeEventListener('scroll',fit);}
       ov.classList.remove('open');setTimeout(()=>ov.remove(),220);_askOpen=false;try{prev&&prev.focus&&prev.focus();}catch(e){}resolve(v);};
-    const submit=()=>{
-      const out=[];
-      for(let i=0;i<fields.length;i++){
-        const f=fields[i], el=ov.querySelector('#ask-f'+i); let v=el.value; if(f.trim!==false)v=v.trim();
-        const m=(f.required&&!v)?(f.requiredMsg||'내용을 입력해 주세요.'):(f.validate&&f.validate(v))||'';
-        if(m){setMsg(m);shake();el.focus();return;}
-        out.push(v);
-      }
-      close(fields.length===1?out[0]:out);
+    let submitting=false;
+    const submit=async()=>{
+      if(submitting||done)return; submitting=true;
+      try{
+        const out=[];
+        for(let i=0;i<fields.length;i++){
+          const f=fields[i], el=ov.querySelector('#ask-f'+i); let v=el.value; if(f.trim!==false)v=v.trim();
+          const m=(f.required&&!v)?(f.requiredMsg||'내용을 입력해 주세요.'):(f.validate?await f.validate(v):'')||'';
+          if(m){setMsg(m);shake();el.setAttribute('aria-invalid','true');el.focus();return;}
+          el.removeAttribute('aria-invalid'); out.push(v);
+        }
+        close(fields.length===1?out[0]:out);
+      }catch(e){setMsg('확인하지 못했어요. 다시 시도해 주세요.');}
+      finally{submitting=false;}
     };
     // PIN 키패드
     let buf='',first=null,busy=false,lockTimer=null; const desc0=o.desc||'';
@@ -1565,10 +1600,10 @@ async function toggleRoutine(itemId){
 async function editRoutine(){
   if(!(await parentAuth()))return;
   const old=S.routineItems||defaultRoutineItems();
-  const v=await askText('아침 루틴 항목',{desc:'쉼표(,)로 구분해 적어 주세요 (최대 10개)',type:'textarea',value:old.map(i=>i.text).join(', '),max:300});
+  const v=await askText('아침 루틴 항목',{desc:'쉼표(,)로 구분해 적어 주세요 (최대 10개)',type:'textarea',value:old.map(i=>i.text).join(', '),max:300,requiredMsg:'항목을 한 개 이상 적어 주세요.',required:true,validate:t=>t.split(',').some(x=>x.trim())?'':'항목을 한 개 이상 적어 주세요.'});
   if(v===null)return;
   const texts=v.split(',').map(t=>t.trim().slice(0,20)).filter(Boolean).slice(0,10);
-  if(!texts.length){notify('항목을 한 개 이상 적어 주세요.',{kind:'warn'});return;}
+  if(!texts.length)return;
   const used=new Set();
   const items=texts.map((t,i)=>{
     const m=old.find(o=>o.text===t&&!used.has(o.id));
@@ -1596,7 +1631,7 @@ function buildPrepSheet(){
 async function savePrep(){
   const date=(document.getElementById('prep-date')||{}).value;
   const text=((document.getElementById('prep-text')||{}).value||'').trim();
-  if(!date||!text){notify('날짜와 준비물을 입력해 주세요.',{kind:'warn'});return;}
+  if(!formCheck([{id:'prep-date',bad:!date,msg:'필요한 날짜를 골라 주세요.'},{id:'prep-text',bad:!text,msg:'준비물을 적어 주세요.'}]))return;
   const id=newId();
   try{
     await prepsCol().doc(id).set({id,date,text:text.slice(0,60),ts:Date.now(),by:getDeviceId(),done:false});
@@ -3449,11 +3484,11 @@ async function familyHasData(code){
 }
 async function startWithCode(){
   const v=document.getElementById('fc-input')?.value?.trim();
-  if(!v)return;
+  if(!formCheck([{id:'fc-input',bad:!v,msg:'가족 코드를 입력해 주세요.'}]))return;
   // 기존 가족 코드에 참가하는 경우는 그대로 허용, 새로 만드는 코드만 강도 검사
   if(!(await familyHasData(v))){
     const err=checkCode(v);
-    if(err){askInfo({title:'가족 코드를 확인해 주세요',desc:err+'\n\n이미 쓰고 있는 가족 코드에 참가하는 경우에는 코드를 정확히 다시 확인해 주세요.'});return;}
+    if(!formCheck([{id:'fc-input',bad:!!err,msg:err+' 이미 쓰고 있는 가족 코드에 참가하는 거라면 코드를 다시 확인해 주세요.'}]))return;
   }
   setFamilyCode(v);
 }
@@ -3486,7 +3521,8 @@ async function deleteFamilyData(code){
   ]);
 }
 async function changeFamilyCode(){
-  const input=await askText('가족 코드 변경',{desc:`현재 코드: ${S.familyCode}\n8자 이상 · 비워 두고 확인하면 안전한 코드를 자동 생성해요`,placeholder:'새 가족 코드',max:40,extra:[{label:'자동 생성',set:()=>genCode()}]});
+  const input=await askText('가족 코드 변경',{desc:`현재 코드: ${S.familyCode}\n8자 이상 · 비워 두고 확인하면 안전한 코드를 자동 생성해요`,placeholder:'새 가족 코드',max:40,extra:[{label:'자동 생성',set:()=>genCode()}],
+    validate:async v=>{if(!v)return ''; if(v===S.familyCode)return '현재 코드와 같아요.'; if(await familyHasData(v))return ''; return checkCode(v);}});
   if(input===null)return;
   const code=input.trim()||genCode();
   if(code===S.familyCode){notify('현재 코드와 같아요.',{kind:'warn'});return;}
@@ -3705,10 +3741,9 @@ function saveMembers(list){
     .catch(e=>notify('구성원 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)',{kind:'error'}));
 }
 async function addMember(){
-  const name=((await askText('가족 구성원 추가',{desc:'8자 이내 · 예: 엄마, 아빠, 민수',max:8,required:true}))||'').trim().slice(0,8);
-  if(!name)return;
-  if(S.members.some(m=>m.name===name)){notify('이미 있는 이름이에요.',{kind:'warn'});return;}
   if(S.members.length>=12){notify('구성원은 최대 12명까지 등록할 수 있어요.',{kind:'warn'});return;}
+  const name=((await askText('가족 구성원 추가',{desc:'8자 이내 · 예: 엄마, 아빠, 민수',max:8,required:true,validate:v=>S.members.some(m=>m.name===v)?'이미 있는 이름이에요.':''}))||'').trim().slice(0,8);
+  if(!name||S.members.some(m=>m.name===name))return;
   const used=new Set(S.members.map(m=>m.color));
   const color=MEM_COLORS.find(c=>!used.has(c))||MEM_COLORS[S.members.length%MEM_COLORS.length];
   saveMembers([...S.members,{name,color}]);
@@ -3815,8 +3850,7 @@ async function saveAsTemplate(){
   syncFormFromDOM();
   const f=S.form,subj=(f.subject||'').trim();
   const tasks=f.tasks.map(t=>t.text.trim()).filter(Boolean);
-  if(!subj){notify('과목을 입력하세요.',{kind:'warn'});return;}
-  if(!tasks.length){notify('수행 내용을 하나 이상 입력하세요.',{kind:'warn'});return;}
+  if(!formCheck(assessRules(subj,'',tasks.length,false)))return;
   const name=((await askText('템플릿 이름',{desc:'20자 이내',value:subj+' 수행평가',max:20,required:true}))||'').trim().slice(0,20);
   if(!name)return;
   const dup=S.templates.find(t=>t.name===name);
@@ -4169,7 +4203,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.20';
+const APP_VER='v4.21';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -4720,13 +4754,14 @@ function saveEvtForm(){
   const title=document.getElementById('ef-title')?.value?.trim();
   const startDate=document.getElementById('ef-start-date')?.value;
   const endDate=document.getElementById('ef-end-date')?.value||startDate;
-  if(!title){notify('제목을 입력하세요.',{kind:'warn'});return;}
-  if(!startDate){notify('시작일을 선택하세요.',{kind:'warn'});return;}
-  if(endDate&&endDate<startDate){notify('종료일은 시작일 이후여야 합니다.',{kind:'warn'});return;}
   const allDay=document.getElementById('ef-allday')?.checked!==false;
   const repeat=document.getElementById('ef-repeat')?.value||'';
   const until=document.getElementById('ef-until')?.value||'';
-  if(repeat&&until&&until<startDate){notify('반복 종료일은 시작일 이후여야 합니다.',{kind:'warn'});return;}
+  if(!formCheck([
+    {id:'ef-title',bad:!title,msg:'제목을 입력해 주세요.'},
+    {id:'ef-start-date',bad:!startDate,msg:'시작일을 골라 주세요.'},
+    {id:'ef-end-date',bad:!!(startDate&&endDate&&endDate<startDate),msg:'종료일은 시작일과 같거나 이후여야 해요.'},
+    {id:'ef-until',bad:!!(repeat&&until&&startDate&&until<startDate),msg:'반복 종료일은 시작일 이후여야 해요.'}]))return;
   const ev={
     id:S.evtForm.id||uid(),
     title,
@@ -5246,7 +5281,7 @@ function buildFormSheet(){
   const dots=COLORS.map(c=>`<div class="c-dot${sc.accent===c?' sel':''}" data-color="${c}" style="background:${c}" onclick="setFormColor('${c}')"></div>`).join('');
   const trows=f.tasks.map((t,i)=>`<div class="task-in-row" id="tr-${t.id}">
     <div class="t-n-badge" style="background:${sc.accent}">${i+1}</div>
-    <input class="f-input" style="flex:1;margin:0" placeholder="수행 단계 ${i+1}" value="${esc(t.text)}" oninput="updFTask('${t.id}',this.value)">
+    <input class="f-input" id="ft-${t.id}" style="flex:1;margin:0" placeholder="수행 단계 ${i+1}" value="${esc(t.text)}" oninput="updFTask('${t.id}',this.value)">
     ${f.tasks.length>1?`<button class="rm-btn" onclick="rmFTask('${t.id}')">✕</button>`:''}
   </div>`).join('');
   return`<div class="drag-handle"></div>
@@ -5431,7 +5466,7 @@ function openAttach(id){S.attachTargetId=id;document.getElementById('attach-file
 function openTxtAttach(id){S.txtAttachTargetId=id;setState({overlay:'txt-attach'})}
 function saveTxtAttach(){
   const val=document.getElementById('txt-area')?.value?.trim();
-  if(!val){notify('내용을 입력해 주세요.',{kind:'warn'});return;}
+  if(!formCheck([{id:'txt-area',bad:!val,msg:'내용을 적어 주세요.'}]))return;
   const id=S.txtAttachTargetId;
   const item=S.items.find(i=>i.id===id);if(!item)return;
   const updated={...item,attachments:[...(item.attachments||[]),{id:uid(),type:'txt',name:'메모',data:val}]};
@@ -5567,22 +5602,27 @@ function onSubjIn(v){S.form.subject=v;const f=SUBJECTS.find(s=>s.name===v);if(f)
     const atb=document.getElementById('add-task-btn');if(atb){atb.style.color=f.accent;atb.style.borderColor=f.accent;}}}
 function setFormColor(c){S.form.subjectColor={name:S.form.subject,bg:c+'22',accent:c,tag:c+'55'};document.querySelectorAll('.c-dot').forEach(d=>d.classList.toggle('sel',d.dataset.color===c));const upd=s=>{const el=document.querySelector(s);if(el)el.style.background=c};upd('#save-btn');upd('#tog-track');document.querySelectorAll('.t-n-badge').forEach(b=>b.style.background=c);const ab=document.getElementById('add-task-btn');if(ab){ab.style.color=c;ab.style.borderColor=c;}}
 function setFPri(n){S.form.priority=n;document.querySelectorAll('.pri-opt').forEach((el,i)=>el.classList.toggle('sel',i+1===n))}
-function addFTask(){S.form.tasks.push({id:uid(),text:'',done:false});const c=document.getElementById('ftl');if(!c)return;const sc=S.form.subjectColor||SUBJECTS[0];const i=S.form.tasks.length-1;const t=S.form.tasks[i];const div=document.createElement('div');div.className='task-in-row';div.id=`tr-${t.id}`;div.innerHTML=`<div class="t-n-badge" style="background:${sc.accent}">${i+1}</div><input class="f-input" style="flex:1;margin:0" placeholder="수행 단계 ${i+1}" oninput="updFTask('${t.id}',this.value)"><button class="rm-btn" onclick="rmFTask('${t.id}')">✕</button>`;c.appendChild(div);}
+function addFTask(){S.form.tasks.push({id:uid(),text:'',done:false});const c=document.getElementById('ftl');if(!c)return;const sc=S.form.subjectColor||SUBJECTS[0];const i=S.form.tasks.length-1;const t=S.form.tasks[i];const div=document.createElement('div');div.className='task-in-row';div.id=`tr-${t.id}`;div.innerHTML=`<div class="t-n-badge" style="background:${sc.accent}">${i+1}</div><input class="f-input" id="ft-${t.id}" style="flex:1;margin:0" placeholder="수행 단계 ${i+1}" oninput="updFTask('${t.id}',this.value)"><button class="rm-btn" onclick="rmFTask('${t.id}')">✕</button>`;c.appendChild(div);}
 function rmFTask(id){S.form.tasks=S.form.tasks.filter(t=>t.id!==id);const r=document.getElementById(`tr-${id}`);if(r)r.remove();document.querySelectorAll('#ftl .t-n-badge').forEach((b,i)=>b.textContent=i+1)}
 function updFTask(id,v){const t=S.form.tasks.find(t=>t.id===id);if(t)t.text=v}
 function togFAlarm(){S.form.alarmEnabled=!S.form.alarmEnabled;const sc=S.form.subjectColor||SUBJECTS[0];const tr=document.getElementById('tog-track'),lb=document.getElementById('tog-lbl');if(tr){tr.style.background=S.form.alarmEnabled?sc.accent:'#CCC';tr.classList.toggle('tog-on',S.form.alarmEnabled)}if(lb)lb.textContent=S.form.alarmEnabled?'켜짐':'꺼짐';const ar=tr?.parentElement?.parentElement;if(ar){const ex=ar.querySelector('.alarm-days-row');if(ex)ex.remove();if(S.form.alarmEnabled){const d=document.createElement('div');d.className='alarm-days-row';d.innerHTML=`<select class="f-input" id="f-alarm-days" style="width:78px;margin:0">${[1,2,3,5,7].map(n=>`<option value="${n}"${S.form.alarmDaysBefore===n?' selected':''}>${n}일</option>`).join('')}</select><span style="font-size:calc(12px*var(--fs));color:#666">전에 알림</span>`;ar.appendChild(d);}}}
 
 // 저장 → Firestore에 업로드 (모든 가족이 실시간으로 볼 수 있게 됨)
+// 수행평가 폼(과목·제출일·수행 내용) 검사 규칙. 템플릿 저장은 제출일을 묻지 않는다(withDate=false)
+function assessRules(subj,date,taskCount,withDate){
+  const first=(S.form.tasks||[])[0];
+  return[{id:'f-subj',bad:!subj,msg:'과목을 입력해 주세요.'},
+    ...(withDate?[{id:'f-date',bad:!date,msg:'제출일을 골라 주세요.'}]:[]),
+    {id:first?'ft-'+first.id:'ftl',bad:!taskCount,msg:'수행 내용을 하나 이상 적어 주세요.',after:'ftl'}];
+}
 function saveForm(){
   const subj=document.getElementById('f-subj')?.value?.trim();
   const date=document.getElementById('f-date')?.value;
   const score=document.getElementById('f-score')?.value;
   const memo=document.getElementById('f-memo')?.value||'';
   const alarmDays=Number(document.getElementById('f-alarm-days')?.value||3);
-  if(!subj){notify('과목을 입력하세요.',{kind:'warn'});return}
-  if(!date){notify('제출일을 입력하세요.',{kind:'warn'});return}
   const clean=S.form.tasks.filter(t=>t.text.trim());
-  if(!clean.length){notify('수행 내용을 하나 이상 입력하세요.',{kind:'warn'});return}
+  if(!formCheck(assessRules(subj,date,clean.length,true)))return;
   const existing=S.form.id?S.items.find(i=>i.id===S.form.id):null;
   const newItem={
     id:S.form.id||uid(),subject:subj,dueDate:date,tasks:clean,

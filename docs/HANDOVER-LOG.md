@@ -333,3 +333,10 @@
 - 테스트 훅: `window.__askAuto(kind)`('text'|'pin'|'confirm'|'choice'|'info'). 확인은 truthy면 true, 선택은 값이 없으면 첫 선택지.
 - 테스트: `dev/ask-test.js` [8d] 토스트, [8e] 확인·선택·안내·큐, [8f] 소스에 `alert(`·`confirm(`·`prompt(` 없음 + 반복 일정 삭제·전체 초기화(PIN) 실제 흐름, [9] 6개 화면 크기·테마에서 토스트·시트가 화면 안(폰은 하단 메뉴 위). 가짜 서버 기준.
 
+## 폼 검증 인라인 오류 (v4.21, 캐시 v30, 2026-11-22)
+- `formCheck(rules)`(`rules:[{id,bad,msg,after?}]`): 모든 규칙을 한꺼번에 검사해 틀린 칸마다 `.f-err`(아이콘+문구, `role=alert`)를 붙이고 `aria-invalid`·`aria-describedby`를 건다. 첫 오류 칸으로 `scrollIntoView`+포커스, 고치기 시작하면(input/change) 그 칸만 해제. 칸을 못 찾으면 토스트로 대신 알린다. 오류색은 기존 `--ask-err` 토큰(다크 규칙 포함)이고 포커스 중에도 빨간 테두리를 유지한다(`.f-bad:focus`).
+- 적용: `saveForm`·`saveAsTemplate`(`assessRules`: 과목·제출일·수행 내용, 템플릿은 제출일 제외), `saveEvtForm`(제목·시작일·종료일<시작일·반복 종료일), `savePrep`, `saveTxtAttach`, `startWithCode`(시작 화면 가족 코드). 수행 단계 입력칸에 `id="ft-<id>"`를 달았다.
+- `askSheet` 검증 확장: `validate`가 Promise를 돌려줘도 된다(제출 중복 방지, 실패 시 `aria-invalid`). `addMember`(중복 이름), `editRoutine`(빈 항목), `changeFamilyCode`(현재 코드와 같음·약한 코드, Firestore 조회 포함)가 시트 안에서 안내한다. 확인 뒤의 방어 검사는 남겼다.
+- 토스트로 남긴 것: 한도(템플릿·목표 30개, 구성원 12명), 내보낼 데이터 없음, 이미지 관련 안내.
+- 테스트: `dev/ask-test.js` [8g](빈 폼·부분 수정·통과·템플릿·일정·준비물·구성원 중복·루틴·가족 코드·시작 화면), [10] 폼 오류 캡처(1138×712 다크, 390×844 다크·라이트). 가짜 Firestore가 빈 조회를 "데이터 있음"으로 읽어서 가족 코드 검사는 `familyHasData`를 가짜로 바꿔 시험했다. 가짜 서버 기준.
+

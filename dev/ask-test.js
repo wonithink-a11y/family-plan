@@ -440,6 +440,31 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(!/\bm\.icon\b/.test(fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')),'소스에 m.icon 참조가 없음');
   ok(await ev(()=>/중요도/.test(priStars(3))&&(priStars(3).match(/<svg/g)||[]).length===3),'중요도 별은 SVG n개 + aria-label');
 
+  console.log('\n[8l] 남은 이모지 교체: 화면 전체에 이모지·깨진 SVG 글자 없음');
+  const scan=()=>ev(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('.nav-ico,script,style').forEach(e=>e.remove());const tx=c.innerText||c.textContent;
+    const m=tx.match(/[\u{1F000}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu);return{emo:m?[...new Set(m)].join(''):'',raw:/<svg|&lt;svg|<path/.test(tx)};});
+  await page.setViewportSize({width:1280,height:800}); await ev(()=>{S.theme='dark';applyPrefs();document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());if(S.overlay)closeOverlay();if(S.evtOverlay)closeEvtOverlay();}); await page.waitForTimeout(500);
+  const views=[
+    ['우리집',()=>setTab('stamp')],['일정 달력',()=>{setTab('events');setEvSub('cal');}],['일정 목록',()=>{setTab('events');setEvSub('list');}],
+    ['수행평가 목록',()=>{setTab('list');setLsSub('list');}],['수행평가 통계',()=>{setTab('list');setLsSub('stats');setStatsView('progress');}],['수행평가 성적',()=>{setTab('list');setLsSub('stats');setStatsView('score');}],
+    ['가이드',()=>setTab('guide')],['설정',()=>setTab('backup')]
+  ];
+  for(const [name,fn] of views){
+    await ev(fn); await page.waitForTimeout(350);
+    const r=await scan(); ok(r.emo===''&&!r.raw,'화면 "'+name+'"에 이모지 없음'+(r.emo?': '+r.emo:'')+(r.raw?' (SVG 글자가 그대로 보임)':''));
+    await page.screenshot({path:path.join(tmp,'view_'+name.replace(/ /g,'_')+'.png')});
+  }
+  await ev(()=>{setTab('guide');});
+  await ev(()=>{asOpen();}); await page.waitForTimeout(300); let r=await scan(); ok(r.emo===''&&!r.raw,'루미 대화 시트에 이모지 없음'+(r.emo?': '+r.emo:'')); await ev(()=>asClose());
+  await ev(()=>{asOpen('settings');}); await page.waitForTimeout(300); r=await scan(); ok(r.emo===''&&!r.raw,'루미 설정 시트에 이모지 없음'+(r.emo?': '+r.emo:'')); await ev(()=>asClose());
+  await ev(()=>{asOpen('listen');}); await page.waitForTimeout(250); r=await scan(); ok(r.emo===''&&!r.raw,'루미 듣기 시트에 이모지 없음'+(r.emo?': '+r.emo:'')); await ev(()=>{asConvStop&&asConvStop();asClose();});
+  // 벽걸이(주소로 열기)
+  const wp=await ctx.newPage(); await wp.goto('file://'+path.join(tmp,'index_ask.html')+'?view=wall'); await wp.waitForTimeout(1200);
+  const wr=await wp.evaluate(()=>{const tx=document.body.innerText;const m=tx.match(/[\u{1F000}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu);return{emo:m?[...new Set(m)].join(''):'',raw:/<svg|&lt;svg/.test(tx),n:document.querySelectorAll('.w-lane-h svg,.w-tools svg').length};});
+  ok(wr.emo===''&&!wr.raw&&wr.n>=3,'벽걸이 화면에 이모지 없음(머리·도구 버튼 SVG '+wr.n+'개)'+(wr.emo?': '+wr.emo:''));
+  await wp.screenshot({path:path.join(tmp,'view_wall.png')}); await wp.close();
+  ok(!/\bsub\.ico\b/.test(fs.readFileSync(path.join(root,'index.html'),'utf8')),'과목 가이드가 sub.ico 이모지를 화면에 쓰지 않음');
+
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];
   for(const [w,h,th] of shots){

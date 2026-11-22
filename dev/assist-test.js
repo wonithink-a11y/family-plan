@@ -219,7 +219,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   console.log('\n[7c] 구성원 목소리 미리듣기 → 요청한 목소리 확인 알림');
   const mt=await page.evaluate(async()=>{asBack();asOpen('settings');await new Promise(x=>setTimeout(x,150));
     document.getElementById('as-m-voice-dad').value='Orus';window.__ttsLog=[];asTestMember('dad');await new Promise(x=>setTimeout(x,700));
-    const t=document.getElementById('as-toast');const sent=(window.__ttsLog||[]).map(x=>x.body.generation_config?x.body.generation_config.speech_config[0].voice:'');
+    const t={textContent:[...document.querySelectorAll('.nt-t')].map(e=>e.textContent).join(' ')};const sent=(window.__ttsLog||[]).map(x=>x.body.generation_config?x.body.generation_config.speech_config[0].voice:'');
     return{toast:t&&t.textContent,sent,saved:S.mbCfg&&S.mbCfg.list[0].voice};});
   ok(mt.saved==='Orus'&&mt.sent[0]==='Orus','아빠 목소리를 바꾸면 그 목소리 이름(Orus)으로 요청함: '+mt.sent.join(','));
   ok(/Orus/.test(mt.toast||'')&&/v\d+\.\d+/.test(mt.toast||''),'미리듣기 때 요청한 목소리·엔진·앱 버전을 알려 줌: '+mt.toast);

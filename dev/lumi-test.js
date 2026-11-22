@@ -238,7 +238,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   ok(dev&&dev[1].token==='TOKEN123'&&dev[1].notify===true&&dev[1].label==='엄마 폰','기기 토큰이 families/코드/devices 에 저장됨');
   ok(await ev(()=>window.__vapid)==='VAPID_KEY_X','VAPID 키로 토큰 요청');
   await ev(()=>window.__fg({notification:{title:'🎒 준비물 요청이 왔어요',body:'11월 18일 · 리코더'}}));
-  ok(await ev(()=>document.getElementById('as-toast').textContent.includes('리코더')),'앱이 열려 있을 때는 토스트로 보여 줌');
+  ok(await ev(()=>[...document.querySelectorAll('.nt-t')].map(e=>e.textContent).join(' ').includes('리코더')),'앱이 열려 있을 때는 토스트로 보여 줌');
   await ev(()=>asPushToggle(false)); await page.waitForTimeout(150);
   ok(await ev(()=>Object.entries(window.__store).find(([k])=>k.includes('/devices/'))[1].notify)===false,'끄면 notify=false');
   await page.screenshot({path:path.join(tmp,'lumi_settings.png')});

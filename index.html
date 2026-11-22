@@ -422,11 +422,6 @@ header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07);flex-shrink:0;
 .log-row{display:flex;justify-content:space-between;gap:8px;padding:9px 0;font-size:13px;border-bottom:1px solid #F1F2FA;color:var(--text)}
 .log-row:last-child{border-bottom:none}
 .log-row span:last-child{color:#9AA0BD;font-size:12px;flex-shrink:0}
-.stamp-toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:999;border-radius:22px;padding:24px 30px;
-  color:#fff;font-size:17px;font-weight:800;text-align:center;line-height:1.7;white-space:pre-line;pointer-events:none;
-  background:linear-gradient(135deg,rgba(27,33,73,.96),rgba(67,48,143,.96));border:1px solid rgba(255,255,255,.18);
-  box-shadow:0 18px 50px rgba(20,20,60,.5);animation:toastIn .4s cubic-bezier(.2,.9,.3,1.3)}
-@keyframes toastIn{0%{transform:translate(-50%,-50%) scale(.7);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 
 /* 태블릿(768px 이상) 기본 레이아웃 — 폰은 확인용 1열 */
 @media (min-width:768px){
@@ -770,8 +765,6 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
 .as-adv label{display:block;font-size:12px;font-weight:800;color:#6B7399;margin:12px 0 6px}
 .as-adv label small{font-weight:600;color:#9AA0BD}
 .as-adv input{width:100%;box-sizing:border-box;border:1.5px solid #E4E7F5;border-radius:14px;padding:12px 14px;font-size:15px;font-family:inherit;background:#FAFAFF;color:#1A1A2E}
-.as-toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-140%);background:#1B2149;color:#fff;border-radius:16px;padding:12px 20px;font-size:14px;font-weight:700;z-index:90;box-shadow:0 10px 30px rgba(10,12,34,.4);transition:transform .3s;max-width:90vw}
-.as-toast.on{transform:translate(-50%,0)}
 
 /* 벽걸이 가족별 3칸 */
 .w-layout{position:fixed;right:44px;bottom:12px;font-size:18px;color:rgba(255,255,255,.28);background:none}
@@ -1025,8 +1018,10 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 @media (prefers-reduced-motion:reduce){.ask-ov,.ask-box,.ask-act button,.ask-pad button,.ask-dots i{transition:none}.ask-box.shake{animation:none}}
 
 /* ── 토스트·확인 시트 보조 ── */
-:root{--nt-bg:#1F2540;--nt-t:#fff;--nt-ok:#4ADE80;--nt-info:#A5B4FC;--nt-warn:#FDBA74;--nt-err:#FCA5A5;--ask-danger:#C62828;--ask-danger-t:#fff}
+:root{--nt-star:#FCD34D;--nt-bg:#1F2540;--nt-t:#fff;--nt-ok:#4ADE80;--nt-info:#A5B4FC;--nt-warn:#FDBA74;--nt-err:#FCA5A5;--ask-danger:#C62828;--ask-danger-t:#fff}
 :root[data-theme=dark]{--nt-bg:#262C4D;--nt-t:#ECEEF8;--ask-danger:#F87171;--ask-danger-t:#0A0E1F}
+#nt-center{position:fixed;left:0;right:0;top:40%;transform:translateY(-50%);z-index:996;display:flex;flex-direction:column;align-items:center;gap:12px;pointer-events:none;padding:0 16px}
+#nt-stack.top{bottom:auto;top:calc(18px + var(--safe-top))}
 #nt-stack{position:fixed;left:0;right:0;bottom:24px;z-index:995;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
 @media (max-width:999px){#nt-stack{bottom:calc(84px + var(--safe-bot))}}
 .nt{pointer-events:auto;display:flex;align-items:center;gap:12px;max-width:min(440px,100%);padding:12px 16px;background:var(--nt-bg);color:var(--nt-t);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 10px 30px rgba(10,12,34,.4);font-size:14px;line-height:1.5;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
@@ -1040,6 +1035,10 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 .ask-ok.ask-danger{background:var(--ask-danger);color:var(--ask-danger-t)}
 .ask-err.good{color:var(--ask-sub)}
 @media (prefers-reduced-motion:reduce){.nt{transition:none}}
+.nt-big{flex-direction:column;gap:8px;max-width:min(520px,100%);padding:24px 32px;border-radius:24px;text-align:center;font-size:clamp(18px,2.4vw,28px);font-weight:700;line-height:1.6;transform:scale(.85);transition:opacity .25s,transform .3s cubic-bezier(.2,.9,.3,1.3);pointer-events:none}
+.nt-big.on{transform:none}
+.nt-big .nt-i{color:var(--nt-star)}
+
 .f-input.f-bad,.f-select.f-bad,.f-input.f-bad:focus,:root[data-theme=dark] .f-input.f-bad,:root[data-theme=dark] .f-select.f-bad,:root[data-theme=dark] .f-input.f-bad:focus{border-color:var(--ask-err)}
 .f-err{display:flex;align-items:flex-start;gap:6px;margin-top:6px;font-size:13px;line-height:1.5;color:var(--ask-err)}
 .f-err svg{flex:none;margin-top:2px}
@@ -1140,7 +1139,7 @@ let S={
   showBanner:true,deferredPrompt:null,
   attachTargetId:null,imgViewSrc:null,imgViewId:null,txtAttachTargetId:null,
   trend:[],
-  reward:{stampCount:0,couponsIssued:0,pinHash:null},stamps:[],coupons:[],stampMsg:null,
+  reward:{stampCount:0,couponsIssued:0,pinHash:null},stamps:[],coupons:[],
   routineItems:null,routineDay:{done:{},stamped:false},routineDate:null,preps:[],rewardErr:null,
 };
 let unsubFS=null; // Firestore 구독 해제 함수
@@ -1315,16 +1314,27 @@ async function sha256Hex(text){
 }
 
 /* ── 토스트 (alert() 대신 쓰는, 화면을 막지 않는 안내) ── */
-const NT_ICO={ok:'<path d="M20 6 9 17l-5-5"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',warn:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',error:'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>'};
+const NT_ICO={ok:'<path d="M20 6 9 17l-5-5"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',warn:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',error:'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>',star:'<path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5l-5.4 3 1.2-6L3.3 9.3l6.1-.7z"/>'};
+// notify(msg,{kind:'ok'|'info'|'warn'|'error', ms, big})
+//  - 같은 문구가 이미 떠 있으면 새로 쌓지 않고 시간만 다시 센다. 루미 시트가 열려 있으면 아래 입력줄을 가리지 않게 위쪽에 띄운다.
+//  - big:true 는 화면 가운데에 크게(도장·구입권 같은 보상 순간). 클릭은 통과하고 render() 를 부르지 않는다.
 function notify(msg,o={}){
-  const kind=NT_ICO[o.kind]?o.kind:'info', ms=o.ms||Math.min(12000,Math.max({ok:2500,info:3500,warn:5000,error:8000}[kind],1500+String(msg).length*70));
-  let st=document.getElementById('nt-stack'); if(!st){st=document.createElement('div');st.id='nt-stack';document.body.appendChild(st);}
+  const kind=NT_ICO[o.kind]&&o.kind!=='star'?o.kind:'info', big=!!o.big;
+  const ms=o.ms||(big?2600:Math.min(12000,Math.max({ok:2500,info:3500,warn:5000,error:8000}[kind],1500+String(msg).length*70)));
+  const hid=big?'nt-center':'nt-stack';
+  let st=document.getElementById(hid); if(!st){st=document.createElement('div');st.id=hid;document.body.appendChild(st);}
+  if(!big)st.classList.toggle('top',!!document.querySelector('.as-ov'));
+  const key=kind+'|'+big+'|'+msg, dup=[...st.children].find(c=>c.dataset.k===key);
+  if(dup){dup._reset();return dup;}
   while(st.children.length>=3)st.firstElementChild.remove();
-  const el=document.createElement('div'); el.className='nt nt-'+kind; el.setAttribute('role',kind==='error'||kind==='warn'?'alert':'status');
-  el.innerHTML=`<svg class="nt-i" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NT_ICO[kind]}</svg><span class="nt-t">${esc(msg)}</span>${kind==='error'||kind==='warn'?'<button type="button" class="nt-x" aria-label="닫기"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>':''}`;
+  const el=document.createElement('div'); el.dataset.k=key; el.className='nt nt-'+kind+(big?' nt-big':''); el.setAttribute('role',kind==='error'||kind==='warn'?'alert':'status');
+  const x=!big&&(kind==='error'||kind==='warn');
+  el.innerHTML=`<svg class="nt-i" viewBox="0 0 24 24" width="${big?44:20}" height="${big?44:20}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NT_ICO[big?'star':kind]}</svg><span class="nt-t"></span>${x?'<button type="button" class="nt-x" aria-label="닫기"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>':''}`;
+  el.querySelector('.nt-t').textContent=msg;
   const rm=()=>{clearTimeout(el._t);el.classList.remove('on');setTimeout(()=>el.remove(),200);};
-  const x=el.querySelector('.nt-x'); if(x)x.onclick=rm;
-  st.appendChild(el); requestAnimationFrame(()=>el.classList.add('on')); el._t=setTimeout(rm,ms);
+  el._reset=()=>{clearTimeout(el._t);el._t=setTimeout(rm,ms);};
+  const xb=el.querySelector('.nt-x'); if(xb)xb.onclick=rm;
+  st.appendChild(el); requestAnimationFrame(()=>el.classList.add('on')); el._reset();
   return el;
 }
 
@@ -1542,12 +1552,8 @@ async function addStamp(reason){
   return issued;
 }
 
-function flashStamp(msg){
-  S.stampMsg=msg; render();
-  setTimeout(()=>{S.stampMsg=null;render();},2300);
-}
 function stampMsgFor(issued,prefix){
-  return issued?'🎉 도장 '+STAMPS_PER_COUPON+'개 완성!\n'+COUPON_TITLE+'이 생겼어요':prefix;
+  return issued?'도장 '+STAMPS_PER_COUPON+'개 완성!\n'+COUPON_TITLE+'이 생겼어요':prefix;
 }
 
 async function stampFlow(){
@@ -1556,7 +1562,7 @@ async function stampFlow(){
   if(reason===null)return;
   try{
     const issued=await addStamp(reason.trim());
-    flashStamp(stampMsgFor(issued,'🏅 칭찬 도장 +1'));
+    notify(stampMsgFor(issued,'칭찬 도장 +1'),{kind:'ok',big:true});
   }catch(e){
     notify('도장을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message),{kind:'error'});
   }
@@ -1591,7 +1597,7 @@ async function toggleRoutine(itemId){
       }
       tx.set(dRef,{date,done,stamped});
     });
-    if(res.stamped)flashStamp(stampMsgFor(res.issued,'🎉 루틴 완료!\n칭찬 도장 +1'));
+    if(res.stamped)notify(stampMsgFor(res.issued,'루틴 완료!\n칭찬 도장 +1'),{kind:'ok',big:true});
   }catch(e){
     notify('저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message),{kind:'error'});
   }
@@ -1751,7 +1757,7 @@ function buildWallView(){
     <div class="w-card w-c-st"><div class="w-h">칭찬 도장 <span>${COUPON_TITLE} ${openCp}장</span></div><div class="w-stamps">${slots}</div><div class="w-sub">${COUPON_TITLE}까지 ${STAMPS_PER_COUPON-cnt}개 남았어요</div><div class="w-tools"><button class="w-tool" onclick="asBrief()" title="오늘 브리핑 듣기"><span>☀️</span><b>브리핑</b></button><button class="w-tool" onclick="asOpen('listen')" title="말로 하기"><span>🎤</span><b>${esc(asName())}</b></button><button class="w-tool" onclick="asOpenExam(false)" title="문제은행 (AI 선생님)"><span>📚</span><b>문제은행</b></button></div></div>
   </div>`:buildWallLanes()}
   <button class="w-layout" onclick="asToggleLayout()" title="${asCfg().wallLayout==='cards'?'가족별 3칸으로':'카드 보기로'}">${asCfg().wallLayout==='cards'?'👨‍👩‍👧':'▦'}</button><a class="w-exit" href="${esc(location.pathname)}">⚙</a>
-</div>${S.briefPending?'<div class="w-brief-pending" onclick="asAutoBrief()">☀️ 화면을 한 번 터치하면 아침 브리핑을 들려드려요</div>':''}${S.stampMsg?`<div class="stamp-toast">${esc(S.stampMsg)}</div>`:''}`;
+</div>${S.briefPending?'<div class="w-brief-pending" onclick="asAutoBrief()">☀️ 화면을 한 번 터치하면 아침 브리핑을 들려드려요</div>':''}`;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2353,7 +2359,7 @@ function asSaveSettings(){
 }
 function asVoiceToast(want){
   if(!A.open||A.mode!=='settings')return;
-  asToast(A.ttsNote?('⚠ '+A.ttsNote):('요청한 목소리 '+want+' → AI 목소리: '+(A.ttsInfo||'?')+' · 앱 '+APP_VER));
+  if(A.ttsNote)notify(A.ttsNote,{kind:'warn'}); else notify('요청한 목소리 '+want+' → AI 목소리: '+(A.ttsInfo||'?')+' · 앱 '+APP_VER,{kind:'info'});
 }
 function asTestMember(id){
   asCollectSettings(); mbSave(); const m=mbById(id); A.mode='settings';asRender();
@@ -2533,7 +2539,7 @@ function mbSpeech(mid){
   return parts.join(' ');
 }
 async function asSpeakMember(mid){
-  asUnlock(); const m=mbById(mid); if(!m)return; const text=mbSpeech(mid); asToast(text);
+  asUnlock(); const m=mbById(mid); if(!m)return; const text=mbSpeech(mid); notify(text,{kind:'info'});
   const multi=asCfg().multiVoice!==false;
   await asSpeak(text,multi?m.voice:undefined,multi?m.pitch:undefined);
 }
@@ -3196,10 +3202,6 @@ function asWakeFire(){
 /* ── 푸시 ── */
 function asLoadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('스크립트를 불러오지 못했어요'));document.head.appendChild(s);});}
 function devicesCol(){return rewardBase().collection('devices');}
-function asToast(msg){
-  let el=document.getElementById('as-toast'); if(!el){el=document.createElement('div');el.id='as-toast';el.className='as-toast';document.body.appendChild(el);}
-  el.textContent=msg; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),7000);
-}
 function asPushState(){
   if(!('Notification' in window)||!('serviceWorker' in navigator))return'unsupported';
   if(Notification.permission==='denied')return'denied';
@@ -3225,7 +3227,7 @@ async function asPushDisable(){
 let _pushFg=false;
 function asPushForeground(m){
   if(_pushFg)return; _pushFg=true;
-  m.onMessage(p=>{const n=(p&&p.notification)||{}; const d=(p&&p.data)||{}; const t=(n.title?n.title+' ':'')+(n.body||d.body||''); asToast(t||'새 알림이 왔어요');
+  m.onMessage(p=>{const n=(p&&p.notification)||{}; const d=(p&&p.data)||{}; const t=(n.title?n.title+' ':'')+(n.body||d.body||''); notify(t||'새 알림이 왔어요',{kind:'info'});
     if(KIOSK&&asInWindow(new Date())&&asCfg().ttsMode!=='silent')asSpeak('새 준비물 요청이 왔어요. '+(d.text||''));});
 }
 async function asPushBoot(){
@@ -4203,7 +4205,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.21';
+const APP_VER='v4.22';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -5360,7 +5362,7 @@ function render(){
     ['backup','<span class="nav-ico">⚙️</span>','설정']];
   const nav=`<nav class="bot-nav">${navDef.map(n=>`<button class="nav-btn${S.tab===n[0]?' active':''}" onclick="setTab('${n[0]}')">${n[1]}${n[2]}</button>`).join('')}</nav>`;
   const banner=S.showBanner&&!isPWA()?`<div class="install-banner" onclick="setState({showBanner:false})"><span>🌹 홈 화면에 추가하면 앱처럼 사용할 수 있어요!</span><span>✕</span></div>`:'';
-  document.getElementById('app').innerHTML=banner+`<div class="app-wrap" style="display:flex;flex-direction:column;height:${S.showBanner&&!isPWA()?'calc(100vh - 38px)':'100vh'}">${main}${nav}</div>${ov}${S.stampMsg?`<div class="stamp-toast">${esc(S.stampMsg)}</div>`:''}`;
+  document.getElementById('app').innerHTML=banner+`<div class="app-wrap" style="display:flex;flex-direction:column;height:${S.showBanner&&!isPWA()?'calc(100vh - 38px)':'100vh'}">${main}${nav}</div>${ov}`;
   const sc=document.querySelector('.screen');if(sc)sc.scrollTop=scrollTop;
   if(S.overlay){requestAnimationFrame(()=>requestAnimationFrame(()=>{const ov=document.getElementById('ov');if(ov)ov.classList.add('open');}));}
   }catch(e){document.getElementById('app').innerHTML='<div style="padding:20px;color:red;font-size:calc(13px*var(--fs));background:#fff;min-height:100vh"><b>render 오류:</b><br>'+e.message+'<br><br>'+e.stack+'</div>';}

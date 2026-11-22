@@ -340,3 +340,9 @@
 - 토스트로 남긴 것: 한도(템플릿·목표 30개, 구성원 12명), 내보낼 데이터 없음, 이미지 관련 안내.
 - 테스트: `dev/ask-test.js` [8g](빈 폼·부분 수정·통과·템플릿·일정·준비물·구성원 중복·루틴·가족 코드·시작 화면), [10] 폼 오류 캡처(1138×712 다크, 390×844 다크·라이트). 가짜 Firestore가 빈 조회를 "데이터 있음"으로 읽어서 가족 코드 검사는 `familyHasData`를 가짜로 바꿔 시험했다. 가짜 서버 기준.
 
+## 토스트 통합: asToast·flashStamp → notify (v4.22, 캐시 v31, 2026-11-22)
+- `notify` 확장: `big:true`는 `#nt-center`(화면 가운데, 위에서 40%)에 큰 글자(`clamp(18px,2.4vw,28px)`)와 별 아이콘(`--nt-star`)으로 2.6초, `pointer-events:none`, 닫기 버튼 없음. 같은 `kind|big|문구` 키가 떠 있으면 새로 쌓지 않고 `_reset()`으로 시간만 다시 센다. 루미 시트(`.as-ov`)가 열려 있으면 `#nt-stack.top`(위쪽)으로 옮긴다.
+- 제거: `asToast`, `.as-toast` CSS, `flashStamp`, `S.stampMsg`, `.stamp-toast`/`toastIn` CSS, 우리집·벽걸이 렌더의 `stampMsg` 출력. `stampMsgFor`는 이모지 없는 문구를 돌려준다.
+- 호출 교체: 도장(`stampFlow`)·루틴 완료는 `big`, 목소리 확인(`asVoiceToast`)은 경고/정보, 구성원 브리핑 읽기(`asSpeakMember`)·푸시 포그라운드 수신은 정보 토스트. 표시 시간은 예전 고정 7초 대신 글자 수에 따라(최대 12초).
+- 테스트: `dev/ask-test.js` [8h](소스에 옛 이름이 없음, 같은 문구 합치기, 도장 축하가 가운데·이모지 없음·`role=status`, 루미 시트가 열리면 위쪽). `lumi-test`·`members-test`·`assist-test`의 `#as-toast` 검사는 `.nt-t` 텍스트 검사로 바꿨다. 가짜 서버 기준.
+

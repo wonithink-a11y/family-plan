@@ -154,7 +154,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await ev(()=>{window.__ttsVoices.length=0;});
   await page.click('.w-lane:nth-child(1) .w-lane-h button'); await page.waitForFunction(()=>window.__ttsVoices.length>=1,null,{timeout:8000});
   ok(await ev(()=>window.__ttsVoices[0])==='Puck','아빠 칸 🔊 → 아빠 목소리로 읽음');
-  ok(await ev(()=>document.getElementById('as-toast').textContent.includes('회의')),'읽는 내용도 화면에 표시');
+  ok(await ev(()=>[...document.querySelectorAll('.nt-t')].map(e=>e.textContent).join(' ').includes('회의')),'읽는 내용도 화면에 표시');
   await ev(()=>{asStopSpeak();});
   await ev(()=>asToggleLayout()); ok(await ev(()=>!!document.querySelector('.w-grid')&&!document.querySelector('.w-lanes')),'전환 버튼으로 카드 보기로 되돌림');
   await ev(()=>asToggleLayout());

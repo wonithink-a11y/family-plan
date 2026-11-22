@@ -142,6 +142,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await ev(()=>{window.__askAnswer=[];});
 
   console.log('\n[8d] 토스트(notify)');
+  await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});  // 앞 단계(도장 축하 등)에서 남은 안내 정리
   await ev(()=>{notify('저장했어요',{kind:'ok',ms:300});notify('경고예요',{kind:'warn',ms:5000});notify('오류예요',{kind:'error',ms:5000});});
   await page.waitForTimeout(60);
   ok(await ev(()=>[...document.querySelectorAll('.nt')].map(e=>e.getAttribute('role')).join(','))==='status,alert,alert','역할: 성공=status, 경고·오류=alert');
@@ -277,6 +278,28 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await ev(()=>{clearFieldErr('fc-input');document.getElementById('fc-input').remove();});
   ok(await ev(()=>document.querySelectorAll('.nt-warn').length)===0,'폼 검증 때문에 경고 토스트가 뜬 곳이 없음');
   await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();});
+
+  console.log('\n[8h] asToast·flashStamp → notify 통합');
+  const src2=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  ok(!/\basToast\b|\bflashStamp\b|\bstampMsg\b|stamp-toast|as-toast/.test(src2),'소스에 asToast·flashStamp·stampMsg·옛 토스트 CSS가 없음');
+  await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});
+  // 같은 문구는 쌓지 않고 시간만 다시 센다
+  await ev(()=>{notify('같은 문구',{kind:'info',ms:5000});notify('같은 문구',{kind:'info',ms:5000});notify('다른 문구',{kind:'info',ms:5000});});
+  ok(await ev(()=>document.querySelectorAll('#nt-stack .nt').length)===2,'같은 문구가 연달아 와도 한 개만 뜸');
+  // 도장 축하: 가운데 큰 토스트, 이모지 없음, 화면을 다시 그리지 않음
+  await ev(()=>{document.getElementById('nt-stack').remove();});
+  await ev(()=>{_pinUntil=0;window.__askAnswer=['1234','통합 테스트'];return stampFlow();}); await page.waitForTimeout(500);
+  const big=await ev(()=>{const e=document.querySelector('#nt-center .nt-big');if(!e)return null;const r=e.getBoundingClientRect();return{t:e.textContent,cx:Math.round(r.left+r.width/2),cy:Math.round(r.top+r.height/2),w:innerWidth,h:innerHeight,pe:getComputedStyle(document.getElementById('nt-center')).pointerEvents,role:e.getAttribute('role')};});
+  ok(big&&/칭찬 도장 \+1|완성/.test(big.t)&&!/[\u{1F300}-\u{1FAFF}]/u.test(big.t),'도장을 찍으면 가운데에 큰 안내(이모지 없음): '+(big&&big.t.replace(/\n/g,' ')));
+  ok(big&&Math.abs(big.cx-big.w/2)<4&&big.cy>big.h*0.25&&big.cy<big.h*0.6&&big.pe==='none'&&big.role==='status','가로 가운데, 클릭은 통과, role=status');
+  await page.screenshot({path:path.join(tmp,'stamp_big.png')});
+  await page.waitForTimeout(2800); ok(await ev(()=>!document.querySelector('#nt-center .nt-big')),'축하 안내는 2.6초 뒤 사라짐');
+  // 루미 시트가 열려 있으면 알림은 위쪽
+  await ev(()=>{asOpen('settings');}); await page.waitForTimeout(250);
+  await ev(()=>{notify('루미 시트 위 알림',{kind:'info',ms:3000});}); await page.waitForTimeout(150);
+  ok(await ev(()=>document.getElementById('nt-stack').classList.contains('top')&&document.getElementById('nt-stack').getBoundingClientRect().top<60),'루미 시트가 열려 있으면 알림은 화면 위쪽');
+  await ev(()=>{asClose();}); await page.waitForTimeout(200);
+  await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});
 
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];

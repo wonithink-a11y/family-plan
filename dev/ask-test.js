@@ -133,8 +133,8 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(await ev(()=>Object.keys(window.__store).filter(k=>k.includes('/stamps/')).length)===st0+1,'이유 입력을 취소하면 도장 안 찍힘');
   await ev(()=>{_pinUntil=0;window.__askAnswer=['0000'];return stampFlow();}); await page.waitForTimeout(200);
   ok(await ev(()=>Object.keys(window.__store).filter(k=>k.includes('/stamps/')).length)===st0+1,'틀린 PIN이면 도장 안 찍힘');
-  await ev(()=>{_pinUntil=0;window.__askAnswer=['1234','양치, 세수, 가방'];return editRoutine();}); await page.waitForTimeout(300);
-  ok(await ev(()=>S.routineItems.map(i=>i.text).join('|'))==='양치|세수|가방','루틴 항목 편집(쉼표 구분 유지)');
+  await ev(()=>{_pinUntil=0;window.__askAnswer=['1234',[{id:'d0',text:'양치'},{id:'n1',text:'세수'},{id:'n2',text:'가방'}]];return editRoutine();}); await page.waitForTimeout(300);
+  ok(await ev(()=>S.routineItems.map(i=>i.text).join('|'))==='양치|세수|가방','루틴 항목 편집(목록 시트 결과 저장)');
   await ev(()=>{S.form={...(S.form||{}),subject:'과학',tasks:[{id:'t1',text:'실험 보고서',done:false}]};window.__askAnswer=['과학 보고서'];return saveAsTemplate();}); await page.waitForTimeout(200);
   ok(await ev(()=>S.templates.some(t=>t.name==='과학 보고서'&&t.subject==='과학')),'템플릿 이름 입력(askText) 후 저장');
   const code0=await ev(()=>S.familyCode); await ev(()=>{window.__askAnswer=[null];return changeFamilyCode();}); await page.waitForTimeout(100);
@@ -259,9 +259,10 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await page.fill('#ask-f0','영희'); await page.keyboard.press('Enter'); await wait();
   ok(await ev(()=>S.members.some(m=>m.name==='영희')),'고쳐서 확인하면 추가됨');
   await ev(()=>{_pinUntil=Date.now()+100000;editRoutine();}); await page.waitForTimeout(200);
-  await page.fill('#ask-f0',' , , '); await page.click('.ask-ok'); await page.waitForTimeout(80);
-  ok(await open()&&await ev(()=>document.querySelector('.ask-err').textContent.includes('한 개 이상')),'루틴: 빈 항목은 시트 안에서 안내');
-  await page.keyboard.press('Escape'); await wait();
+  ok(await ev(()=>document.querySelector('.ask-t').textContent)==='아침 루틴 편집'&&await page.locator('.ask-rowin').count()===3,'루틴 편집은 항목별 목록 시트(행 3개)');
+  for(let i=0;i<3;i++)await page.fill(`.ask-rowin[data-r="${i}"]`,' '); await page.click('.ask-ok'); await page.waitForTimeout(80);
+  ok(await open()&&await ev(()=>document.querySelector('.ask-err').textContent.includes('한 개 이상')),'루틴: 전부 비우면 시트 안에서 안내');
+  await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); await wait();
   await ev(()=>{window.__fhd=familyHasData;familyHasData=async()=>false;});  // 가짜 Firestore 는 빈 결과를 '데이터 있음'으로 읽으므로 새 코드로 가정
   await ev(()=>{changeFamilyCode();}); await page.waitForTimeout(200);
   await page.fill('#ask-f0','abc'); await page.keyboard.press('Enter'); await page.waitForTimeout(250);
@@ -363,6 +364,49 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   // 테스트 훅
   await ev(()=>{window.__askAnswer=[[{id:'q',text:'가'}],null];});
   ok(JSON.stringify(await ev(l=>askList({items:l}),L3()))==='[{"id":"q","text":"가"}]'&&await ev(l=>askList({items:l}),L3())===null,'테스트 훅: 큐의 배열은 그대로, null 은 취소');
+
+  console.log('\n[8j] 루틴 항목 편집: id 유지 · 충돌 확인 · 도장 판정');
+  const rtSet=(items,done,stamped)=>ev(async([i,d,st])=>{await routineRef().set({items:i});await routineDayRef(todayStr()).set({date:todayStr(),done:d,stamped:!!st});},[items,done||{},stamped]);
+  const stampN=()=>ev(()=>Object.keys(window.__store).filter(k=>k.includes('/stamps/rt_')).length);
+  const rtState=()=>ev(()=>({t:S.routineItems.map(i=>i.id+':'+i.text).join('|'),done:Object.keys(S.routineDay.done||{}).filter(k=>S.routineDay.done[k]).join(',')}));
+  // 이름을 고쳐도 id 가 같아서 오늘 체크가 남는다
+  await rtSet([{id:'a',text:'양치'},{id:'b',text:'세수'},{id:'c',text:'가방'}],{a:true}); await page.waitForTimeout(300);
+  await ev(()=>{_pinUntil=Date.now()+100000;window.__askAnswer=[[{id:'a',text:'양치하기'},{id:'b',text:'세수'},{id:'c',text:'가방'}]];return editRoutine();}); await page.waitForTimeout(400);
+  let st=await rtState(); ok(st.t==='a:양치하기|b:세수|c:가방'&&st.done==='a','이름을 고쳐도 id 가 같아 오늘 체크(양치)가 남음');
+  ok(await ev(()=>[...document.querySelectorAll('.nt-t')].some(e=>e.textContent.includes('저장했어요'))),'저장하면 안내 토스트');
+  const s0=await stampN();
+  // 순서만 바꿔도 체크 유지, 도장 없음(아직 다 안 끝남)
+  await ev(()=>{window.__askAnswer=[[{id:'c',text:'가방'},{id:'a',text:'양치하기'},{id:'b',text:'세수'}]];return editRoutine();}); await page.waitForTimeout(400);
+  st=await rtState(); ok(st.t==='c:가방|a:양치하기|b:세수'&&st.done==='a'&&await stampN()===s0,'순서를 바꿔도 체크 유지, 끝나지 않았으면 도장 없음');
+  // 바뀐 게 없으면 쓰지 않음(저장 토스트도 없음)
+  await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());window.__askAnswer=[S.routineItems.map(i=>({id:i.id,text:i.text}))];return editRoutine();}); await page.waitForTimeout(300);
+  ok(await ev(()=>![...document.querySelectorAll('.nt-t')].some(e=>e.textContent.includes('저장했어요'))),'바뀐 게 없으면 저장하지 않음');
+  // 남은 항목을 지워서 전부 체크된 상태가 되면 도장 한 번
+  await rtSet([{id:'a',text:'양치'},{id:'b',text:'세수'},{id:'c',text:'가방'}],{a:true,b:true}); await page.waitForTimeout(300);
+  const sc0=await ev(()=>S.reward.stampCount||0);
+  await ev(()=>{window.__askAnswer=[[{id:'a',text:'양치'},{id:'b',text:'세수'}]];return editRoutine();}); await page.waitForTimeout(500);
+  ok(await stampN()===s0+1&&await ev(()=>Object.keys(window.__store).some(k=>k.includes('/stamps/rt_')))&&await ev(()=>S.reward.stampCount)===sc0+1,'안 한 항목을 지워 모두 체크된 상태가 되면 도장 +1(하루 한 번 id rt_날짜)');
+  ok(await ev(()=>!!document.querySelector('#nt-center .nt-big')),'도장 축하 안내가 뜸');
+  ok(await ev(()=>(window.__store['families/TEST/routine/'+todayStr()]||{}).stamped)===true,'그날 stamped=true 로 기록');
+  // 이미 도장을 받은 날은 다시 주지 않음
+  await ev(()=>{window.__askAnswer=[[{id:'a',text:'양치!'},{id:'b',text:'세수'}]];return editRoutine();}); await page.waitForTimeout(400);
+  ok(await stampN()===s0+1,'이미 도장을 받은 날은 편집해도 중복 지급 없음');
+  // 다른 기기가 먼저 바꾼 경우
+  await rtSet([{id:'a',text:'양치'},{id:'b',text:'세수'}],{}); await page.waitForTimeout(300);
+  await ev(()=>{_pinUntil=Date.now()+100000;editRoutine();}); await page.waitForTimeout(250);
+  await ev(async()=>{await routineRef().set({items:[{id:'a',text:'양치'},{id:'z',text:'다른 기기 항목'}]});}); await page.waitForTimeout(300);
+  await page.fill('.ask-rowin[data-r="0"]','내가 고침'); await page.click('.ask-ok'); await page.waitForTimeout(350);
+  ok(await ev(()=>document.querySelector('.ask-t')&&document.querySelector('.ask-t').textContent)==='다른 기기에서 먼저 바꿨어요','열어 둔 사이 다른 기기가 바꾸면 덮어쓸지 물음');
+  await page.click('.ask-cancel'); await page.waitForTimeout(300);
+  ok(await ev(()=>S.routineItems.map(i=>i.text).join('|'))==='양치|다른 기기 항목','"취소"하면 다른 기기의 내용이 그대로');
+  await ev(()=>{_pinUntil=Date.now()+100000;editRoutine();}); await page.waitForTimeout(250);
+  await ev(async()=>{await routineRef().set({items:[{id:'a',text:'양치'},{id:'y',text:'또 다른 항목'}]});}); await page.waitForTimeout(300);
+  await page.fill('.ask-rowin[data-r="0"]','덮어쓸 내용'); await page.click('.ask-ok'); await page.waitForTimeout(350);
+  await page.click('[data-c="0"]'); await page.waitForTimeout(400);
+  ok(await ev(()=>S.routineItems.map(i=>i.text).join('|'))==='덮어쓸 내용|세수','"덮어쓰기"를 고르면 내가 연 시점의 내용(+고친 부분)으로 저장');
+  const fn=fs.readFileSync(path.join(root,'index.html'),'utf8').match(/async function editRoutine\(\)\{[\s\S]*?\n\}\n/)[0];
+  ok(!/split\(','\)/.test(fn),'editRoutine 에 쉼표 분리 방식이 남아 있지 않음');
+  await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});
 
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];

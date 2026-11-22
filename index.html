@@ -1679,19 +1679,34 @@ async function toggleRoutine(itemId){
 async function editRoutine(){
   if(!(await parentAuth()))return;
   const old=S.routineItems||defaultRoutineItems();
-  const v=await askText('아침 루틴 항목',{desc:'쉼표(,)로 구분해 적어 주세요 (최대 10개)',type:'textarea',value:old.map(i=>i.text).join(', '),max:300,requiredMsg:'항목을 한 개 이상 적어 주세요.',required:true,validate:t=>t.split(',').some(x=>x.trim())?'':'항목을 한 개 이상 적어 주세요.'});
-  if(v===null)return;
-  const texts=v.split(',').map(t=>t.trim().slice(0,20)).filter(Boolean).slice(0,10);
-  if(!texts.length)return;
-  const used=new Set();
-  const items=texts.map((t,i)=>{
-    const m=old.find(o=>o.text===t&&!used.has(o.id));
-    const id=m?m.id:newId()+i;
-    used.add(id);
-    return{id,text:t};
-  });
+  const items=await askList({title:'아침 루틴 편집',desc:'항목을 고치고 순서를 바꿔요. 저장하기 전에는 바뀌지 않아요.',items:old,max:10,maxLen:20,noun:'항목',placeholder:'예: 양치하기',emptyMsg:'항목을 한 개 이상 적어 주세요.',
+    extra:[{label:'기본 항목으로',set:()=>defaultRoutineItems()}]});
+  if(items===null)return;
+  // 시트를 열어 둔 사이 다른 기기가 먼저 바꿨으면 덮어쓸지 묻는다
+  const now=S.routineItems||defaultRoutineItems();
+  if(JSON.stringify(now)!==JSON.stringify(old)&&!(await askConfirm({title:'다른 기기에서 먼저 바꿨어요',desc:'이 내용으로 덮어쓸까요?',ok:'덮어쓰기'})))return;
+  if(JSON.stringify(items)===JSON.stringify(now))return;   // 바뀐 게 없으면 쓰지 않는다
   try{ await routineRef().set({items}); }
-  catch(e){ notify('저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); }
+  catch(e){ notify('저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); return; }
+  notify('아침 루틴을 저장했어요.',{kind:'ok'});
+  await stampIfRoutineDone(items);
+}
+// 항목을 고친 뒤 오늘 남은 항목이 모두 체크된 상태가 되면 도장을 한 번 준다.
+// toggleRoutine 과 같은 규칙(트랜잭션 + applyStamp, 문서 id rt_날짜로 하루 한 번)이다.
+async function stampIfRoutineDone(items){
+  const date=todayStr(), dRef=routineDayRef(date); let res={stamped:false,issued:false};
+  try{
+    await db.runTransaction(async tx=>{
+      res={stamped:false,issued:false};
+      const dSnap=await tx.get(dRef), rSnap=await tx.get(rewardRef());
+      const day=Object.assign({done:{},stamped:false},dSnap.exists?dSnap.data():{});
+      if(day.stamped||!(items.length>0&&items.every(it=>day.done[it.id])))return;
+      res.issued=applyStamp(tx,rSnap.exists?rSnap.data():{},'rt_'+date,'아침 루틴 완료');
+      res.stamped=true;
+      tx.set(dRef,{date,done:day.done,stamped:true});
+    });
+    if(res.stamped)notify(stampMsgFor(res.issued,'루틴 완료!\n칭찬 도장 +1'),{kind:'ok',big:true});
+  }catch(e){ notify('도장을 확인하지 못했어요. 항목을 한 번 눌렀다 다시 눌러 주세요.',{kind:'warn'}); }
 }
 
 function tomorrowStr(){
@@ -4278,7 +4293,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.22';
+const APP_VER='v4.23';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};

@@ -408,6 +408,38 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(!/split\(','\)/.test(fn),'editRoutine 에 쉼표 분리 방식이 남아 있지 않음');
   await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});
 
+  console.log('\n[8k] 시트·구성원 아이콘: 이모지 대신 SVG');
+  const EMO="[\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}\\u{2B50}\\u{2705}]";
+  const emojiIn=sel=>ev(([q,e])=>{const el=document.querySelector(q);if(!el)return'(없음)';const m=el.textContent.match(new RegExp(e,'gu'));return m?m.join(''):'';},[sel,EMO]);
+  await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});
+  const iid=await ev(()=>{const it=S.items.find(i=>i.tasks&&i.tasks.length)||S.items[0];return it&&it.id;});
+  const closeAll=async()=>{await ev(()=>{if(S.overlay)closeOverlay();if(S.evtOverlay)closeEvtOverlay();});await page.waitForTimeout(450);};  // closeOverlay 는 280ms 뒤에 상태를 비운다
+  const checkSheet=async(name,open1)=>{
+    await closeAll(); await ev(open1,iid); await page.waitForTimeout(350);
+    const has=await ev(()=>!!document.querySelector('.overlay .sheet'));
+    const e=has?await emojiIn('.overlay .sheet'):'(없음)';
+    ok(has&&e==='','시트 "'+name+'"에 이모지·글리프 아이콘 없음'+(!has?' — 시트를 못 열었음':e?': '+e:''));
+  };
+  await checkSheet('수행평가 등록',()=>openAdd());
+  await checkSheet('수행평가 수정',id=>openEdit(id));
+  await checkSheet('수행평가 상세',id=>openDetail(id));
+  await checkSheet('준비물 요청',()=>openPrep());
+  await checkSheet('텍스트 메모',id=>openTxtAttach(id));
+  await checkSheet('일정 등록(분류 칩 포함)',()=>openEvtAdd());
+  ok(await ev(()=>document.querySelectorAll('#ef-cats svg').length)===8,'일정 분류 칩 8개가 모두 SVG 아이콘');
+  // 일정 상세(반복·메모 포함)
+  await ev(()=>{S.events=[{id:'ev9',title:'테스트 일정',startDate:todayStr(),endDate:todayStr(),date:todayStr(),allDay:true,repeat:'weekly',memo:'메모 내용',category:'일반'},...S.events];openEvtDetail('ev9',todayStr());}); await page.waitForTimeout(300);
+  ok(await emojiIn('.overlay .sheet')==='','시트 "일정 상세"(반복·메모 포함)에 이모지 없음: '+await emojiIn('.overlay .sheet'));
+  ok(await ev(()=>document.querySelectorAll('.overlay .sheet .det-date svg,.overlay .sheet .act-btn svg').length)>=3,'일정 상세의 날짜·버튼에 SVG 아이콘');
+  await ev(()=>closeEvtOverlay());
+  // 구성원 아이콘
+  await ev(()=>{asOpen('settings');}); await page.waitForTimeout(250);
+  ok(await ev(()=>document.querySelectorAll('.as-mb-ic svg').length)===3&&await emojiIn('.as-mb-ic')==='','설정의 구성원 아이콘 3개가 SVG, 아이콘 칸에 이모지 없음');
+  await ev(()=>asClose());
+  ok(await ev(()=>MB_DEF.every(m=>m.icon===undefined)),'MB_DEF 에 이모지 icon 필드가 없음');
+  ok(!/\bm\.icon\b/.test(fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')),'소스에 m.icon 참조가 없음');
+  ok(await ev(()=>/중요도/.test(priStars(3))&&(priStars(3).match(/<svg/g)||[]).length===3),'중요도 별은 SVG n개 + aria-label');
+
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];
   for(const [w,h,th] of shots){
@@ -445,6 +477,18 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     const m=await ev(()=>{const all=[...document.querySelectorAll('.f-err')],e=all[0],r=e.getBoundingClientRect(),c=getComputedStyle(e).color,bg=getComputedStyle(document.querySelector('.sheet')).backgroundColor;return{vis:r.top>=0&&r.bottom<=innerHeight&&all.every(x=>x.getBoundingClientRect().height>0),c,bg,n:all.length};});
     ok(m.vis&&m.n===3,`오류 문구 3개가 그려지고 첫 오류가 화면 안에 보임 ${w}×${h} ${th} (글자 ${m.c} / 바탕 ${m.bg})`);
     await ev(()=>closeOverlay()); await page.waitForTimeout(150);
+  }
+
+  console.log('\n[11] 시트 화면 (가짜 서버 기준 캡처)');
+  for(const [w,h,th] of [[1138,712,'dark'],[1138,712,'light'],[1280,800,'dark'],[390,844,'dark'],[390,844,'light']]){
+    await page.setViewportSize({width:w,height:h}); await ev(t=>{S.theme=t;applyPrefs();},th); await page.waitForTimeout(400);
+    for(const [name,fn] of [['detail',id=>openDetail(id)],['form',()=>openAdd()],['evtdetail',()=>openEvtDetail('ev9',todayStr())],['evtform',()=>openEvtAdd()]]){
+      await ev(()=>{if(S.overlay)closeOverlay();if(S.evtOverlay)closeEvtOverlay();}); await page.waitForTimeout(450);
+      await ev(([f,id])=>{(0,eval(f))(id);},[fn.toString(),iid]); await page.waitForTimeout(350);
+      await page.screenshot({path:path.join(tmp,`sheet_${name}_${w}_${th}.png`)});
+      ok(await ev(()=>{const b=document.querySelector('.overlay .sheet');if(!b)return false;const r=b.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0;}),`시트 ${name} 가 화면 안 ${w}×${h} ${th}`);
+    }
+    await ev(()=>{if(S.overlay)closeOverlay();if(S.evtOverlay)closeEvtOverlay();}); await page.waitForTimeout(450);
   }
 
   console.log(errs.length?'\n페이지 오류:\n  '+errs.join('\n  '):'\n페이지 오류: 없음');

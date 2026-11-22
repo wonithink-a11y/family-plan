@@ -1058,6 +1058,23 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 .f-input.f-bad,.f-select.f-bad,.f-input.f-bad:focus,:root[data-theme=dark] .f-input.f-bad,:root[data-theme=dark] .f-select.f-bad,:root[data-theme=dark] .f-input.f-bad:focus{border-color:var(--ask-err)}
 .f-err{display:flex;align-items:flex-start;gap:6px;margin-top:6px;font-size:13px;line-height:1.5;color:var(--ask-err)}
 .f-err svg{flex:none;margin-top:2px}
+.ui-i{flex:none;vertical-align:-.2em}
+.evt-cat{display:inline-flex;align-items:center;gap:4px}
+.act-btn{display:flex;align-items:center;justify-content:center;gap:6px}
+.det-date,.det-alarm,.det-memo{display:flex;align-items:flex-start;gap:6px}
+.det-date .ui-i,.det-alarm .ui-i,.det-memo .ui-i{margin-top:2px}
+.pri-st{display:inline-flex;gap:1px;vertical-align:middle;color:var(--warn)}
+.pri-st .ui-i{fill:currentColor;stroke:none;vertical-align:baseline}
+.attach-add-btn,.attach-local-note{display:flex;align-items:center;justify-content:center;gap:6px}
+.attach-add-btn{flex-direction:column;gap:4px}
+.add-task-btn{display:flex;align-items:center;justify-content:center;gap:6px}
+.cb-lg{display:flex;align-items:center;justify-content:center}
+.rm-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0}
+.sheet-close .ui-i{vertical-align:baseline}
+.as-mb-ic{color:var(--text)}
+.w-lane-ic{color:#ECEEF8}   /* 벽걸이는 항상 어두운 바탕이라 테마와 상관없이 밝은 선 */
+.w-lane-ic .ui-i,.as-mb-ic .ui-i{vertical-align:baseline}
+.w-exit,.w-layout{display:flex;align-items:center}
 </style>
 </head>
 <body>
@@ -1104,8 +1121,41 @@ const SUBJECTS=[
 ];
 const COLORS=['#FF6B8A','#5B7FFF','#34A853','#FF9500','#9B59B6','#E07B39',
   '#1ABC9C','#E91E8C','#F4C430','#2196F3','#66BB6A','#00BCD4','#FF5252','#651FFF','#FF6D00','#607D8B'];
-const PRI_ICON=['','⭐','⭐⭐','⭐⭐⭐'];
+const PRI_ICON=['','⭐','⭐⭐','⭐⭐⭐'];   // 공유 텍스트(fmtItem)용. 화면에는 priStars 를 쓴다
 const PRI_NAME=['','낮음','보통','높음'];
+/* ── 선 아이콘 세트(화면에서 이모지 대신 쓴다. currentColor, 두께 1.8) ── */
+const UI_ICO={
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  calAdd:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/>',
+  bell:'<path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16z"/><path d="M10 21h4"/>',
+  bellOff:'<path d="M18 16v-5a6 6 0 0 0-9.2-5M6 8.5V16l-2 2h12"/><path d="M10 21h4M3 3l18 18"/>',
+  note:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/>',
+  repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',
+  edit:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m14 6 4 4"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',
+  clip:'<path d="m20 11-8.5 8.5a5 5 0 0 1-7-7L13 4a3.3 3.3 0 0 1 4.7 4.7L9.2 17.2a1.7 1.7 0 0 1-2.4-2.4L14 7.5"/>',
+  save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
+  x:'<path d="m6 6 12 12M18 6 6 18"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="2.8"/><path d="M17 14.5a6 6 0 0 1 5 5.5"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  star:'<path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5l-5.4 3 1.2-6L3.3 9.3l6.1-.7z"/>',
+  pin:'<path d="M12 21s-6-5.4-6-10a6 6 0 0 1 12 0c0 4.6-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>',
+  hospital:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/>',
+  school:'<path d="m3 9 9-5 9 5-9 5z"/><path d="M7 11.5V16c0 1.2 2.2 2.5 5 2.5s5-1.3 5-2.5v-4.5"/>',
+  cake:'<path d="M4 20h16v-7H4z"/><path d="M4 16c2 1.5 4 1.5 6 0s4-1.5 6 0 3 1 4 0M12 13V9"/><path d="M12 5.5h.01"/>',
+  plane:'<path d="M10.5 13.5 3 11l1-2 8 .5L18 4l2 1-3.5 6 4 .5.5 2-5-.5L12 19l-2-.5z"/>',
+  run:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  palette:'<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2s0-2 1.5-2h2a3 3 0 0 0 3-3A9 9 0 0 0 12 3z"/><path d="M7.5 11h.01M10 7.5h.01M14.5 7.5h.01"/>'
+};
+const uiIco=(n,sz)=>`<svg class="ui-i" viewBox="0 0 24 24" width="${sz||18}" height="${sz||18}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${UI_ICO[n]}</svg>`;
+const priStars=n=>`<span class="pri-st" role="img" aria-label="중요도 ${PRI_NAME[n]}">${Array.from({length:n},()=>uiIco('star',13)).join('')}</span>`;
+// 일정 분류(EVT_CATS 항목) → 선 아이콘. EVT_CATS 의 이모지는 캘린더 내보내기(.ics) 글자에만 쓴다
+const catIco=(c,sz)=>uiIco({일반:'pin',병원:'hospital',학교:'school',약속:'users',기념일:'cake',여행:'plane',운동:'run',취미:'palette'}[c[1]]||'pin',sz||14);
+const mbIcon=(m,sz)=>uiIco(m&&m.id==='all'?'users':'user',sz||22);
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    유틸
@@ -1715,7 +1765,7 @@ function tomorrowStr(){
 }
 function openPrep(){ setState({overlay:'prep'}); }
 function buildPrepSheet(){
-  return`<div class="drag-handle"></div><div class="form-title" style="font-size:16px">🎒 준비물 요청</div>
+  return`<div class="drag-handle"></div><div class="form-title" style="font-size:16px">준비물 요청</div>
 <div class="f-label">필요한 날짜</div>
 <input type="date" class="f-input" id="prep-date" value="${tomorrowStr()}">
 <div class="f-label">준비물</div>
@@ -1844,7 +1894,7 @@ function buildWallView(){
     <div class="w-card w-c-pr"><div class="w-h">챙길 준비물</div>${preps.length?preps.map(p=>ddRow(getDays(p.date),'#5B7FFF',p.text)).join(''):'<div class="w-empty">요청된 준비물이 없어요</div>'}</div>
     <div class="w-card w-c-st"><div class="w-h">칭찬 도장 <span>${COUPON_TITLE} ${openCp}장</span></div><div class="w-stamps">${slots}</div><div class="w-sub">${COUPON_TITLE}까지 ${STAMPS_PER_COUPON-cnt}개 남았어요</div><div class="w-tools"><button class="w-tool" onclick="asBrief()" title="오늘 브리핑 듣기"><span>☀️</span><b>브리핑</b></button><button class="w-tool" onclick="asOpen('listen')" title="말로 하기"><span>🎤</span><b>${esc(asName())}</b></button><button class="w-tool" onclick="asOpenExam(false)" title="문제은행 (AI 선생님)"><span>📚</span><b>문제은행</b></button></div></div>
   </div>`:buildWallLanes()}
-  <button class="w-layout" onclick="asToggleLayout()" title="${asCfg().wallLayout==='cards'?'가족별 3칸으로':'카드 보기로'}">${asCfg().wallLayout==='cards'?'👨‍👩‍👧':'▦'}</button><a class="w-exit" href="${esc(location.pathname)}">⚙</a>
+  <button class="w-layout" onclick="asToggleLayout()" title="${asCfg().wallLayout==='cards'?'가족별 3칸으로':'카드 보기로'}">${asCfg().wallLayout==='cards'?uiIco('users',20):'▦'}</button><a class="w-exit" href="${esc(location.pathname)}" aria-label="설정으로">${uiIco('gear',20)}</a>
 </div>${S.briefPending?'<div class="w-brief-pending" onclick="asAutoBrief()">☀️ 화면을 한 번 터치하면 아침 브리핑을 들려드려요</div>':''}`;
 }
 
@@ -2473,7 +2523,7 @@ function asRender(){
 <label class="as-ck" style="margin-top:8px!important"><input type="checkbox" id="as-s-wake"${cfg.wakeWord?' checked':''}> “${esc(nmv)}야” 하고 부르면 대화 시작 <small>(실험 · 이 기기에서만)</small></label>
 <div class="as-note" style="margin-top:2px">호출어는 앱이 화면에 떠 있고 마이크 허용일 때만 들어요. 마이크 표시등이 계속 켜지고, 기기에 따라 "띵" 소리가 날 수 있어요.</div>
 <label>가족 구성원 <small>(이름 · 목소리 — 일정 담당·벽걸이 3칸·브리핑에 써요)</small></label>
-${members().map(m=>`<div class="as-mb"><span class="as-mb-ic" style="background:${m.color}33">${m.icon}</span><input id="as-m-name-${m.id}" value="${esc(m.name)}" maxlength="8"><select id="as-m-voice-${m.id}">${AS_VOICES.map(v=>`<option value="${v[0]}"${m.voice===v[0]?' selected':''}>${v[1]}</option>`).join('')}</select><button class="as-ghost" style="flex:none;padding:10px 12px" onclick="asTestMember('${m.id}')" aria-label="${esc(m.name)} 목소리 듣기">🔊</button></div>`).join('')}
+${members().map(m=>`<div class="as-mb"><span class="as-mb-ic" style="background:${m.color}33">${mbIcon(m,22)}</span><input id="as-m-name-${m.id}" value="${esc(m.name)}" maxlength="8"><select id="as-m-voice-${m.id}">${AS_VOICES.map(v=>`<option value="${v[0]}"${m.voice===v[0]?' selected':''}>${v[1]}</option>`).join('')}</select><button class="as-ghost" style="flex:none;padding:10px 12px" onclick="asTestMember('${m.id}')" aria-label="${esc(m.name)} 목소리 듣기">🔊</button></div>`).join('')}
 <label class="as-ck" style="margin-top:8px!important"><input type="checkbox" id="as-s-multi"${cfg.multiVoice!==false?' checked':''}> 브리핑·일정을 구성원마다 다른 목소리로 읽기</label>
 <label>아이 이름 (브리핑 호칭, 선택)</label><input id="as-s-name" value="${esc(cfg.name)}" placeholder="예: 서연">
 <label>음성 방식</label><select id="as-s-mode"><option value="auto"${cfg.ttsMode==='auto'?' selected':''}>자동 (Gemini 목소리 → 안 되면 기기 음성)</option><option value="device"${cfg.ttsMode==='device'?' selected':''}>기기 음성만 (키·사용량 안 씀)</option></select>
@@ -2548,9 +2598,9 @@ ${A.err?`<div class="as-err">${esc(A.err)}</div>`:''}${A.notice?`<div class="as-
      비어 있거나 알 수 없으면 "온 가족" 일정이다.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const MB_DEF=[
-  {id:'dad',name:'아빠',icon:'👨',voice:'Charon',pitch:0.8,color:'#6EA8FF'},
-  {id:'mom',name:'엄마',icon:'👩',voice:'Aoede',pitch:1.12,color:'#FF8FB1'},
-  {id:'kid',name:'딸',icon:'👧',voice:'Leda',pitch:1.3,color:'#B9A2FF'}
+  {id:'dad',name:'아빠',voice:'Charon',pitch:0.8,color:'#6EA8FF'},
+  {id:'mom',name:'엄마',voice:'Aoede',pitch:1.12,color:'#FF8FB1'},
+  {id:'kid',name:'딸',voice:'Leda',pitch:1.3,color:'#B9A2FF'}
 ];
 function members(){
   let sv=S.mbCfg; if(!sv){try{sv=JSON.parse(localStorage.getItem('fp_members')||'null');}catch(e){}}
@@ -2661,7 +2711,7 @@ function buildWallLanes(){
   const shared=mbEvents('all',7).slice(0,4);
   const evRow=x=>`<div class="w-dd"><span class="w-dd-b" style="background:${ddColor(x.d,x.color)}">${x.d===0&&x.time?esc(x.time):ddLabel(x.d)}</span><span>${esc(x.title)}</span></div>`;
   const asRow=a=>{const b=dBadge(a.d,a.done,getColor(a.subject));return`<div class="w-dd"><span class="w-dd-b" style="background:${a.d<0?'#7B83A8':b.c}">${a.d<0?'지남':b.t}</span><span>${esc(a.subject)}${a.left?' · '+esc(a.left):''}${a.done?' ✓':''}</span></div>`;};
-  const head=m=>`<div class="w-lane-h"><span class="w-lane-ic" style="background:${m.color}33">${m.icon}</span><span>${esc(m.name)}</span><button onclick="asSpeakMember('${m.id}')" aria-label="${esc(m.name)} 일정 듣기">🔊</button></div>`;
+  const head=m=>`<div class="w-lane-h"><span class="w-lane-ic" style="background:${m.color}33">${mbIcon(m,26)}</span><span>${esc(m.name)}</span><button onclick="asSpeakMember('${m.id}')" aria-label="${esc(m.name)} 일정 듣기">🔊</button></div>`;
   const lane=m=>{
     const evs=mbEvents(m.id,14);
     if(m.id!=='kid'){
@@ -2678,7 +2728,7 @@ ${evs.length?`<div class="w-h" style="margin-top:12px">일정</div>${evs.slice(0
 <div class="w-h" style="margin-top:12px">칭찬 도장 <span>${COUPON_TITLE} ${openCp}장</span></div><div class="w-stamps">${slots}</div>
 </div></div></div>`;
   };
-  return`${shared.length?`<div class="w-shared"><b>👨‍👩‍👧 온 가족</b>${shared.map(x=>`<span><i style="background:${ddColor(x.d,x.color)}">${x.d===0&&x.time?esc(x.time):ddLabel(x.d)}</i>${esc(x.title)}</span>`).join('')}</div>`:''}<div class="w-lanes">${ms.map(lane).join('')}</div>`;
+  return`${shared.length?`<div class="w-shared"><b>${uiIco('users',18)} 온 가족</b>${shared.map(x=>`<span><i style="background:${ddColor(x.d,x.color)}">${x.d===0&&x.time?esc(x.time):ddLabel(x.d)}</i>${esc(x.title)}</span>`).join('')}</div>`:''}<div class="w-lanes">${ms.map(lane).join('')}</div>`;
 }
 
 /* ── 일정 폼: 담당 가족 고르기 ── */
@@ -4020,7 +4070,7 @@ function buildWeekCard(){
     const ci=evtCatInfo(ev.category||'일반'),col=ev.color||ci[2];
     const when=ev.allDay===false&&ev.startTime?ev.startTime:'종일';
     return`<div class="wk-row" onclick="openEvtDetail('${ev.id}','${ev.startDate||ev.date}')">
-      <span class="evt-cat" style="background:${col}22;color:${col}">${ci[0]}</span>
+      <span class="evt-cat" style="background:${col}22;color:${col}">${catIco(ci)}</span>
       <span class="wk-txt">${esc(ev.title)}${total>1?`<span class="wk-dim"> ${nth}/${total}일차</span>`:''}${ev.repeat?' 🔁':''}<span class="wk-dim"> ${when}</span></span>
       ${personPill(ev.person)}</div>`;};
   const od=overdue.length?`<div class="wk-day" style="color:var(--danger)">⚠️ 기한 지난 미완료</div>${overdue.map(i=>{
@@ -4090,7 +4140,7 @@ function runSearch(q){
   const evHtml=evs.slice(0,50).map(({e,f})=>{
     const ci=evtCatInfo(e.category||'일반'),col=e.color||ci[2];
     return`<div class="srch-row" onclick="goSearch('e','${e.id}','${e.startDate||e.date}')">
-      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="evt-cat" style="background:${col}22;color:${col}">${ci[0]} ${esc(e.category||'일반')}</span><b style="font-size:calc(14px*var(--fs))">${hl(e.title,toks)}${e.repeat?' 🔁':''}</b>${personPill(e.person)}</div>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="evt-cat" style="background:${col}22;color:${col}">${catIco(ci)} ${esc(e.category||'일반')}</span><b style="font-size:calc(14px*var(--fs))">${hl(e.title,toks)}${e.repeat?' 🔁':''}</b>${personPill(e.person)}</div>
       <div class="wk-dim" style="margin-top:3px">📅 ${fmtDateRange(e)}</div>${snip(f)}</div>`;}).join('');
   res.innerHTML=!items.length&&!evs.length
     ?`<div class="srch-hint">😶 '${esc(q)}' 검색 결과가 없어요</div>`
@@ -4293,7 +4343,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.23';
+const APP_VER='v4.24';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -4340,7 +4390,7 @@ function buildCard(item){
   <div class="card-top">
     <div class="card-meta">
       <span class="subj-tag" style="background:${sc.tag};color:${sc.accent}">${esc(item.subject)}</span>
-      <span class="priority-pip">${PRI_ICON[item.priority||2]}</span>
+      <span class="priority-pip">${priStars(item.priority||2)}</span>
       ${personPill(item.person)}
     </div>
     <span class="d-badge" style="background:${bd.c}">${bd.t}</span>
@@ -4566,7 +4616,7 @@ function buildCalView(){
     <div class="cal-popup-title">📅 ${fmt(S.calDate)}</div>
     ${selHols.map(h=>`<div class="cal-holi-popup"><span style="width:10px;height:10px;border-radius:50%;background:${h.color};flex-shrink:0;display:inline-block"></span><span style="font-size:calc(13px*var(--fs));font-weight:800;color:${h.color}">${h.name}</span></div>`).join('')}
     ${selItems.map(item=>{const sc=getColor(item.subject);const bd=dBadge(getDays(item.dueDate),item.tasks.every(t=>t.done),sc);return`<div class="cal-popup-item" onclick="openDetail('${item.id}')"><span style="width:8px;height:8px;border-radius:50%;background:${sc.accent};flex-shrink:0;display:inline-block"></span><span class="subj-tag" style="background:${sc.tag};color:${sc.accent}">${esc(item.subject)}</span><span style="font-size:calc(13px*var(--fs));font-weight:600;flex:1">${esc(item.subject)}</span><span class="d-badge" style="background:${bd.c}">${bd.t}</span></div>`;}).join('')}
-    ${selEvts.map(ev=>{const ci=evtCatInfo(ev.category||'일반');return`<div class="cal-popup-item" onclick="openEvtDetail('${ev.id}','${ev.startDate||ev.date}')"><span style="width:8px;height:8px;border-radius:50%;background:${ev.color||ci[2]};flex-shrink:0;display:inline-block"></span><span class="evt-cat" style="background:${(ev.color||ci[2])}22;color:${ev.color||ci[2]}">${ci[0]} ${ev.category||'일반'}</span><span style="font-size:calc(13px*var(--fs));font-weight:600;flex:1">${esc(ev.title)}</span>${ev.person?`<span class="evt-person" style="background:${ev.color||ci[2]};font-size:calc(10px*var(--fs))">${esc(ev.person)}</span>`:''}</div>`;}).join('')}
+    ${selEvts.map(ev=>{const ci=evtCatInfo(ev.category||'일반');return`<div class="cal-popup-item" onclick="openEvtDetail('${ev.id}','${ev.startDate||ev.date}')"><span style="width:8px;height:8px;border-radius:50%;background:${ev.color||ci[2]};flex-shrink:0;display:inline-block"></span><span class="evt-cat" style="background:${(ev.color||ci[2])}22;color:${ev.color||ci[2]}">${catIco(ci)} ${ev.category||'일반'}</span><span style="font-size:calc(13px*var(--fs));font-weight:600;flex:1">${esc(ev.title)}</span>${ev.person?`<span class="evt-person" style="background:${ev.color||ci[2]};font-size:calc(10px*var(--fs))">${esc(ev.person)}</span>`:''}</div>`;}).join('')}
   </div>`:'';;
   return`
 <header>
@@ -4672,7 +4722,7 @@ function buildEventsView(){
       <div class="evt-accent" style="background:${ev.color||ci[2]}"></div>
       <div class="evt-top">
         <div class="evt-title">${esc(ev.title)}</div>
-        <span class="evt-cat" style="background:${ev.color||ci[2]}22;color:${ev.color||ci[2]}">${ci[0]} ${ev.category||'일반'}</span>${evtDdayBadge(ev)}
+        <span class="evt-cat" style="background:${ev.color||ci[2]}22;color:${ev.color||ci[2]}">${catIco(ci)} ${ev.category||'일반'}</span>${evtDdayBadge(ev)}
       </div>
       <div class="evt-meta">
         <span>📅 ${fmtDateRange(ev)}${ev.allDay&&!(ev.startDate!==ev.endDate&&ev.endDate)?' (종일)':`${ev.startTime?' · '+ev.startTime:''}${ev.endTime?'~'+ev.endTime:''}`}</span>
@@ -4702,22 +4752,22 @@ function buildEventsView(){
 function buildEvtDetailSheet(ev){
   const ci=evtCatInfo(ev.category||'일반');
   return`<div class="drag-handle"></div>
-<button class="sheet-close" onclick="closeEvtOverlay()">✕</button>
+<button class="sheet-close" onclick="closeEvtOverlay()" aria-label="닫기">${uiIco('x',14)}</button>
 <div style="height:4px;border-radius:3px;margin-bottom:14px;background:${ev.color||ci[2]}"></div>
 <div class="evt-det-title">${esc(ev.title)}</div>
 <div class="evt-det-meta">
-  <span class="evt-cat" style="background:${(ev.color||ci[2])}22;color:${ev.color||ci[2]};font-size:calc(12px*var(--fs));padding:4px 10px">${ci[0]} ${ev.category||'일반'}</span>
+  <span class="evt-cat" style="background:${(ev.color||ci[2])}22;color:${ev.color||ci[2]};font-size:calc(12px*var(--fs));padding:4px 10px">${catIco(ci)} ${ev.category||'일반'}</span>
   ${ev.person?`<span class="evt-person" style="background:${ev.color||ci[2]};font-size:calc(12px*var(--fs));padding:4px 12px">${esc(ev.person)}</span>`:''}
 </div>
-<div class="det-date">📅 ${fmtDateRange(ev)}${ev.allDay&&!(ev.startDate!==ev.endDate&&ev.endDate)?' (종일)':`${ev.startTime?' · '+ev.startTime:''}${ev.endTime?'~'+ev.endTime:''}`}</div>
-${ev.repeat?`<div class="det-alarm" style="color:var(--p)">🔁 ${repLabel(ev.repeat)} 반복${ev.repeatUntil?' · '+fmt(ev.repeatUntil)+'까지':''}</div>`:''}
-${ev.memo?`<div class="det-memo" style="margin-top:8px">📌 ${esc(ev.memo)}</div>`:''}
+<div class="det-date">${uiIco('cal')}<span>${fmtDateRange(ev)}${ev.allDay&&!(ev.startDate!==ev.endDate&&ev.endDate)?' (종일)':`${ev.startTime?' · '+ev.startTime:''}${ev.endTime?'~'+ev.endTime:''}`}</span></div>
+${ev.repeat?`<div class="det-alarm" style="color:var(--p)">${uiIco('repeat')}<span>${repLabel(ev.repeat)} 반복${ev.repeatUntil?' · '+fmt(ev.repeatUntil)+'까지':''}</span></div>`:''}
+${ev.memo?`<div class="det-memo" style="margin-top:8px">${uiIco('note')}<span>${esc(ev.memo)}</span></div>`:''}
 <div class="act-row" style="margin-top:18px">
-  <button class="act-btn" style="background:${ev.color||ci[2]}" onclick="openEvtEdit('${ev.id}')">✏️ ${ev.repeat?'전체 수정':'수정'}</button>
-  <button class="act-btn" style="background:var(--danger)" onclick="deleteEvt('${ev.id}','${ev.startDate||ev.date}')">🗑️ 삭제</button>
+  <button class="act-btn" style="background:${ev.color||ci[2]}" onclick="openEvtEdit('${ev.id}')">${uiIco('edit')} ${ev.repeat?'전체 수정':'수정'}</button>
+  <button class="act-btn" style="background:var(--danger)" onclick="deleteEvt('${ev.id}','${ev.startDate||ev.date}')">${uiIco('trash')} 삭제</button>
 </div>
 <div class="act-row" style="margin-top:8px">
-  <button class="act-btn" style="background:#26A69A" onclick="exportEvtICS('${ev.id}')">🗓️ 캘린더 추가</button>
+  <button class="act-btn" style="background:#26A69A" onclick="exportEvtICS('${ev.id}')">${uiIco('calAdd')} 캘린더 추가</button>
 </div>`;
 }
 
@@ -4726,13 +4776,13 @@ function buildEvtFormSheet(){
   const f=S.evtForm;
   const color=f.color||'#FF6B8A';
   return`<div class="drag-handle"></div>
-<button class="sheet-close" onclick="closeEvtOverlay()">✕</button>
-<div class="form-title" style="border-left:5px solid ${color};padding-left:10px">${f.id?'✏️ 일정 수정':'🗒️ 일정 등록'}</div>
+<button class="sheet-close" onclick="closeEvtOverlay()" aria-label="닫기">${uiIco('x',14)}</button>
+<div class="form-title" style="border-left:5px solid ${color};padding-left:10px">${f.id?'일정 수정':'일정 등록'}</div>
 <div class="f-label">일정 제목</div>
 <input class="f-input" id="ef-title" placeholder="일정 제목을 입력하세요" value="${esc(f.title||'')}">
-<div class="f-label">시작일 📅</div>
+<div class="f-label">시작일</div>
 <input type="date" class="f-input" id="ef-start-date" value="${f.startDate||''}" oninput="S.evtForm.startDate=this.value;if(!S.evtForm.endDate||S.evtForm.endDate<this.value){S.evtForm.endDate=this.value;document.getElementById('ef-end-date')&&(document.getElementById('ef-end-date').value=this.value)}">
-<div class="f-label">종료일 📅 <span style="font-size:calc(10px*var(--fs));color:#BBB;font-weight:400">(하루 일정이면 시작일과 동일하게)</span></div>
+<div class="f-label">종료일 <span style="font-size:calc(10px*var(--fs));color:#BBB;font-weight:400">(하루 일정이면 시작일과 동일하게)</span></div>
 <input type="date" class="f-input" id="ef-end-date" value="${f.endDate||f.startDate||''}" oninput="S.evtForm.endDate=this.value">
 <div class="f-label">시간</div>
 <div style="display:flex;gap:8px;align-items:center">
@@ -4745,7 +4795,7 @@ function buildEvtFormSheet(){
     <input type="time" class="f-input" id="ef-end" style="flex:1;margin:0" value="${f.endTime||''}">
   </div>
 </div>
-<div class="f-label">반복 🔁</div>
+<div class="f-label">반복</div>
 <select class="f-select" id="ef-repeat" onchange="setEvtRepeat(this.value)">${REPEAT_OPTS.map(([v,l])=>`<option value="${v}"${(f.repeat||'')===v?' selected':''}>${l}</option>`).join('')}</select>
 <div id="ef-until-row" style="display:${f.repeat?'block':'none'}">
   <div class="f-label">반복 종료일 <span style="font-size:10px;color:#BBB;font-weight:400">(비우면 계속 반복)</span></div>
@@ -4754,7 +4804,7 @@ function buildEvtFormSheet(){
 </div>
 <div class="f-label">카테고리</div>
 <div style="display:flex;flex-wrap:wrap;gap:7px" id="ef-cats">
-  ${EVT_CATS.map(c=>`<div onclick="setEvtCat('${c[1]}')" style="padding:6px 12px;border-radius:20px;font-size:calc(12px*var(--fs));font-weight:700;cursor:pointer;border:2px solid ${(f.category||'일반')===c[1]?c[2]:'#DDD'};background:${(f.category||'일반')===c[1]?c[2]+'22':'#fff'};color:${(f.category||'일반')===c[1]?c[2]:'#888'}">${c[0]} ${c[1]}</div>`).join('')}
+  ${EVT_CATS.map(c=>`<div onclick="setEvtCat('${c[1]}')" style="padding:6px 12px;border-radius:20px;font-size:calc(12px*var(--fs));font-weight:700;cursor:pointer;border:2px solid ${(f.category||'일반')===c[1]?c[2]:'#DDD'};background:${(f.category||'일반')===c[1]?c[2]+'22':'#fff'};color:${(f.category||'일반')===c[1]?c[2]:'#888'};display:inline-flex;align-items:center;gap:5px">${catIco(c)} ${c[1]}</div>`).join('')}
 </div>
 <div class="f-label">담당 가족 (선택)</div>
 <div id="ef-persons" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px">${evtPersonChips(f.person||'')}</div>
@@ -5130,7 +5180,7 @@ function closeGuideSheet(){
 
 function buildCommonGuide(){
   return`<div class="drag-handle"></div>
-<button class="sheet-close" onclick="closeGuideSheet()">✕</button>
+<button class="sheet-close" onclick="closeGuideSheet()" aria-label="닫기">${uiIco('x',14)}</button>
 <div style="height:4px;border-radius:3px;margin-bottom:14px;background:linear-gradient(90deg,#FF9800,#FFD54F)"></div>
 <div style="font-size:calc(18px*var(--fs));font-weight:900;margin-bottom:4px">⭐ 만점 방어 10계명</div>
 <div style="font-size:calc(12px*var(--fs));color:var(--muted);margin-bottom:16px">전과목 공통 — 반드시 지켜야 할 핵심 원칙</div>
@@ -5153,7 +5203,7 @@ function buildSubjectGuide(sub){
     </button>`).join('');
   const checksKey=sub.id+'_'+GS.taskIdx;
   return`<div class="drag-handle"></div>
-<button class="sheet-close" onclick="closeGuideSheet()">✕</button>
+<button class="sheet-close" onclick="closeGuideSheet()" aria-label="닫기">${uiIco('x',14)}</button>
 <div style="height:4px;border-radius:3px;margin-bottom:12px;background:${sub.color}"></div>
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
   <span style="font-size:calc(24px*var(--fs))">${sub.ico}</span>
@@ -5214,7 +5264,7 @@ function buildBackupView(){
 <header><div class="hd-row" style="margin-bottom:12px"><div><div class="hd-sub">⚙️ 관리</div><div class="hd-title">백업 &amp; 설정</div></div><div class="hd-right">${syncBadge()}</div></div></header>
 <div class="screen scr-set">
   <div class="bk-section">
-    <div class="bk-title">👨‍👩‍👧 가족 동기화</div>
+    <div class="bk-title">${uiIco('users',18)} 가족 동기화</div>
     <div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:10px">
       <div style="font-size:calc(11px*var(--fs));color:var(--muted);margin-bottom:4px">현재 가족 코드</div>
       <div style="font-size:calc(18px*var(--fs));font-weight:900;color:var(--p);letter-spacing:1px">${esc(S.familyCode||'-')}</div>
@@ -5308,17 +5358,17 @@ function buildDetailSheet(item){
   const sp=sn!==null?Math.round(sn/item.maxScore*100):null;
   const atts=item.attachments||[];
   return`<div class="drag-handle"></div>
-<button class="sheet-close" onclick="closeOverlay()">✕</button>
+<button class="sheet-close" onclick="closeOverlay()" aria-label="닫기">${uiIco('x',14)}</button>
 <div class="det-accent" style="background:linear-gradient(90deg,${sc.accent},${sc.accent}66)"></div>
 <div class="det-top">
   <span class="subj-tag-lg" style="background:${sc.tag};color:${sc.accent}">${esc(item.subject)}</span>
   <span class="d-badge-lg" style="background:${bd.c}">${bd.t}</span>
-  <span style="font-size:calc(15px*var(--fs))">${PRI_ICON[item.priority||2]}</span>
+  ${priStars(item.priority||2)}
   ${personPill(item.person)}
 </div>
-<div class="det-date">📅 제출일: ${fmt(item.dueDate)}</div>
-${item.alarmEnabled?`<div class="det-alarm">🔔 ${item.alarmDaysBefore}일 전 알림</div>`:''}
-${item.memo?`<div class="det-memo">📌 ${esc(item.memo)}</div>`:''}
+<div class="det-date">${uiIco('cal')}<span>제출일: ${fmt(item.dueDate)}</span></div>
+${item.alarmEnabled?`<div class="det-alarm">${uiIco('bell')}<span>${item.alarmDaysBefore}일 전 알림</span></div>`:''}
+${item.memo?`<div class="det-memo">${uiIco('note')}<span>${esc(item.memo)}</span></div>`:''}
 <div class="det-sec">진행 상황</div>
 <div class="prog-lg-hd"><span style="font-size:calc(12px*var(--fs));font-weight:700;color:#555">완료율</span><span style="font-size:calc(13px*var(--fs));font-weight:900;color:${sc.accent}">${p}%</span></div>
 <div class="prog-lg-wrap"><div class="prog-lg-bar" style="width:${p}%;background:${sc.accent}"></div></div>
@@ -5327,7 +5377,7 @@ ${item.memo?`<div class="det-memo">📌 ${esc(item.memo)}</div>`:''}
   ${item.tasks.length===0?'<p style="font-size:calc(12px*var(--fs));color:#AAA">등록된 내용이 없습니다.</p>':''}
   ${item.tasks.map((t,i)=>`<div class="task-row" onclick="toggleTask('${item.id}','${t.id}')">
     <span class="t-num">${i+1}</span>
-    <span class="cb-lg" style="border-color:${sc.accent};background:${t.done?sc.accent:'white'}">${t.done?'✓':''}</span>
+    <span class="cb-lg" style="border-color:${sc.accent};background:${t.done?sc.accent:'white'};color:#fff">${t.done?uiIco('check',14):''}</span>
     <span class="t-txt" style="color:${t.done?'#BBB':'#222'};text-decoration:${t.done?'line-through':'none'}">${esc(t.text)}</span>
   </div>`).join('')}
 </div>
@@ -5340,24 +5390,24 @@ ${item.memo?`<div class="det-memo">📌 ${esc(item.memo)}</div>`:''}
   <span class="score-pct" id="score-pct" style="background:${sc.accent};display:${sp!==null?'inline-block':'none'}">${sp!==null?sp+'%':''}</span>
 </div>
 <div class="det-sec">첨부 파일 <span style="font-weight:400;color:#BBB;font-size:calc(9px*var(--fs))">(이미지는 가족과 동기화 · 최대 ${MAX_IMG}장)</span></div>
-${atts.some(a=>a.type==='img'&&!a.cloud)?`<div class="attach-local-note">📱 표시된 이미지는 이 기기에만 있어요 → 설정 › 이미지 공유에서 가족과 공유할 수 있어요</div>`:''}
+${atts.some(a=>a.type==='img'&&!a.cloud)?`<div class="attach-local-note">${uiIco('phone',14)} 표시된 이미지는 이 기기에만 있어요 → 설정 › 이미지 공유에서 가족과 공유할 수 있어요</div>`:''}
 <div class="attach-grid">
   ${atts.map(a=>a.type==='img'?(a.cloud
-    ?`<div class="attach-card" onclick="viewCloudImg('${item.id}','${a.id}')"><img src="${a.thumb||''}" alt="${esc(a.name)}"><div class="attach-rm" onclick="event.stopPropagation();removeAttach('${item.id}','${a.id}')">✕</div></div>`
-    :`<div class="attach-card" onclick="viewImg('${esc(a.data)}')"><img src="${a.data}" alt="${esc(a.name)}"><span class="attach-local">📱</span><div class="attach-rm" onclick="event.stopPropagation();removeAttach('${item.id}','${a.id}')">✕</div></div>`):
-    `<div class="attach-txt-card"><div class="attach-txt-preview">${esc(a.data)}</div><div class="attach-rm" onclick="removeAttach('${item.id}','${a.id}')">✕</div></div>`
+    ?`<div class="attach-card" onclick="viewCloudImg('${item.id}','${a.id}')"><img src="${a.thumb||''}" alt="${esc(a.name)}"><div class="attach-rm" onclick="event.stopPropagation();removeAttach('${item.id}','${a.id}')" aria-label="첨부 삭제">${uiIco('x',10)}</div></div>`
+    :`<div class="attach-card" onclick="viewImg('${esc(a.data)}')"><img src="${a.data}" alt="${esc(a.name)}"><span class="attach-local">${uiIco('phone',12)}</span><div class="attach-rm" onclick="event.stopPropagation();removeAttach('${item.id}','${a.id}')" aria-label="첨부 삭제">${uiIco('x',10)}</div></div>`):
+    `<div class="attach-txt-card"><div class="attach-txt-preview">${esc(a.data)}</div><div class="attach-rm" onclick="removeAttach('${item.id}','${a.id}')" aria-label="첨부 삭제">${uiIco('x',10)}</div></div>`
   ).join('')}
-  ${atts.filter(a=>a.type==='img').length<MAX_IMG?`<div class="attach-add-btn" onclick="openAttach('${item.id}')"><span>📎</span><span>이미지</span></div>`:''}
-  <div class="attach-add-btn" onclick="openTxtAttach('${item.id}')"><span>📝</span><span>텍스트</span></div>
+  ${atts.filter(a=>a.type==='img').length<MAX_IMG?`<div class="attach-add-btn" onclick="openAttach('${item.id}')"><span>${uiIco('clip',22)}</span><span>이미지</span></div>`:''}
+  <div class="attach-add-btn" onclick="openTxtAttach('${item.id}')"><span>${uiIco('note',22)}</span><span>텍스트</span></div>
 </div>
 <div class="act-row" style="margin-top:14px">
-  <button class="act-btn" style="background:${sc.accent}" onclick="openEdit('${item.id}')">✏️ 수정</button>
-  <button class="act-btn" style="background:#607D8B" onclick="shareItem('${item.id}')">📤 공유</button>
-  <button class="act-btn" style="background:var(--danger)" onclick="deleteItem('${item.id}')">🗑️ 삭제</button>
+  <button class="act-btn" style="background:${sc.accent}" onclick="openEdit('${item.id}')">${uiIco('edit')} 수정</button>
+  <button class="act-btn" style="background:#607D8B" onclick="shareItem('${item.id}')">${uiIco('share')} 공유</button>
+  <button class="act-btn" style="background:var(--danger)" onclick="deleteItem('${item.id}')">${uiIco('trash')} 삭제</button>
 </div>
 <div class="act-row" style="margin-top:8px">
-  <button class="act-btn" style="background:${item.alarmEnabled?'#FF9800':'#9E9E9E'}" onclick="toggleItemAlarm('${item.id}')">${item.alarmEnabled?'🔔 알림 켜짐':'🔕 알림 꺼짐'}</button>
-  <button class="act-btn" style="background:#26A69A" onclick="exportItemICS('${item.id}')">🗓️ 캘린더 추가</button>
+  <button class="act-btn" style="background:${item.alarmEnabled?'#FF9800':'#9E9E9E'}" onclick="toggleItemAlarm('${item.id}')">${item.alarmEnabled?uiIco('bell')+' 알림 켜짐':uiIco('bellOff')+' 알림 꺼짐'}</button>
+  <button class="act-btn" style="background:#26A69A" onclick="exportItemICS('${item.id}')">${uiIco('calAdd')} 캘린더 추가</button>
 </div>`;
 }
 
@@ -5372,33 +5422,33 @@ function buildFormSheet(){
   const trows=f.tasks.map((t,i)=>`<div class="task-in-row" id="tr-${t.id}">
     <div class="t-n-badge" style="background:${sc.accent}">${i+1}</div>
     <input class="f-input" id="ft-${t.id}" style="flex:1;margin:0" placeholder="수행 단계 ${i+1}" value="${esc(t.text)}" oninput="updFTask('${t.id}',this.value)">
-    ${f.tasks.length>1?`<button class="rm-btn" onclick="rmFTask('${t.id}')">✕</button>`:''}
+    ${f.tasks.length>1?`<button class="rm-btn" onclick="rmFTask('${t.id}')" aria-label="단계 삭제">${uiIco('x',14)}</button>`:''}
   </div>`).join('');
   return`<div class="drag-handle"></div>
-<button class="sheet-close" onclick="closeOverlay()">✕</button>
-<div class="form-title">${isEdit?'✏️ 수행평가 수정':'📝 수행평가 등록'}</div>
-${!isEdit&&S.templates.length?`<div class="f-label" style="margin-top:0">📋 템플릿에서 불러오기</div>
+<button class="sheet-close" onclick="closeOverlay()" aria-label="닫기">${uiIco('x',14)}</button>
+<div class="form-title">${isEdit?'수행평가 수정':'수행평가 등록'}</div>
+${!isEdit&&S.templates.length?`<div class="f-label" style="margin-top:0">템플릿에서 불러오기</div>
 <select class="f-select" onchange="applyTemplate(this.value)"><option value="">템플릿 선택…</option>${S.templates.map(t=>`<option value="${esc(t.id)}">${esc(t.name)} · ${esc(t.subject)} (${t.tasks.length}단계)</option>`).join('')}</select>`:''}
 <div class="f-label">과목 이름</div>
 <input list="sl" class="f-input" id="f-subj" placeholder="국어, 수학, 영어..." value="${esc(f.subject)}" oninput="onSubjIn(this.value)">
 <datalist id="sl">${SUBJECTS.map(s=>`<option value="${s.name}">`).join('')}</datalist>
 <div class="f-label">테마 색상</div>
 <div class="color-dots">${dots}</div>
-<div class="f-label">제출일 📅</div>
+<div class="f-label">제출일</div>
 <input type="date" class="f-input" id="f-date" value="${f.dueDate||''}" min="${todayStr()}">
-<div class="f-label">수행 내용 (단계별) ✅</div>
+<div class="f-label">수행 내용 (단계별)</div>
 <div id="ftl">${trows}</div>
 <button class="add-task-btn" id="add-task-btn" style="color:${sc.accent};border-color:${sc.accent}" onclick="addFTask()">+ 단계 추가</button>
-<div class="f-label">담당 가족 👤</div>
+<div class="f-label">담당 가족</div>
 ${personChips(f.person,'setFPerson')}
-<div class="f-label">중요도 ⭐</div>
-<div class="priority-row">${[1,2,3].map(n=>`<div class="pri-opt${(f.priority||2)===n?' sel':''}" onclick="setFPri(${n})">${PRI_ICON[n]} ${PRI_NAME[n]}</div>`).join('')}</div>
-<div class="f-label">배점 🏆</div>
+<div class="f-label">중요도</div>
+<div class="priority-row">${[1,2,3].map(n=>`<div class="pri-opt${(f.priority||2)===n?' sel':''}" onclick="setFPri(${n})">${priStars(n)} ${PRI_NAME[n]}</div>`).join('')}</div>
+<div class="f-label">배점</div>
 <div style="display:flex;align-items:center;gap:8px">
   <input type="number" class="f-input" id="f-score" style="width:88px;margin:0" min="0" max="100" placeholder="직접입력" value="${f.maxScore===0?'':(f.maxScore||'')}">
   <span style="font-size:calc(13px*var(--fs));color:#666">점</span>
 </div>
-<div class="f-label">제출 전 알람 🔔</div>
+<div class="f-label">제출 전 알람</div>
 <div class="alarm-row" id="alarm-row">
   <div class="tog-wrap" onclick="togFAlarm()">
     <div class="tog-track${f.alarmEnabled?' tog-on':''}" id="tog-track" style="background:${f.alarmEnabled?sc.accent:'#CCC'}"><div class="tog-thumb"></div></div>
@@ -5408,7 +5458,7 @@ ${personChips(f.person,'setFPerson')}
 </div>
 <div class="f-label">메모 (선택)</div>
 <input class="f-input" id="f-memo" placeholder="분량, 주의사항 등..." value="${esc(f.memo||'')}">
-<button class="add-task-btn" style="color:var(--p);border-color:var(--p);margin-top:16px" onclick="saveAsTemplate()">💾 이 내용을 템플릿으로 저장</button>
+<button class="add-task-btn" style="color:var(--p);border-color:var(--p);margin-top:16px" onclick="saveAsTemplate()">${uiIco('save',16)} 이 내용을 템플릿으로 저장</button>
 <div class="form-btns">
   <button class="cancel-btn" onclick="closeOverlay()">취소</button>
   <button class="save-btn" id="save-btn" style="background:${sc.accent}" onclick="saveForm()">${isEdit?'저장하기':'등록하기'}</button>
@@ -5438,7 +5488,7 @@ function render(){
   let ov='';
   if(S.overlay==='detail'){const item=S.items.find(i=>i.id===S.activeId);if(item)ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildDetailSheet(item)}</div></div>`;}
   else if(S.overlay==='form')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildFormSheet()}</div></div>`;
-  else if(S.overlay==='txt-attach')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()"><div class="drag-handle"></div><div class="form-title" style="font-size:calc(16px*var(--fs))">📝 텍스트 메모 추가</div><textarea class="f-input" id="txt-area" placeholder="참고 내용, 필기 메모 등..." style="min-height:120px;resize:vertical"></textarea><div class="form-btns" style="margin-top:12px"><button class="cancel-btn" onclick="closeOverlay()">취소</button><button class="save-btn" style="background:var(--p)" onclick="saveTxtAttach()">추가하기</button></div></div></div>`;
+  else if(S.overlay==='txt-attach')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()"><div class="drag-handle"></div><div class="form-title" style="font-size:calc(16px*var(--fs))">텍스트 메모 추가</div><textarea class="f-input" id="txt-area" placeholder="참고 내용, 필기 메모 등..." style="min-height:120px;resize:vertical"></textarea><div class="form-btns" style="margin-top:12px"><button class="cancel-btn" onclick="closeOverlay()">취소</button><button class="save-btn" style="background:var(--p)" onclick="saveTxtAttach()">추가하기</button></div></div></div>`;
   else if(S.overlay==='coupons')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildCouponSheet()}</div></div>`;
   else if(S.overlay==='prep')ov=`<div class="overlay" id="ov" onclick="bgClick(event)"><div class="sheet" onclick="event.stopPropagation()">${buildPrepSheet()}</div></div>`;
   else if(S.overlay==='img-view')ov=`<div class="img-viewer" onclick="closeImgView()"><img src="${S.imgViewSrc}" alt="첨부 이미지"></div>`;
@@ -5692,7 +5742,7 @@ function onSubjIn(v){S.form.subject=v;const f=SUBJECTS.find(s=>s.name===v);if(f)
     const atb=document.getElementById('add-task-btn');if(atb){atb.style.color=f.accent;atb.style.borderColor=f.accent;}}}
 function setFormColor(c){S.form.subjectColor={name:S.form.subject,bg:c+'22',accent:c,tag:c+'55'};document.querySelectorAll('.c-dot').forEach(d=>d.classList.toggle('sel',d.dataset.color===c));const upd=s=>{const el=document.querySelector(s);if(el)el.style.background=c};upd('#save-btn');upd('#tog-track');document.querySelectorAll('.t-n-badge').forEach(b=>b.style.background=c);const ab=document.getElementById('add-task-btn');if(ab){ab.style.color=c;ab.style.borderColor=c;}}
 function setFPri(n){S.form.priority=n;document.querySelectorAll('.pri-opt').forEach((el,i)=>el.classList.toggle('sel',i+1===n))}
-function addFTask(){S.form.tasks.push({id:uid(),text:'',done:false});const c=document.getElementById('ftl');if(!c)return;const sc=S.form.subjectColor||SUBJECTS[0];const i=S.form.tasks.length-1;const t=S.form.tasks[i];const div=document.createElement('div');div.className='task-in-row';div.id=`tr-${t.id}`;div.innerHTML=`<div class="t-n-badge" style="background:${sc.accent}">${i+1}</div><input class="f-input" id="ft-${t.id}" style="flex:1;margin:0" placeholder="수행 단계 ${i+1}" oninput="updFTask('${t.id}',this.value)"><button class="rm-btn" onclick="rmFTask('${t.id}')">✕</button>`;c.appendChild(div);}
+function addFTask(){S.form.tasks.push({id:uid(),text:'',done:false});const c=document.getElementById('ftl');if(!c)return;const sc=S.form.subjectColor||SUBJECTS[0];const i=S.form.tasks.length-1;const t=S.form.tasks[i];const div=document.createElement('div');div.className='task-in-row';div.id=`tr-${t.id}`;div.innerHTML=`<div class="t-n-badge" style="background:${sc.accent}">${i+1}</div><input class="f-input" id="ft-${t.id}" style="flex:1;margin:0" placeholder="수행 단계 ${i+1}" oninput="updFTask('${t.id}',this.value)"><button class="rm-btn" onclick="rmFTask('${t.id}')" aria-label="단계 삭제">${uiIco('x',14)}</button>`;c.appendChild(div);}
 function rmFTask(id){S.form.tasks=S.form.tasks.filter(t=>t.id!==id);const r=document.getElementById(`tr-${id}`);if(r)r.remove();document.querySelectorAll('#ftl .t-n-badge').forEach((b,i)=>b.textContent=i+1)}
 function updFTask(id,v){const t=S.form.tasks.find(t=>t.id===id);if(t)t.text=v}
 function togFAlarm(){S.form.alarmEnabled=!S.form.alarmEnabled;const sc=S.form.subjectColor||SUBJECTS[0];const tr=document.getElementById('tog-track'),lb=document.getElementById('tog-lbl');if(tr){tr.style.background=S.form.alarmEnabled?sc.accent:'#CCC';tr.classList.toggle('tog-on',S.form.alarmEnabled)}if(lb)lb.textContent=S.form.alarmEnabled?'켜짐':'꺼짐';const ar=tr?.parentElement?.parentElement;if(ar){const ex=ar.querySelector('.alarm-days-row');if(ex)ex.remove();if(S.form.alarmEnabled){const d=document.createElement('div');d.className='alarm-days-row';d.innerHTML=`<select class="f-input" id="f-alarm-days" style="width:78px;margin:0">${[1,2,3,5,7].map(n=>`<option value="${n}"${S.form.alarmDaysBefore===n?' selected':''}>${n}일</option>`).join('')}</select><span style="font-size:calc(12px*var(--fs));color:#666">전에 알림</span>`;ar.appendChild(d);}}}
@@ -5925,7 +5975,7 @@ authReady.then(()=>{
     // localStorage에 없으면 Firebase에서 복원 시도
     document.getElementById('app').innerHTML=`
       <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#667eea,#764ba2);">
-        <div style="font-size:calc(40px*var(--fs))">👨‍👩‍👧‍👦</div>
+        <div style="color:#fff;opacity:.9">${uiIco('users',44)}</div>
         <div style="color:#fff;font-weight:700;font-size:calc(16px*var(--fs))">데이터 복원 중...</div>
         <div style="color:rgba(255,255,255,0.7);font-size:calc(12px*var(--fs))">잠시만 기다려주세요</div>
       </div>`;

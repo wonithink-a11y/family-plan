@@ -440,6 +440,69 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(!/\bm\.icon\b/.test(fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')),'소스에 m.icon 참조가 없음');
   ok(await ev(()=>/중요도/.test(priStars(3))&&(priStars(3).match(/<svg/g)||[]).length===3),'중요도 별은 SVG n개 + aria-label');
 
+  console.log('\n[8l] 남은 이모지 교체: 화면 전체에 이모지·깨진 SVG 글자 없음');
+  const scan=()=>ev(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('.nav-ico,script,style').forEach(e=>e.remove());const tx=c.innerText||c.textContent;
+    const m=tx.match(/[\u{1F000}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu);return{emo:m?[...new Set(m)].join(''):'',raw:/<svg|&lt;svg|<path/.test(tx)};});
+  await page.setViewportSize({width:1280,height:800}); await ev(()=>{S.theme='dark';applyPrefs();document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());if(S.overlay)closeOverlay();if(S.evtOverlay)closeEvtOverlay();}); await page.waitForTimeout(500);
+  const views=[
+    ['우리집',()=>setTab('stamp')],['일정 달력',()=>{setTab('events');setEvSub('cal');}],['일정 목록',()=>{setTab('events');setEvSub('list');}],
+    ['수행평가 목록',()=>{setTab('list');setLsSub('list');}],['수행평가 통계',()=>{setTab('list');setLsSub('stats');setStatsView('progress');}],['수행평가 성적',()=>{setTab('list');setLsSub('stats');setStatsView('score');}],
+    ['가이드',()=>setTab('guide')],['설정',()=>setTab('backup')]
+  ];
+  for(const [name,fn] of views){
+    await ev(fn); await page.waitForTimeout(350);
+    const r=await scan(); ok(r.emo===''&&!r.raw,'화면 "'+name+'"에 이모지 없음'+(r.emo?': '+r.emo:'')+(r.raw?' (SVG 글자가 그대로 보임)':''));
+    await page.screenshot({path:path.join(tmp,'view_'+name.replace(/ /g,'_')+'.png')});
+  }
+  await ev(()=>{setTab('guide');});
+  await ev(()=>{asOpen();}); await page.waitForTimeout(300); let r=await scan(); ok(r.emo===''&&!r.raw,'루미 대화 시트에 이모지 없음'+(r.emo?': '+r.emo:'')); await ev(()=>asClose());
+  await ev(()=>{asOpen('settings');}); await page.waitForTimeout(300); r=await scan(); ok(r.emo===''&&!r.raw,'루미 설정 시트에 이모지 없음'+(r.emo?': '+r.emo:'')); await ev(()=>asClose());
+  await ev(()=>{asOpen('listen');}); await page.waitForTimeout(250); r=await scan(); ok(r.emo===''&&!r.raw,'루미 듣기 시트에 이모지 없음'+(r.emo?': '+r.emo:'')); await ev(()=>{asConvStop&&asConvStop();asClose();});
+  // 벽걸이(주소로 열기)
+  const wp=await ctx.newPage(); await wp.goto('file://'+path.join(tmp,'index_ask.html')+'?view=wall'); await wp.waitForTimeout(1200);
+  const wr=await wp.evaluate(()=>{const tx=document.body.innerText;const m=tx.match(/[\u{1F000}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu);return{emo:m?[...new Set(m)].join(''):'',raw:/<svg|&lt;svg/.test(tx),n:document.querySelectorAll('.w-lane-h svg,.w-tools svg').length};});
+  ok(wr.emo===''&&!wr.raw&&wr.n>=3,'벽걸이 화면에 이모지 없음(머리·도구 버튼 SVG '+wr.n+'개)'+(wr.emo?': '+wr.emo:''));
+  await wp.screenshot({path:path.join(tmp,'view_wall.png')}); await wp.close();
+  ok(!/\bsub\.ico\b/.test(fs.readFileSync(path.join(root,'index.html'),'utf8')),'과목 가이드가 sub.ico 이모지를 화면에 쓰지 않음');
+
+  console.log('\n[8m] 이모지를 바꾼 나머지 화면 실행 점검(과목 가이드·검색·달력 팝업·주간 패널·점수 통계)');
+  const scan2=()=>ev(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('.nav-ico,script,style').forEach(e=>e.remove());const tx=c.innerText||c.textContent;const m=tx.match(/[\u{1F000}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu);return{emo:m?[...new Set(m)].join(''):'',raw:/<svg|&lt;svg|<path/.test(tx)};});
+  const errN=errs.length;
+  await ev(()=>{if(S.overlay)closeOverlay();if(S.evtOverlay)closeEvtOverlay();setTab('guide');}); await page.waitForTimeout(300);
+  for(const id of ['korean','math','science','pe']){
+    await ev(i=>openGuideDetail(i,0),id); await page.waitForTimeout(250);
+    const r=await scan2(); ok(r.emo===''&&!r.raw&&await ev(()=>!!document.querySelector('#guide-ov svg')),'과목 가이드 시트('+id+')에 이모지 없음, 아이콘은 SVG'+(r.emo?': '+r.emo:''));
+    await ev(()=>closeGuideSheet());
+  }
+  await page.screenshot({path:path.join(tmp,'view_guide_sheet.png')});
+  // 전과목 공통 가이드 시트
+  await ev(()=>{const b=document.querySelector('.guide-common-btn');if(b)b.click();}); await page.waitForTimeout(250);
+  ok((await scan2()).emo===''&&await ev(()=>!!document.getElementById('guide-ov')),'전과목 공통 가이드 시트에 이모지 없음'); await ev(()=>closeGuideSheet());
+  // 검색
+  await ev(()=>{setTab('list');openSearch();}); await page.waitForTimeout(200);
+  await page.fill('#srch-in','수학'); await page.waitForTimeout(250);
+  let r2=await scan2(); ok(r2.emo===''&&!r2.raw&&await ev(()=>document.querySelectorAll('#srch-res svg').length)>0,'검색 결과에 이모지 없음, 아이콘 SVG'+(r2.emo?': '+r2.emo:''));
+  await page.fill('#srch-in','없는검색어zzz'); await page.waitForTimeout(250);
+  ok((await scan2()).emo===''&&await ev(()=>/검색 결과가 없어요/.test(document.getElementById('srch-res').textContent)),'검색 결과 없음 문구(이모지 없이)'); await ev(()=>closeSearch());
+  // 달력 날짜 팝업, 주간 패널, 정렬 버튼
+  await ev(()=>{setTab('events');setEvSub('cal');setState({calDate:todayStr()});}); await page.waitForTimeout(300);
+  ok((await scan2()).emo==='','달력 날짜 팝업에 이모지 없음');
+  await ev(()=>{setTab('list');setLsSub('list');if(!S.weekOpen)toggleWeek();}); await page.waitForTimeout(300);
+  ok((await scan2()).emo===''&&await ev(()=>!!document.querySelector('.wk-title svg')),'주간 패널에 이모지 없음, 제목 아이콘 SVG');
+  for(const k of ['due','subj','score','pri']){await ev(v=>setState({sortBy:v}),k); await page.waitForTimeout(120);}
+  ok((await scan2()).emo==='','정렬 버튼 4종에 이모지 없음'); await ev(()=>setState({sortBy:'due'}));
+  await ev(()=>{S.hideDone=true;render();S.hideDone=false;render();});
+  // 점수가 있는 통계(팁·목표·추이)
+  await ev(()=>{const old=S.items.slice();S.__bak=old;S.items=S.items.map((it,i)=>Object.assign({},it,{earnedScore:i%2?18:14,maxScore:20,dueDate:it.dueDate<todayStr()?it.dueDate:asYmd(asAddDays(new Date(),-3-i)),tasks:(it.tasks||[]).map(x=>Object.assign({},x,{done:true}))}));S.goals=[{subject:S.items[0].subject,target:90}];setTab('list');setLsSub('stats');setStatsView('score');}); await page.waitForTimeout(400);
+  r2=await scan2(); ok(r2.emo===''&&!r2.raw,'점수가 있는 성적 화면(팁·목표·추이)에 이모지 없음'+(r2.emo?': '+r2.emo:''));
+  await page.screenshot({path:path.join(tmp,'view_score_data.png')});
+  await ev(()=>{setStatsView('progress');}); await page.waitForTimeout(250); ok((await scan2()).emo==='','점수가 있는 진행 통계에 이모지 없음');
+  await ev(()=>{S.items=S.__bak;S.goals=[];setTab('stamp');});
+  // 동기화 배지 4상태, 알림 버튼 상태
+  for(const st of ['synced','connecting','offline','error']){ await ev(v=>{S.syncStatus=v;render();},st); const e=await ev(()=>document.querySelector('.sync-badge').textContent); ok(e&&!/[\u{1F000}-\u{1FAFF}]/u.test(e),'동기화 배지('+st+') 이모지 없음: '+e.trim()); }
+  await ev(()=>{S.syncStatus='synced';render();});
+  ok(errs.length===errN,'위 화면들을 여는 동안 페이지 오류 없음'+(errs.length>errN?': '+errs.slice(errN).join(' | '):''));
+
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];
   for(const [w,h,th] of shots){

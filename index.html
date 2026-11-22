@@ -587,12 +587,13 @@ header,[data-theme=dark] header{background:transparent;box-shadow:none}
   .home-fit .note{margin-top:4px;font-size:10px;line-height:1.4}
   .home-fit .wx-hr{padding:4px 0}.home-fit .wx-hrs{margin-top:6px}.home-fit .bf-tips{margin-top:8px}
   .home-fit .home-cols>:nth-child(1){grid-column:1;grid-row:1}          /* 날씨·브리핑 */
-  .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2}          /* 루미 */
-  .home-fit .home-cols>:nth-child(4){grid-column:2;grid-row:1 / span 3} /* 아침 루틴 */
+  .home-fit .home-cols>:nth-child(3){grid-column:1;grid-row:2 / span 2}  /* 루미: 아래 끝까지 길게 */
+  .home-fit .home-cols>:nth-child(4){grid-column:2;grid-row:1 / span 2} /* 아침 루틴 */
   .home-fit .home-cols>:nth-child(2){grid-column:3;grid-row:1}          /* 수행평가 */
   .home-fit .home-cols>:nth-child(5){grid-column:3;grid-row:2 / span 2}  /* 준비물 */
-  .home-fit .home-cols>:nth-child(6){grid-column:1;grid-row:3}          /* 도장·구입권 */
+  .home-fit .home-cols>:nth-child(6){grid-column:2;grid-row:3}          /* 도장·구입권: 아침 루틴 아래 */
   .home-fit .home-cols>:nth-child(7){display:none}                      /* 최근 도장(공간 부족) */
+  .home-fit .st-card .sec-h{flex-wrap:nowrap;gap:8px}.home-fit .st-card .sec-t,.home-fit .st-card .sec-pill{white-space:nowrap}.home-fit .st-card .st-btn{padding:0 14px}
   .home-fit .ghost-btn{margin:0!important;padding:7px;font-size:12px}
   .home-fit .rt-row{padding:7px 2px;gap:10px}.home-fit .rt-txt{font-size:14px}.home-fit .rt-chk{width:22px;height:22px;font-size:12px}
   .home-fit .prep-row{padding:6px 0}.home-fit .prep-t,.home-fit .ticket-t{font-size:13px}
@@ -1194,6 +1195,8 @@ const UI_ICO={
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   users:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="2.8"/><path d="M17 14.5a6 6 0 0 1 5 5.5"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  contrast:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
   star:'<path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5l-5.4 3 1.2-6L3.3 9.3l6.1-.7z"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
   mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
@@ -3585,7 +3588,7 @@ function buildClockHeader(){
   return`<header class="hh">
   <div class="hh-left"><div class="hh-clock"><span class="hh-time" id="fp-time">${hh}:${mm}</span><span class="hh-date" id="fp-date"><span>${now.getMonth()+1}월 ${now.getDate()}일</span> <span class="hh-dow">${DOW[now.getDay()]}요일</span></span></div><div class="hh-leave" id="fp-leave">${asLeaveText(now)}</div></div>
   <div class="hh-right">
-    <button class="hh-ic" onclick="asBrief()" aria-label="오늘 브리핑 듣기"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
+    <button class="hh-ic" onclick="cycleTheme()" aria-label="화면 모드: ${THEME_NAME[S.theme]||'자동'} (눌러서 바꾸기)" title="화면 모드: ${THEME_NAME[S.theme]||'자동'}">${uiIco(THEME_ICO[S.theme]||'contrast',22)}</button>
     <button class="hh-ic" onclick="asOpen('listen')" aria-label="말하기"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     ${syncBadge()}
   </div>
@@ -4449,6 +4452,9 @@ function applyPrefs(){
   r.style.setProperty('--fs',FS_MAP[S.fs]||1);
   const tc=document.querySelector('meta[name=theme-color]');if(tc)tc.content=dark?'#1B1D2B':'#5B7FFF';
 }
+// 화면 모드 한 번에 바꾸기: 자동(시스템) → 라이트 → 다크 → 자동. 우리집 머리 오른쪽 아이콘이 이걸 한다(브리핑은 날씨 카드·위 띠의 "브리핑 듣기")
+const THEME_NAME={auto:'자동(시스템)',light:'라이트',dark:'다크'}, THEME_ICO={auto:'contrast',light:'sun',dark:'moon'};
+function cycleTheme(){const nx={auto:'light',light:'dark',dark:'auto'}[S.theme]||'light'; setTheme(nx); notify('화면 모드: '+THEME_NAME[nx],{kind:'info',ms:1800});}
 function setTheme(v){S.theme=v;try{localStorage.setItem('theme',v);}catch(e){}applyPrefs();render();}
 function setFs(v){S.fs=v;try{localStorage.setItem('fs',v);}catch(e){}applyPrefs();render();}
 if(window.matchMedia)matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(S.theme==='auto')applyPrefs();});
@@ -4481,7 +4487,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.26';
+const APP_VER='v4.27';
 function syncBadge(){
   const m={synced:['sync-ok',(sdot('ok')+' 동기화')],connecting:['sync-conn',(uiIco('refresh',16)+' 연결중')],
     offline:['sync-off',(uiIco('wifiOff',16)+' 오프라인')],error:['sync-err',(sdot('err')+' 오류')]};

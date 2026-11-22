@@ -314,3 +314,12 @@
 - 하지 않은 것: 질문 키워드로 도구를 고르는 라우팅(오분류 위험), 구성원별 자동 분기(기기 단위만 가능), 벽걸이 기본값 변경(허남원님 결정 필요, 지금은 `full`).
 - 테스트: `dev/lumi-test.js` [3] 도구 개수 13, [11] 조회 전용 6항목. 가짜 서버 기준. 실제 Gemini·Live·태블릿 화면은 미검증.
 
+## prompt() → 앱 안 입력 시트 (v4.19, 캐시 v28, 2026-11-22)
+- `askSheet(o)`(필드 text·number·textarea, 검증, 보조 버튼), `askText(title,o)`, `askPin({title,desc,again,verify})`. 값 또는 `null`(취소)을 돌려주고 한 번에 하나만 연다(열려 있으면 `null`).
+- **`render()`와 분리**: `#ask-ov`를 body에 직접 붙이고 `S`에 넣지 않아서 `onSnapshot` 재렌더에도 입력이 유지된다(테스트 [4]). z-index 1000. `visualViewport`로 높이를 맞춰 가상 키보드 대응(실기기 미확인).
+- PIN: 직접 만든 키패드(키 높이 60px)라 OS 키보드가 안 뜬다. 물리 키보드 숫자·Backspace도 된다. 틀리면 시트 유지+흔들림, 5회 틀리면 30초 잠금(`_pinFails`, `_pinLockUntil`, 모듈 변수라 새로고침하면 풀림). `parentAuth`의 5분 유지(`_pinUntil`)와 해시 저장 방식은 그대로 → Firestore 규칙 변경 없음.
+- 교체한 곳: `parentAuth`(설정·입력), `changePin`(한 번 더 확인 추가), `stampFlow`, `editRoutine`(쉼표 한 줄 유지, 항목별 편집은 후속), `changeFamilyCode`("자동 생성" 버튼), `addMember`, `saveAsTemplate`, `setGoal`("목표 삭제" 버튼, 시트 안 1~100 검증). 함수들이 async가 됐다.
+- 테스트 훅: `window.__askAnswer`(큐, `null`=취소)와 `window.__askAuto()`(항상 같은 답). 기존 4개 테스트의 `prompt` 가짜는 `__askAuto`로 함께 바꿨다. `askPin`은 훅 답에도 `verify`를 적용한다.
+- 테스트: `dev/ask-test.js`(시트 동작·PIN 잠금·실제 흐름·화면 캡처 12장). 가짜 서버 기준.
+- 남은 것: `alert()`/`confirm()` 약 70곳(후속), 루틴 항목별 편집, 구성원 아이콘 SVG.
+

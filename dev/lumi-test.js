@@ -131,7 +131,8 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   ok(bub.some(b=>b.includes('영어')&&b.includes('수행평가')),'도구로 조회한 답을 말함: '+bub[bub.length-1]);
   const g0=await ev(()=>window.__gemLog[0]);
   ok(g0.systemInstruction.parts[0].text.includes('"루미"'),'시스템 지침에 이름(루미)이 들어감');
-  ok(g0.tools[0].functionDeclarations.length===15,'도구 15개 선언: '+g0.tools[0].functionDeclarations.map(f=>f.name).length);
+  ok(g0.tools[0].functionDeclarations.length===13&&!g0.tools[0].functionDeclarations.some(f=>/^(confirm|cancel)_pending/.test(f.name)),'확인 대기 없음 → 조회+쓰기 13개만 선언(confirm/cancel 숨김)');
+  ok(await ev(()=>window.__gemLog[1].tools[0].functionDeclarations.length)===13,'조회 후 반복에도 13개');
   ok(await ev(()=>window.__gemLog.length)===2,'모델 2회 호출(도구 요청 → 결과로 답)');
 
   console.log('\n[4] 등록: 말 → 확인 카드 → "응"');
@@ -247,6 +248,21 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   await ev(()=>{asSetCfg({agent:false});asOpen('listen');});
   ok(await ev(()=>A.mode)==='main'||await ev(()=>A.mode)==='draft','대화 모드를 끄면 예전 방식(말 해석)으로 열림');
   await ev(()=>{asClose();asSetCfg({agent:true});});
+
+  console.log('\n[11] 도구 노출 분리: 조회 전용 모드');
+  await ev(()=>{asSetCfg({lumiMode:'readonly'});});
+  const names=await ev(()=>asToolDecls(true)[0].functionDeclarations.map(f=>f.name));
+  ok(names.length===8&&!names.some(n=>/^(add_|reschedule|mark_|confirm|cancel)/.test(n)),'readonly: 조회 8개만, 쓰기·확인 도구 없음(Live 포함)');
+  ok(await ev(()=>asSys(false).includes('조회만 할 수 있어')&&!asSys(false).includes('confirm_pending_action')),'readonly: 시스템 지침이 조회 전용으로 바뀜');
+  const r1=await ev(()=>asTool('add_event',{title:'테스트',date:todayStr()}));
+  ok(r1.error&&!await ev(()=>A.pending),'readonly: 모델이 add_event 를 불러도 거부, 확인 대기도 안 생김');
+  const r2=await ev(()=>asTool('confirm_pending_action',{}));
+  ok(r2.error,'readonly: confirm_pending_action 도 거부');
+  await ev(()=>{asSetCfg({lumiMode:'full'});});
+  ok(await ev(()=>asToolDecls(false)[0].functionDeclarations.length)===13,'full 복귀: 확인 대기 없으면 13개');
+  await ev(()=>{asTool('add_prep',{date:asYmd(asAddDays(new Date(),1)),text:'리코더'});});
+  ok(await ev(()=>asToolDecls(false)[0].functionDeclarations.length)===15,'full: 확인 대기가 생기면 15개(confirm/cancel 노출)');
+  await ev(()=>{A.pending=null;});
 
   console.log(errs.length?'\n페이지 오류:\n  '+errs.join('\n  '):'\n페이지 오류: 없음');
   await browser.close();

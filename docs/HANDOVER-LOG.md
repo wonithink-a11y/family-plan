@@ -323,3 +323,13 @@
 - 테스트: `dev/ask-test.js`(시트 동작·PIN 잠금·실제 흐름·화면 캡처 12장). 가짜 서버 기준.
 - 남은 것: `alert()`/`confirm()` 약 70곳(후속), 루틴 항목별 편집, 구성원 아이콘 SVG.
 
+## alert·confirm → 토스트·확인 시트 (v4.20, 캐시 v29, 2026-11-22)
+- 설계: `alert` 59곳은 성격별로(오류 17·경고 28·성공 8·안내 모달 약 6), `confirm` 17곳은 예/아니오와 3지선다로 나눴다. 이모지(✅ 📋 💾 ⚠️)는 문구에서 뺐다.
+- `notify(msg,{kind,ms})`: `#nt-stack` 아래 가운데(폰은 하단 메뉴 위 `bottom:84px`), 경고·오류만 `role=alert`+닫기 버튼(44px), 최대 3개, 표시 시간은 종류별 기본값과 `1500+글자수*70ms` 중 큰 값(최대 12초). 문구는 이스케이프한다. `asToast`(루미)·`flashStamp`는 그대로(통합은 후속).
+- `askConfirm`(→boolean, Esc·바깥=false), `askChoice`(세로 버튼, 취소=null), `askInfo`(복사 버튼 선택). 셋 다 `_askModal` 큐로 **순서대로** 열린다(다른 시트가 열려 있으면 기다림). 입력 시트(`askText`·`askPin`)는 열려 있으면 `null`을 돌려주는 기존 동작 유지. 위험(`danger`) 확인은 위험색 버튼 + 기본 포커스 "취소".
+- 구조 변경: `deleteEvt`(반복 일정 "이 날짜만/전체/취소"), `changeFamilyCode`("복사하고 전환/데이터 없이 전환/취소", 복사 뒤 새 코드를 `askInfo`로 보여 주고 복사 가능), `deleteItem`·`deletePrep`·`removeMember`·`removeTemplate`·`clearDone`·`clearAll`·`migrateLocalImages`·파일 불러오기가 async가 됐다(모두 onclick/이벤트에서만 호출).
+- **`clearAll`(전체 초기화)은 `parentAuth()` 뒤에 위험 확인**(허남원님 결정 "비번으로 설정"). "부모 폰"으로 기기를 제한하는 방식은 만들지 않았다(기기 식별이 없고 PIN이 이미 있음).
+- 앱 종료 확인(`popstate`)은 `askConfirm().then(...)`.
+- 테스트 훅: `window.__askAuto(kind)`('text'|'pin'|'confirm'|'choice'|'info'). 확인은 truthy면 true, 선택은 값이 없으면 첫 선택지.
+- 테스트: `dev/ask-test.js` [8d] 토스트, [8e] 확인·선택·안내·큐, [8f] 소스에 `alert(`·`confirm(`·`prompt(` 없음 + 반복 일정 삭제·전체 초기화(PIN) 실제 흐름, [9] 6개 화면 크기·테마에서 토스트·시트가 화면 안(폰은 하단 메뉴 위). 가짜 서버 기준.
+

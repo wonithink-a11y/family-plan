@@ -192,6 +192,35 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   ok(await ev(()=>askConfirm({title:'x'}))===true&&await ev(()=>askChoice({title:'x',choices:[{label:'a',value:'A'},{label:'b',value:'B'}]}))==='A','테스트 훅: 확인=true, 선택=첫 선택지');
   await ev(()=>{window.__askAuto=null;});
 
+  console.log('\n[8f] alert·confirm 교체 (소스 검사 + 실제 흐름)');
+  const src=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'');
+  ok(!/(?<![\w.$])(alert|confirm|prompt)\(/.test(src),'index.html 에 alert()/confirm()/prompt() 호출이 남아 있지 않음(주석 제외)');
+  // 반복 일정 삭제: 이 날짜만 / 전체 / 취소
+  await ev(()=>{S.events=[{id:'rep1',title:'반복 일정',startDate:'2026-11-23',endDate:'2026-11-23',date:'2026-11-23',allDay:true,repeat:'weekly',category:'일반'},...S.events];});
+  await ev(()=>{window.__r=undefined;deleteEvt('rep1','2026-11-23').then(()=>{window.__r='end';});}); await page.waitForTimeout(200);
+  ok(await page.locator('.ask-stack button').count()===3&&await ev(()=>document.querySelector('.ask-t').textContent)==='반복 일정이에요','반복 일정은 3지선다(이 날짜만·전체·취소)');
+  await page.click('.ask-cancel'); await page.waitForTimeout(250);
+  ok(await ev(()=>S.events.some(e=>e.id==='rep1'&&!(e.exdates||[]).length)),'취소하면 그대로');
+  await ev(()=>{deleteEvt('rep1','2026-11-23');}); await page.waitForTimeout(200); await page.click('[data-c="0"]'); await page.waitForTimeout(300);
+  ok(await ev(()=>(S.events.find(e=>e.id==='rep1')||{}).exdates&&S.events.find(e=>e.id==='rep1').exdates.includes('2026-11-23')),'"이 날짜만 삭제"는 해당 날짜만 제외');
+  await ev(()=>{deleteEvt('rep1','2026-11-30');}); await page.waitForTimeout(200); await page.click('[data-c="1"]'); await page.waitForTimeout(300);
+  ok(await ev(()=>!S.events.some(e=>e.id==='rep1')),'"전체 삭제"는 일정이 사라짐');
+  // 모든 데이터 삭제: 부모 PIN 필요
+  await ev(()=>{S.items=S.items.length?S.items:[{id:'zz',subject:'수학',dueDate:todayStr(),tasks:[]}];_pinUntil=0;window.__r=undefined;clearAll().then(()=>{window.__r='end';});}); await page.waitForTimeout(200);
+  ok(await ev(()=>document.querySelector('.ask-t').textContent)==='부모 PIN','"전체 초기화"는 먼저 부모 PIN을 물음');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+  ok(await ev(()=>window.__r)==='end'&&await ev(()=>S.items.length)>0,'PIN을 취소하면 아무것도 지우지 않음');
+  await ev(()=>{_pinUntil=0;window.__r=undefined;clearAll().then(()=>{window.__r='end';});}); await page.waitForTimeout(200);
+  for(const k of '1234')await page.click(`[data-k="${k}"]`); await page.waitForTimeout(500);
+  ok(await ev(()=>document.querySelector('.ask-t').textContent)==='모든 데이터(수행평가+일정)를 삭제할까요?'&&await ev(()=>document.activeElement.classList.contains('ask-cancel')),'PIN 통과 후 위험 확인(기본 포커스 취소)');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+  ok(await ev(()=>S.items.length)>0,'확인에서 취소하면 삭제 안 됨');
+  // 검증 경고는 토스트(시트를 막지 않음)
+  await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();S.members=[];addMember();window.__askAnswer=[];});
+  await ev(()=>{window.__askAnswer=['민수'];return addMember();}); await ev(()=>{window.__askAnswer=['민수'];return addMember();}); await page.waitForTimeout(100);
+  ok(await ev(()=>[...document.querySelectorAll('.nt-warn .nt-t')].some(e=>e.textContent.includes('이미 있는 이름'))),'중복 구성원은 경고 토스트');
+  await ev(()=>{S.reward=Object.assign({},S.reward);}); await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();});
+
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[1280,800,'dark'],[1280,800,'light'],[390,844,'light'],[390,844,'dark']];
   for(const [w,h,th] of shots){
@@ -206,6 +235,14 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
     await page.screenshot({path:path.join(tmp,`ask_pin_${w}_${th}.png`)});
     const m2=await ev(()=>{const b=document.querySelector('.ask-box').getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0;});
     ok(m2,`PIN 시트가 화면 안 ${w}×${h} ${th}`);
+    await page.keyboard.press('Escape'); await wait();
+    await ev(()=>{document.getElementById('nt-stack')&&document.getElementById('nt-stack').remove();notify('저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\npermission-denied',{kind:'error',ms:6000});notify('가족 코드를 복사했어요.',{kind:'ok',ms:6000});}); await page.waitForTimeout(350);
+    await page.screenshot({path:path.join(tmp,`toast_${w}_${th}.png`)});
+    const m3=await ev(()=>{const st=document.getElementById('nt-stack').getBoundingClientRect(),nav=document.querySelector('.bnav,.bottom-nav,nav');const kids=[...document.querySelectorAll('.nt')].map(e=>e.getBoundingClientRect());return{inside:kids.every(b=>b.left>=0&&b.right<=innerWidth&&b.bottom<=innerHeight&&b.height>=40),bottom:Math.round(Math.max(...kids.map(b=>b.bottom))),h:innerHeight};});
+    ok(m3.inside&&(w>=1000||m3.bottom<=m3.h-72),`토스트가 화면 안, 폰은 하단 메뉴 위 ${w}×${h} ${th} (bottom ${m3.bottom}/${m3.h})`);
+    await ev(()=>{document.getElementById('nt-stack').remove();askConfirm({title:'모든 데이터(수행평가+일정)를 삭제할까요?',desc:'모든 가족 기기에서 삭제됩니다. 복구할 수 없어요.',ok:'모두 삭제',danger:true});}); await page.waitForTimeout(350);
+    await page.screenshot({path:path.join(tmp,`confirm_${w}_${th}.png`)});
+    ok(await ev(()=>{const b=document.querySelector('.ask-box').getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0&&b.right<=innerWidth;}),`확인 시트가 화면 안 ${w}×${h} ${th}`);
     await page.keyboard.press('Escape'); await wait();
   }
 

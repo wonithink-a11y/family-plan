@@ -1311,10 +1311,10 @@ async function sha256Hex(text){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-/* ── 토스트 (alert() 대체: 화면을 막지 않는 안내) ── */
+/* ── 토스트 (alert() 대신 쓰는, 화면을 막지 않는 안내) ── */
 const NT_ICO={ok:'<path d="M20 6 9 17l-5-5"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',warn:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',error:'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>'};
 function notify(msg,o={}){
-  const kind=NT_ICO[o.kind]?o.kind:'info', ms=o.ms||{ok:2500,info:3500,warn:5000,error:8000}[kind];
+  const kind=NT_ICO[o.kind]?o.kind:'info', ms=o.ms||Math.min(12000,Math.max({ok:2500,info:3500,warn:5000,error:8000}[kind],1500+String(msg).length*70));
   let st=document.getElementById('nt-stack'); if(!st){st=document.createElement('div');st.id='nt-stack';document.body.appendChild(st);}
   while(st.children.length>=3)st.firstElementChild.remove();
   const el=document.createElement('div'); el.className='nt nt-'+kind; el.setAttribute('role',kind==='error'||kind==='warn'?'alert':'status');
@@ -1462,7 +1462,7 @@ async function parentAuth(){
     const p1=await askPin({title:'부모 PIN 설정',desc:'숫자 4자리를 정해 주세요.\n도장 찍기, 구입권 사용, 루틴 편집에 필요해요.',again:'확인을 위해 한 번 더 입력해 주세요.'});
     if(p1===null)return false;
     try{ await rewardRef().set({pinHash:await sha256Hex(p1)},{merge:true}); }
-    catch(e){ alert('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); return false; }
+    catch(e){ notify('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); return false; }
     _pinUntil=Date.now()+5*60*1000;
     return true;
   }
@@ -1477,8 +1477,8 @@ async function changePin(){
   if(!(await parentAuth()))return;
   const p1=await askPin({title:'새 PIN',desc:'바꿀 숫자 4자리를 입력해 주세요.',again:'확인을 위해 한 번 더 입력해 주세요.'});
   if(p1===null)return;
-  try{ await rewardRef().set({pinHash:await sha256Hex(p1)},{merge:true}); alert('PIN을 바꿨어요.'); }
-  catch(e){ alert('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+  try{ await rewardRef().set({pinHash:await sha256Hex(p1)},{merge:true}); notify('PIN을 바꿨어요.',{kind:'ok'}); }
+  catch(e){ notify('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); }
 }
 
 // 트랜잭션 안에서 도장 +1 (구입권 자동 발급 포함). 구입권을 만들었으면 true.
@@ -1523,15 +1523,15 @@ async function stampFlow(){
     const issued=await addStamp(reason.trim());
     flashStamp(stampMsgFor(issued,'🏅 칭찬 도장 +1'));
   }catch(e){
-    alert('도장을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message));
+    notify('도장을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message),{kind:'error'});
   }
 }
 
 async function useCoupon(id){
   if(!(await parentAuth()))return;
-  if(!confirm('이 '+COUPON_TITLE+'을 사용 처리할까요?'))return;
+  if(!(await askConfirm({title:'이 '+COUPON_TITLE+'을 사용 처리할까요?',ok:'사용 처리'})))return;
   try{ await couponsCol().doc(id).update({usedAt:Date.now()}); }
-  catch(e){ alert('저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+  catch(e){ notify('저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); }
 }
 
 // 아침 루틴 체크. 전부 체크하면 오늘 첫 완료에 한해 도장 +1 (체크를 풀어도 도장은 유지)
@@ -1558,7 +1558,7 @@ async function toggleRoutine(itemId){
     });
     if(res.stamped)flashStamp(stampMsgFor(res.issued,'🎉 루틴 완료!\n칭찬 도장 +1'));
   }catch(e){
-    alert('저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message));
+    notify('저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message),{kind:'error'});
   }
 }
 
@@ -1568,7 +1568,7 @@ async function editRoutine(){
   const v=await askText('아침 루틴 항목',{desc:'쉼표(,)로 구분해 적어 주세요 (최대 10개)',type:'textarea',value:old.map(i=>i.text).join(', '),max:300});
   if(v===null)return;
   const texts=v.split(',').map(t=>t.trim().slice(0,20)).filter(Boolean).slice(0,10);
-  if(!texts.length){alert('항목을 한 개 이상 적어 주세요.');return;}
+  if(!texts.length){notify('항목을 한 개 이상 적어 주세요.',{kind:'warn'});return;}
   const used=new Set();
   const items=texts.map((t,i)=>{
     const m=old.find(o=>o.text===t&&!used.has(o.id));
@@ -1577,7 +1577,7 @@ async function editRoutine(){
     return{id,text:t};
   });
   try{ await routineRef().set({items}); }
-  catch(e){ alert('저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+  catch(e){ notify('저장하지 못했어요. 인터넷 연결을 확인해 주세요.',{kind:'error'}); }
 }
 
 function tomorrowStr(){
@@ -1596,19 +1596,19 @@ function buildPrepSheet(){
 async function savePrep(){
   const date=(document.getElementById('prep-date')||{}).value;
   const text=((document.getElementById('prep-text')||{}).value||'').trim();
-  if(!date||!text){alert('날짜와 준비물을 입력해 주세요.');return;}
+  if(!date||!text){notify('날짜와 준비물을 입력해 주세요.',{kind:'warn'});return;}
   const id=newId();
   try{
     await prepsCol().doc(id).set({id,date,text:text.slice(0,60),ts:Date.now(),by:getDeviceId(),done:false});
     closeOverlay();
-  }catch(e){ alert('요청을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message)); }
+  }catch(e){ notify('요청을 저장하지 못했어요. 인터넷 연결과 Firestore 규칙을 확인해 주세요.\n'+(e.code||e.message),{kind:'error'}); }
 }
 async function togglePrep(id){
   const p=(S.preps||[]).find(x=>x.id===id); if(!p)return;
   try{ await prepsCol().doc(id).update({done:!p.done}); }catch(e){}
 }
 async function deletePrep(id){
-  if(!confirm('이 준비물 요청을 삭제할까요?'))return;
+  if(!(await askConfirm({title:'이 준비물 요청을 삭제할까요?',ok:'삭제',danger:true})))return;
   try{ await prepsCol().doc(id).delete(); }catch(e){}
 }
 function pendingPreps(){
@@ -3417,7 +3417,7 @@ async function restoreFamilyCode(){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function setFamilyCode(code){
   const c=code.trim();
-  if(c!==S.familyCode){const er=checkCode(c);if(er){alert(er+'\n(기존 코드를 쓰는 기기는 그대로 사용 가능)');return;}}
+  if(c!==S.familyCode){const er=checkCode(c);if(er){notify(er+'\n(기존 코드를 쓰는 기기는 그대로 사용 가능)',{kind:'warn'});return;}}
   localStorage.setItem('fc',c);
   S.familyCode=c;
   backupFamilyCode(c); // Firebase에도 백업
@@ -3453,7 +3453,7 @@ async function startWithCode(){
   // 기존 가족 코드에 참가하는 경우는 그대로 허용, 새로 만드는 코드만 강도 검사
   if(!(await familyHasData(v))){
     const err=checkCode(v);
-    if(err){alert(err+'\n\n※ 이미 쓰고 있는 가족 코드에 참가하는 경우에는 코드를 정확히 다시 확인해 주세요.');return;}
+    if(err){askInfo({title:'가족 코드를 확인해 주세요',desc:err+'\n\n이미 쓰고 있는 가족 코드에 참가하는 경우에는 코드를 정확히 다시 확인해 주세요.'});return;}
   }
   setFamilyCode(v);
 }
@@ -3489,27 +3489,29 @@ async function changeFamilyCode(){
   const input=await askText('가족 코드 변경',{desc:`현재 코드: ${S.familyCode}\n8자 이상 · 비워 두고 확인하면 안전한 코드를 자동 생성해요`,placeholder:'새 가족 코드',max:40,extra:[{label:'자동 생성',set:()=>genCode()}]});
   if(input===null)return;
   const code=input.trim()||genCode();
-  if(code===S.familyCode){alert('현재 코드와 같아요.');return;}
+  if(code===S.familyCode){notify('현재 코드와 같아요.',{kind:'warn'});return;}
   const exists=await familyHasData(code);
-  if(!exists){const err=checkCode(code);if(err){alert(err);return;}}
+  if(!exists){const err=checkCode(code);if(err){notify(err,{kind:'warn'});return;}}
   const old=S.familyCode;
   try{
     if(!exists&&(S.items.length||S.events.length)){
-      if(confirm(`새 코드 [${code}]로 현재 데이터를 복사할까요?\n(수행평가 ${S.items.length}개 · 일정 ${S.events.length}개)\n\n확인 = 복사 후 전환\n취소 = 다음 단계로`)){
+      const pick=await askChoice({title:'새 코드로 전환할까요?',desc:`새 코드: ${code}\n현재 데이터(수행평가 ${S.items.length}개 · 일정 ${S.events.length}개)를 어떻게 할까요?`,
+        choices:[{label:'데이터를 복사하고 전환',value:'copy'},{label:'데이터 없이 전환 (이전 데이터는 이전 코드에 남아요)',value:'blank'}]});
+      if(!pick)return;
+      if(pick==='copy'){
         await copyFamilyData(old,code);
-        alert(`✅ 복사 완료!\n새 가족 코드: ${code}\n가족에게 새 코드를 공유해 주세요.`);
+        await askInfo({title:'복사 완료',desc:`새 가족 코드: ${code}\n가족에게 새 코드를 공유해 주세요.`,copy:code});
         setFamilyCode(code);
-        if(confirm('이전 코드의 데이터를 삭제할까요?\n(이전 코드를 아는 사람이 데이터를 볼 수 없게 돼요.\n아직 이전 코드를 쓰는 가족 기기가 있으면 먼저 새 코드로 바꿔 주세요.)'))await deleteFamilyData(old);
+        if(await askConfirm({title:'이전 코드의 데이터를 삭제할까요?',desc:'이전 코드를 아는 사람이 데이터를 볼 수 없게 돼요.\n아직 이전 코드를 쓰는 가족 기기가 있으면 먼저 새 코드로 바꿔 주세요.',ok:'삭제',cancel:'남겨 두기',danger:true}))await deleteFamilyData(old);
         return;
       }
-      if(!confirm('데이터 없이 새 코드로만 전환할까요?\n(이전 데이터는 이전 코드에 그대로 남아요)'))return;
     }
-  }catch(e){alert('코드 변경 중 오류: '+e.message);return;}
+  }catch(e){notify('코드 변경 중 오류: '+e.message,{kind:'error'});return;}
   setFamilyCode(code);
-  if(!exists)alert('새 가족 코드: '+code+'\n가족에게 공유해 주세요.');
+  if(!exists)await askInfo({title:'새 가족 코드',desc:code+'\n가족에게 공유해 주세요.',copy:code});
 }
 function copyFamilyCode(){
-  navigator.clipboard.writeText(S.familyCode||'').then(()=>alert('📋 가족 코드를 복사했어요!')).catch(()=>alert(S.familyCode));
+  navigator.clipboard.writeText(S.familyCode||'').then(()=>notify('가족 코드를 복사했어요.',{kind:'ok'})).catch(()=>askInfo({title:'가족 코드',desc:S.familyCode,copy:S.familyCode}));
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3555,7 +3557,7 @@ function checkAlarms(){
   });
 }
 async function reqNotif(){
-  if(typeof Notification==='undefined'){alert('이 브라우저는 알림을 지원하지 않아요.\n(iOS는 홈 화면에 추가한 앱에서만 가능)');return;}
+  if(typeof Notification==='undefined'){askInfo({title:'알림을 쓸 수 없어요',desc:'이 브라우저는 알림을 지원하지 않아요.\niOS는 홈 화면에 추가한 앱에서만 가능해요.'});return;}
   const p=await Notification.requestPermission();
   if(p==='granted'){localStorage.removeItem('notifOff');S.notifOn=true;}
   setState({notif:p});
@@ -3575,7 +3577,7 @@ function testNotif(){
 }
 function notifBtn(){
   if(typeof Notification==='undefined')return'';
-  if(S.notif==='denied')return`<button class="notif-btn off" onclick="alert('브라우저 설정에서 이 사이트의 알림 권한을 허용해주세요.')">🔕 차단됨</button>`;
+  if(S.notif==='denied')return`<button class="notif-btn off" onclick="askInfo({title:'알림이 차단돼 있어요',desc:'브라우저 설정에서 이 사이트의 알림 권한을 허용해 주세요.'})">🔕 차단됨</button>`;
   if(S.notif!=='granted')return`<button class="notif-btn" onclick="reqNotif()">🔔 알림</button>`;
   return`<button class="notif-btn ${S.notifOn?'on':'off'}" onclick="toggleNotif()">${S.notifOn?'🔔 켜짐':'🔕 꺼짐'}</button>`;
 }
@@ -3632,7 +3634,7 @@ function exportItemICS(id){
 }
 function exportAllICS(){
   const list=S.items.filter(i=>{const d=getDays(i.dueDate);return d!==null&&d>=0&&!(i.tasks.length>0&&i.tasks.every(t=>t.done));});
-  if(!list.length){alert('캘린더로 내보낼 진행중 수행평가가 없어요.');return;}
+  if(!list.length){notify('캘린더로 내보낼 진행중 수행평가가 없어요.',{kind:'warn'});return;}
   downloadICS(list.map(icsEvent),`패밀리플랜_수행평가_${todayStr()}.ics`);
 }
 // 가족 일정(events) → .ics (종일: 전날 09:00 알림 / 시간 지정: 30분 전 알림)
@@ -3676,7 +3678,7 @@ function exportEvtICS(id){
 function exportAllEvtICS(){
   const today=todayStr();
   const list=S.events.filter(e=>e.repeat?(!e.repeatUntil||e.repeatUntil>=today):(e.endDate||e.startDate||e.date)>=today);
-  if(!list.length){alert('캘린더로 내보낼 다가오는 일정이 없어요.');return;}
+  if(!list.length){notify('캘린더로 내보낼 다가오는 일정이 없어요.',{kind:'warn'});return;}
   downloadICS(list.map(icsEventEvt),`패밀리플랜_일정_${today}.ics`);
 }
 
@@ -3700,19 +3702,19 @@ function saveMembers(list){
   render();
   if(!S.familyCode)return;
   db.collection('families').doc(S.familyCode).collection('config').doc('members').set({list})
-    .catch(e=>alert('구성원 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)'));
+    .catch(e=>notify('구성원 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)',{kind:'error'}));
 }
 async function addMember(){
   const name=((await askText('가족 구성원 추가',{desc:'8자 이내 · 예: 엄마, 아빠, 민수',max:8,required:true}))||'').trim().slice(0,8);
   if(!name)return;
-  if(S.members.some(m=>m.name===name)){alert('이미 있는 이름이에요.');return;}
-  if(S.members.length>=12){alert('구성원은 최대 12명까지 등록할 수 있어요.');return;}
+  if(S.members.some(m=>m.name===name)){notify('이미 있는 이름이에요.',{kind:'warn'});return;}
+  if(S.members.length>=12){notify('구성원은 최대 12명까지 등록할 수 있어요.',{kind:'warn'});return;}
   const used=new Set(S.members.map(m=>m.color));
   const color=MEM_COLORS.find(c=>!used.has(c))||MEM_COLORS[S.members.length%MEM_COLORS.length];
   saveMembers([...S.members,{name,color}]);
 }
-function removeMember(name){
-  if(!confirm(`'${name}'을(를) 구성원 목록에서 삭제할까요?\n(기존 수행평가/일정의 담당자 표시는 그대로 남아요)`))return;
+async function removeMember(name){
+  if(!(await askConfirm({title:`'${name}'을(를) 구성원 목록에서 삭제할까요?`,desc:'기존 수행평가·일정의 담당자 표시는 그대로 남아요.',ok:'삭제',danger:true})))return;
   saveMembers(S.members.filter(m=>m.name!==name));
 }
 const memColor=n=>(S.members.find(m=>m.name===n)||{color:'#9E9E9E'}).color;
@@ -3798,7 +3800,7 @@ function saveTemplates(list){
   S.templates=list;render();
   if(!S.familyCode)return;
   db.collection('families').doc(S.familyCode).collection('config').doc('templates').set({list})
-    .catch(e=>alert('템플릿 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)'));
+    .catch(e=>notify('템플릿 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)',{kind:'error'}));
 }
 // 폼 입력값을 S.form에 보존 (재렌더 시 입력 중이던 내용이 사라지지 않게)
 function syncFormFromDOM(){
@@ -3813,18 +3815,18 @@ async function saveAsTemplate(){
   syncFormFromDOM();
   const f=S.form,subj=(f.subject||'').trim();
   const tasks=f.tasks.map(t=>t.text.trim()).filter(Boolean);
-  if(!subj){alert('과목을 입력하세요.');return;}
-  if(!tasks.length){alert('수행 내용을 하나 이상 입력하세요.');return;}
+  if(!subj){notify('과목을 입력하세요.',{kind:'warn'});return;}
+  if(!tasks.length){notify('수행 내용을 하나 이상 입력하세요.',{kind:'warn'});return;}
   const name=((await askText('템플릿 이름',{desc:'20자 이내',value:subj+' 수행평가',max:20,required:true}))||'').trim().slice(0,20);
   if(!name)return;
   const dup=S.templates.find(t=>t.name===name);
-  if(dup&&!confirm(`'${name}' 템플릿이 이미 있어요. 덮어쓸까요?`))return;
-  if(!dup&&S.templates.length>=30){alert('템플릿은 최대 30개까지 저장할 수 있어요.');return;}
+  if(dup&&!(await askConfirm({title:`'${name}' 템플릿이 이미 있어요`,desc:'덮어쓸까요?',ok:'덮어쓰기'})))return;
+  if(!dup&&S.templates.length>=30){notify('템플릿은 최대 30개까지 저장할 수 있어요.',{kind:'warn'});return;}
   const tpl={id:dup?dup.id:uid(),name,subject:subj,color:(f.subjectColor||getColor(subj)).accent,tasks,
     maxScore:f.maxScore||0,priority:f.priority||2,alarmEnabled:!!f.alarmEnabled,alarmDaysBefore:f.alarmDaysBefore||3,
     memo:f.memo||'',person:f.person||''};
   saveTemplates([...S.templates.filter(t=>t.name!==name),tpl]);
-  alert(`💾 '${name}' 템플릿을 저장했어요.`);
+  notify(`'${name}' 템플릿을 저장했어요.`,{kind:'ok'});
 }
 function applyTemplate(id){
   const t=S.templates.find(x=>x.id===id);if(!t)return;
@@ -3835,9 +3837,9 @@ function applyTemplate(id){
     memo:t.memo||S.form.memo,person:t.person||S.form.person});
   render();
 }
-function removeTemplate(id){
+async function removeTemplate(id){
   const t=S.templates.find(x=>x.id===id);if(!t)return;
-  if(!confirm(`'${t.name}' 템플릿을 삭제할까요?\n(이미 만든 수행평가에는 영향 없어요)`))return;
+  if(!(await askConfirm({title:`'${t.name}' 템플릿을 삭제할까요?`,desc:'이미 만든 수행평가에는 영향 없어요.',ok:'삭제',danger:true})))return;
   saveTemplates(S.templates.filter(x=>x.id!==id));
 }
 
@@ -3993,7 +3995,7 @@ function saveGoals(list){
   S.goals=list;render();
   if(!S.familyCode)return;
   db.collection('families').doc(S.familyCode).collection('config').doc('goals').set({list})
-    .catch(e=>alert('목표 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)'));
+    .catch(e=>notify('목표 저장 실패: '+e.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)',{kind:'error'}));
 }
 async function setGoal(subject){
   const cur=goalOf(subject);
@@ -4004,8 +4006,8 @@ async function setGoal(subject){
   const t=v.trim();
   if(!t){saveGoals(S.goals.filter(g=>g.subject!==subject));return;}
   const n=Math.round(Number(t));
-  if(!(n>=1&&n<=100)){alert('1~100 사이의 숫자를 입력해 주세요.');return;}
-  if(!cur&&S.goals.length>=30){alert('목표는 최대 30개까지 설정할 수 있어요.');return;}
+  if(!(n>=1&&n<=100)){notify('1~100 사이의 숫자를 입력해 주세요.',{kind:'warn'});return;}
+  if(!cur&&S.goals.length>=30){notify('목표는 최대 30개까지 설정할 수 있어요.',{kind:'warn'});return;}
   saveGoals([...S.goals.filter(g=>g.subject!==subject),{subject,target:n}]);
 }
 function setStatsView(v){try{localStorage.setItem('statsView',v);}catch(e){}setState({statsView:v});}
@@ -4166,8 +4168,8 @@ function dBadge(days,allDone,sc){
    동기화 상태 배지
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
-function showSyncError(){alert(S.syncError||'오류가 발생했습니다.');}
-const APP_VER='v4.19';
+function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
+const APP_VER='v4.20';
 function syncBadge(){
   const m={synced:['sync-ok','🟢 동기화'],connecting:['sync-conn','🔄 연결중'],
     offline:['sync-off','📴 오프라인'],error:['sync-err','🔴 오류']};
@@ -4718,13 +4720,13 @@ function saveEvtForm(){
   const title=document.getElementById('ef-title')?.value?.trim();
   const startDate=document.getElementById('ef-start-date')?.value;
   const endDate=document.getElementById('ef-end-date')?.value||startDate;
-  if(!title){alert('제목을 입력하세요.');return;}
-  if(!startDate){alert('시작일을 선택하세요.');return;}
-  if(endDate&&endDate<startDate){alert('종료일은 시작일 이후여야 합니다.');return;}
+  if(!title){notify('제목을 입력하세요.',{kind:'warn'});return;}
+  if(!startDate){notify('시작일을 선택하세요.',{kind:'warn'});return;}
+  if(endDate&&endDate<startDate){notify('종료일은 시작일 이후여야 합니다.',{kind:'warn'});return;}
   const allDay=document.getElementById('ef-allday')?.checked!==false;
   const repeat=document.getElementById('ef-repeat')?.value||'';
   const until=document.getElementById('ef-until')?.value||'';
-  if(repeat&&until&&until<startDate){alert('반복 종료일은 시작일 이후여야 합니다.');return;}
+  if(repeat&&until&&until<startDate){notify('반복 종료일은 시작일 이후여야 합니다.',{kind:'warn'});return;}
   const ev={
     id:S.evtForm.id||uid(),
     title,
@@ -4747,17 +4749,21 @@ function saveEvtForm(){
   render();
   saveEventFS(ev);
 }
-function deleteEvt(id,date){
+async function deleteEvt(id,date){
   const ev0=S.events.find(e=>e.id===id);if(!ev0)return;
   if(ev0.repeat){
     // 반복 일정: 이 날짜만 / 전체 중 선택
-    if(date&&confirm(`반복 일정이에요.\n${fmt(date)} 하루만 삭제할까요?\n\n확인 = 이 날짜만 삭제\n취소 = 다음 단계`)){
+    let pick='all';
+    if(date){
+      pick=await askChoice({title:'반복 일정이에요',desc:fmt(date)+' 일정을 어떻게 삭제할까요?',choices:[{label:'이 날짜만 삭제',value:'one'},{label:'반복 일정 전체 삭제',value:'all',danger:true}]});
+      if(!pick)return;
+    }else if(!(await askConfirm({title:'반복 일정 전체를 삭제할까요?',ok:'삭제',danger:true})))return;
+    if(pick==='one'){
       const upd={...ev0,exdates:[...(ev0.exdates||[]),date]};
       S.events=S.events.map(e=>e.id===id?upd:e);
       closeEvtOverlay();render();saveEventFS(upd);return;
     }
-    if(!confirm('반복 일정 전체를 삭제할까요?'))return;
-  }else if(!confirm('일정을 삭제할까요?'))return;
+  }else if(!(await askConfirm({title:'일정을 삭제할까요?',ok:'삭제',danger:true})))return;
   S.events=S.events.filter(e=>e.id!==id);
   closeEvtOverlay();render();
   deleteEventFS(id);
@@ -5385,8 +5391,8 @@ function saveScore(itemId,val){
 function updScorePct(inp,max){const el=document.getElementById('score-pct');if(!el)return;if(!inp.value){el.style.display='none';return;}el.style.display='inline-block';el.textContent=Math.round(Number(inp.value)/max*100)+'%'}
 
 // 삭제 → Firestore (모든 가족 기기에서 사라짐)
-function deleteItem(id){
-  if(!confirm('삭제할까요?\n(모든 가족 기기에서 삭제됩니다)'))return;
+async function deleteItem(id){
+  if(!(await askConfirm({title:'삭제할까요?',desc:'모든 가족 기기에서 삭제됩니다.',ok:'삭제',danger:true})))return;
   const it0=S.items.find(i=>i.id===id);
   S.items=S.items.filter(i=>i.id!==id);
   setState({overlay:null,activeId:null});
@@ -5401,7 +5407,7 @@ function shareItem(id){
   const item=S.items.find(i=>i.id===id);if(!item)return;
   const text=fmtItem(item);
   if(navigator.share)navigator.share({title:`${item.subject} 수행평가`,text});
-  else navigator.clipboard.writeText(text).then(()=>alert('클립보드에 복사됐어요!'));
+  else navigator.clipboard.writeText(text).then(()=>notify('클립보드에 복사됐어요!',{kind:'ok'}));
 }
 function viewImg(src){setState({overlay:'img-view',imgViewSrc:src,imgViewId:null})}
 function closeImgView(){setState({overlay:S.activeId?'detail':null,imgViewSrc:null,imgViewId:null});}
@@ -5412,10 +5418,10 @@ function viewCloudImg(itemId,attId){
   setState({overlay:'img-view',imgViewSrc:att.thumb||'',imgViewId:attId,activeId:itemId});
   imgCol().doc(attId).get().then(snap=>{
     if(S.imgViewId!==attId)return; // 그 사이 닫았으면 무시
-    if(!snap.exists){alert('원본 이미지를 찾을 수 없어요. (다른 기기에서 삭제됐을 수 있어요)');return;}
+    if(!snap.exists){notify('원본 이미지를 찾을 수 없어요. (다른 기기에서 삭제됐을 수 있어요)',{kind:'warn'});return;}
     S.imgViewSrc=snap.data().data;
     const el=document.querySelector('.img-viewer img');if(el)el.src=S.imgViewSrc;
-  }).catch(e=>{if(S.imgViewId===attId)alert('이미지를 불러오지 못했어요: '+e.message);});
+  }).catch(e=>{if(S.imgViewId===attId)notify('이미지를 불러오지 못했어요: '+e.message,{kind:'error'});});
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -5425,7 +5431,7 @@ function openAttach(id){S.attachTargetId=id;document.getElementById('attach-file
 function openTxtAttach(id){S.txtAttachTargetId=id;setState({overlay:'txt-attach'})}
 function saveTxtAttach(){
   const val=document.getElementById('txt-area')?.value?.trim();
-  if(!val){alert('내용을 입력해 주세요.');return;}
+  if(!val){notify('내용을 입력해 주세요.',{kind:'warn'});return;}
   const id=S.txtAttachTargetId;
   const item=S.items.find(i=>i.id===id);if(!item)return;
   const updated={...item,attachments:[...(item.attachments||[]),{id:uid(),type:'txt',name:'메모',data:val}]};
@@ -5450,7 +5456,7 @@ function removeAttach(itemId,attachId){
 // 원본 업로드는 기다리지 않음(오프라인이면 연결 시 자동 전송). 실패하면 첨부를 되돌림
 function uploadImage(doc){
   imgCol().doc(doc.id).set(doc).catch(err=>{
-    alert('이미지 업로드 실패: '+err.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)');
+    notify('이미지 업로드 실패: '+err.message+'\n(Firestore 규칙 최신본이 게시됐는지 확인해 주세요)',{kind:'error'});
     const it=S.items.find(i=>i.id===doc.itemId);if(!it)return;
     const upd={...it,attachments:(it.attachments||[]).filter(a=>a.id!==doc.id)};
     S.items=S.items.map(i=>i.id!==upd.id?i:upd);saveItemFS(upd);render();
@@ -5465,14 +5471,14 @@ document.getElementById('attach-file').addEventListener('change',async e=>{
   const added=[];
   for(const file of files){
     if(file.type.startsWith('image/')){
-      if(imgCount>=MAX_IMG){alert(`이미지는 수행평가당 최대 ${MAX_IMG}장까지 첨부할 수 있어요.`);break;}
+      if(imgCount>=MAX_IMG){notify(`이미지는 수행평가당 최대 ${MAX_IMG}장까지 첨부할 수 있어요.`,{kind:'warn'});break;}
       try{
         const {data,thumb}=await makeCloudImage(file);
         const aid=uid();
         uploadImage({id:aid,itemId:id,data,createdAt:Date.now()});
         added.push({id:aid,type:'img',name:file.name.slice(0,40),thumb,cloud:true});
         imgCount++;
-      }catch(err){alert('이미지를 처리하지 못했어요: '+err.message);}
+      }catch(err){notify('이미지를 처리하지 못했어요: '+err.message,{kind:'error'});}
     }else{
       const text=await file.text();
       added.push({id:uid(),type:'txt',name:file.name,data:text.slice(0,500)});
@@ -5518,8 +5524,8 @@ function localImgInfo(){
 }
 async function migrateLocalImages(){
   const {n,ids}=localImgInfo();
-  if(!n){alert('공유할 이미지가 없어요.');return;}
-  if(!confirm(`이 기기에만 저장된 이미지 ${n}장을 가족과 공유할까요?\n(수행평가당 최대 ${MAX_IMG}장, 업로드 후 이 기기의 로컬 사본은 삭제돼요)`))return;
+  if(!n){notify('공유할 이미지가 없어요.',{kind:'warn'});return;}
+  if(!(await askConfirm({title:`이 기기에만 저장된 이미지 ${n}장을 가족과 공유할까요?`,desc:`수행평가당 최대 ${MAX_IMG}장, 업로드 후 이 기기의 로컬 사본은 삭제돼요.`,ok:'공유'})))return;
   let ok=0,fail=0;
   for(const id of ids){
     const item=S.items.find(i=>i.id===id);if(!item)continue;
@@ -5547,7 +5553,8 @@ async function migrateLocalImages(){
     S.items=S.items.map(i=>i.id!==id?i:{...i,attachments:(i.attachments||[]).filter(a=>a.cloud||a.type!=='img').concat(rest)});
   }
   render();
-  alert(`✅ ${ok}장 공유 완료${fail?`\n⚠️ ${fail}장은 공유하지 못해 이 기기에 남아 있어요`:''}`);
+  if(ok)notify(`${ok}장을 공유했어요.`,{kind:'ok'});
+  if(fail)notify(`${fail}장은 공유하지 못해 이 기기에 남아 있어요.`,{kind:'warn'});
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -5572,10 +5579,10 @@ function saveForm(){
   const score=document.getElementById('f-score')?.value;
   const memo=document.getElementById('f-memo')?.value||'';
   const alarmDays=Number(document.getElementById('f-alarm-days')?.value||3);
-  if(!subj){alert('과목을 입력하세요.');return}
-  if(!date){alert('제출일을 입력하세요.');return}
+  if(!subj){notify('과목을 입력하세요.',{kind:'warn'});return}
+  if(!date){notify('제출일을 입력하세요.',{kind:'warn'});return}
   const clean=S.form.tasks.filter(t=>t.text.trim());
-  if(!clean.length){alert('수행 내용을 하나 이상 입력하세요.');return}
+  if(!clean.length){notify('수행 내용을 하나 이상 입력하세요.',{kind:'warn'});return}
   const existing=S.form.id?S.items.find(i=>i.id===S.form.id):null;
   const newItem={
     id:S.form.id||uid(),subject:subj,dueDate:date,tasks:clean,
@@ -5599,8 +5606,8 @@ function saveForm(){
 function fmtItem(item){const days=getDays(item.dueDate);const bd=dBadge(days,item.tasks.every(t=>t.done),{accent:''});return`[${item.subject}] ${bd.t}\n📅 ${fmt(item.dueDate)}\n${PRI_ICON[item.priority||2]} 중요도: ${PRI_NAME[item.priority||2]}\n진행률: ${pct(item)}%\n\n${item.tasks.map((t,i)=>`${i+1}. [${t.done?'✓':'　'}] ${t.text}`).join('\n')}${item.earnedScore!==null?`\n\n점수: ${item.earnedScore}/${item.maxScore}점 (${Math.round(item.earnedScore/item.maxScore*100)}%)`:''}`;
 }
 function fmtAll(){return`📚 패밀리 플랜 (${S.familyCode})\n${'='.repeat(28)}\n\n`+S.items.map(fmtItem).join('\n'+'-'.repeat(28)+'\n')+'\n\n'+new Date().toLocaleDateString('ko-KR')}
-function shareText(){if(navigator.share)navigator.share({title:'패밀리 플랜',text:fmtAll()});else navigator.clipboard.writeText(fmtAll()).then(()=>alert('복사됐어요!'));}
-function copyText(){navigator.clipboard.writeText(fmtAll()).then(()=>alert('📋 복사됐어요!')).catch(()=>alert(fmtAll()))}
+function shareText(){if(navigator.share)navigator.share({title:'패밀리 플랜',text:fmtAll()});else navigator.clipboard.writeText(fmtAll()).then(()=>notify('복사됐어요!',{kind:'ok'}));}
+function copyText(){navigator.clipboard.writeText(fmtAll()).then(()=>notify('복사됐어요.',{kind:'ok'})).catch(()=>askInfo({title:'복사하지 못했어요',desc:fmtAll()}))}
 function exportJSON(){
   const blob=new Blob([JSON.stringify({version:3,familyCode:S.familyCode,exportDate:todayStr(),items:S.items},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`수행평가_${todayStr()}.json`;a.click();URL.revokeObjectURL(url);
@@ -5608,38 +5615,40 @@ function exportJSON(){
 document.getElementById('import-file').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=ev=>{
+  reader.onload=async ev=>{
     try{
       const data=JSON.parse(ev.target.result);
       const items=data.items||data;
       if(!Array.isArray(items))throw new Error();
-      if(!confirm(`${items.length}개 항목을 Firestore에 업로드할까요?\n(기존 데이터와 병합됩니다)`))return;
+      if(!(await askConfirm({title:`${items.length}개 항목을 업로드할까요?`,desc:'기존 데이터와 병합됩니다.',ok:'업로드'})))return;
       // 보안 규칙: 문서 ID == data.id 이므로 id를 항상 명시
       const docs=items.map(item=>{const id=item.id||uid();return{id,data:toFSDoc({attachments:[],...item,id})};});
       batchWrite(docs.map(d=>b=>b.set(colRef().doc(d.id),d.data)))
-        .then(()=>alert('✅ 불러오기 완료! 잠시 후 목록이 업데이트됩니다.')).catch(e=>alert('오류: '+e.message));
-    }catch(err){alert('파일 형식이 올바르지 않습니다.')}
+        .then(()=>notify('불러오기 완료! 잠시 후 목록이 업데이트됩니다.',{kind:'ok'})).catch(e=>notify('오류: '+e.message,{kind:'error'}));
+    }catch(err){notify('파일 형식이 올바르지 않습니다.',{kind:'warn'})}
   };
   reader.readAsText(file);e.target.value='';
 });
-function clearDone(){
-  if(!confirm('완료된 수행평가를 모두 삭제할까요?\n(모든 가족 기기에 반영됩니다)'))return;
+async function clearDone(){
+  if(!(await askConfirm({title:'완료된 수행평가를 모두 삭제할까요?',desc:'모든 가족 기기에 반영됩니다.',ok:'모두 삭제',danger:true})))return;
   const targets=S.items.filter(i=>i.tasks.length>0&&i.tasks.every(t=>t.done));
   targets.forEach(i=>localStorage.removeItem('img_'+i.id));
   batchWrite([
     ...targets.map(i=>b=>b.delete(colRef().doc(i.id))),
     ...targets.flatMap(i=>imgIdsOf(i).map(aid=>b=>b.delete(imgCol().doc(aid))))
-  ]).catch(e=>alert('오류: '+e.message));
+  ]).catch(e=>notify('오류: '+e.message,{kind:'error'}));
 }
-function clearAll(){
-  if(!confirm('모든 데이터(수행평가+일정)를 삭제할까요?\n(모든 가족 기기에서 삭제됩니다. 복구 불가)'))return;
+async function clearAll(){
+  // 아이가 실수로 지우지 못하게 부모 PIN 을 먼저 확인한다(허남원님 결정 2026-11-22)
+  if(!(await parentAuth()))return;
+  if(!(await askConfirm({title:'모든 데이터(수행평가+일정)를 삭제할까요?',desc:'모든 가족 기기에서 삭제됩니다. 복구할 수 없어요.',ok:'모두 삭제',danger:true})))return;
   S.items.forEach(i=>localStorage.removeItem('img_'+i.id));
   const ops=[
     ...S.items.map(i=>b=>b.delete(colRef().doc(i.id))),
     ...S.items.flatMap(i=>imgIdsOf(i).map(aid=>b=>b.delete(imgCol().doc(aid)))),
     ...S.events.map(e=>b=>b.delete(evtColRef().doc(e.id)))
   ];
-  batchWrite(ops).catch(e=>alert('오류: '+e.message));
+  batchWrite(ops).catch(e=>notify('오류: '+e.message,{kind:'error'}));
 }
 // Firestore 배치는 500건 제한 → 400건씩 나눠 커밋
 async function batchWrite(ops,size=400){
@@ -5764,11 +5773,10 @@ window.addEventListener('popstate', () => {
     return;
   }
   // 아무것도 열려있지 않으면 종료 확인
-  if(confirm('앱을 종료하시겠습니까?')){
-    history.go(-1);
-  } else {
-    history.pushState({page:'app'}, '', '');
-  }
+  askConfirm({title:'앱을 종료할까요?',ok:'종료'}).then(yes=>{
+    if(yes){history.go(-1);}
+    else{history.pushState({page:'app'}, '', '');}
+  });
 });
 
 

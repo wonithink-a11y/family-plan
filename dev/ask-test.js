@@ -403,7 +403,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await ev(async()=>{await routineRef().set({items:[{id:'a',text:'양치'},{id:'y',text:'또 다른 항목'}]});}); await page.waitForTimeout(300);
   await page.fill('.ask-rowin[data-r="0"]','덮어쓸 내용'); await page.click('.ask-ok'); await page.waitForTimeout(350);
   await page.click('[data-c="0"]'); await page.waitForTimeout(400);
-  ok(await ev(()=>S.routineItems.map(i=>i.text).join('|'))==='덮어쓸 내용|세수','"덮어쓰기"를 고르면 내가 연 시점의 내용(+고친 부분)으로 저장');
+  ok(await ev(()=>S.routineItems.map(i=>i.text).join('|'))==='덮어쓸 내용|다른 기기 항목','"덮어쓰기"를 고르면 내가 열 때의 목록(+고친 부분)으로 저장, 그 사이 다른 기기가 쓴 내용은 덮임');
   const fn=fs.readFileSync(path.join(root,'index.html'),'utf8').match(/async function editRoutine\(\)\{[\s\S]*?\n\}\n/)[0];
   ok(!/split\(','\)/.test(fn),'editRoutine 에 쉼표 분리 방식이 남아 있지 않음');
   await ev(()=>{document.querySelectorAll('#nt-stack,#nt-center').forEach(e=>e.remove());});

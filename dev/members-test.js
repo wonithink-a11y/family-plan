@@ -191,6 +191,7 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await page.click('.hf-lane:nth-of-type(2) .hf-lh .hf-ib:last-child'); await page.waitForTimeout(300);
   ok(await ev(()=>S.evtOverlay==='form'&&S.evtForm.person==='아버지'&&(document.getElementById('ef-person')||{}).value==='아버지'),'아빠 칸의 ＋ 버튼 → 일정 등록 폼에 담당 가족(아버지)이 채워짐');
   await ev(()=>closeEvtOverlay()); await page.waitForTimeout(300);
+  ok(await ev(()=>{const b=document.querySelector('.hf-kid .hf-cp');return !!b&&/구입권 \d+장/.test(b.textContent)&&b.getBoundingClientRect().height>=36;}),'딸 칸 머리에 책 구입권 개수(누르면 구입권 보기)');
   ok(await ev(()=>[...document.querySelectorAll('.hf-lane button')].every(b=>b.getBoundingClientRect().height>=36)),'칸 안 버튼 높이 36px 이상(머리 버튼·도장 버튼은 44px)');
   ok(await ev(()=>[...document.querySelectorAll('.hf-ib:not(.sm)')].every(b=>b.getBoundingClientRect().width>=44&&b.getAttribute('aria-label'))),'칸 머리 버튼은 44px 이상 + aria-label');
   // 설정에서 기능별로 되돌리기, 폰·세로 화면은 예전 배치

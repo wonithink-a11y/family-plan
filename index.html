@@ -2704,7 +2704,7 @@ function asTestMember(id){
 }
 function asTestVoice(){
   asCollectSettings(); A.mode='settings';asRender();
-  asSpeak('안녕하세요! 오늘 아침 브리핑을 들려드릴게요. 우산은 필요 없고, 가볍게 입고 가면 좋아요.',undefined,undefined,true);
+  asSpeak('오늘 브리핑은 이런 목소리로 들려 드려요. 우산은 필요 없고, 가볍게 입고 가면 좋아요.',undefined,undefined,true);
 }
 function asOpenExam(pub){window.open(pub?AS_EXAM_PUB:examUrl(),'_blank','noopener');}
 
@@ -4548,7 +4548,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.29';
+const APP_VER='v4.30';
 function syncBadge(){
   const m={synced:['sync-ok',(sdot('ok')+' 동기화')],connecting:['sync-conn',(uiIco('refresh',16)+' 연결중')],
     offline:['sync-off',(uiIco('wifiOff',16)+' 오프라인')],error:['sync-err',(sdot('err')+' 오류')]};

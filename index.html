@@ -2307,7 +2307,7 @@ function asListSpeech(dateStr){
 function asBriefSegs(){
   const now=new Date(), cfg=asCfg(), h=now.getHours(), w=S.wx, segs=[]; const P=(who,t)=>segs.push({who,text:t});
   const nm=cfg.name?cfg.name.trim()+asYoung(cfg.name)+', ':'';
-  P('lumi',nm+(h<11?'좋은 아침이에요!':h<17?'안녕하세요!':'좋은 저녁이에요!')+' 오늘은 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 '+AS_DOW[now.getDay()]+'요일이에요.');
+  P('lumi',nm+'오늘은 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 '+AS_DOW[now.getDay()]+'요일이에요.');
   if(w){
     let t='날씨는 '+w.now.label+', 지금 '+w.now.temp+'도예요.';
     if(w.min!==null&&w.max!==null)t+=' 오늘 최저 '+w.min+'도, 최고 '+w.max+'도예요.';
@@ -2318,7 +2318,6 @@ function asBriefSegs(){
   asKidParts(now).forEach(t=>P('kid',t));
   const sh=mbEvents('all',0); if(sh.length){const t=sh.map(mbLabel).join(', ');P('lumi','오늘 가족 일정은 '+t+asIyeyo(t)+'.');}
   members().forEach(m=>{const ev=mbEvents(m.id,0); if(ev.length)P(m.id,mbEventSentence(m,ev));});
-  P('lumi','오늘도 파이팅이에요!');
   return segs;
 }
 function asBriefing(){return asBriefSegs().map(x=>x.text).join('\n');}
@@ -4549,7 +4548,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.28';
+const APP_VER='v4.29';
 function syncBadge(){
   const m={synced:['sync-ok',(sdot('ok')+' 동기화')],connecting:['sync-conn',(uiIco('refresh',16)+' 연결중')],
     offline:['sync-off',(uiIco('wifiOff',16)+' 오프라인')],error:['sync-err',(sdot('err')+' 오류')]};

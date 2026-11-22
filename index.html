@@ -991,6 +991,38 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 :root[data-theme=dark] .wxi .n{stroke:#A5D8FF}:root[data-theme=dark] .wxi circle.n{fill:#A5D8FF}
 .w-wx-ic .wxi{width:1em;height:1em}
 .wall .wxi .s,.wall .wxi .t{stroke:#FCD34D}.wall .wxi .c{stroke:#C5CCEE}.wall .wxi .r{stroke:#7DB2FF}.wall .wxi .n{stroke:#A5D8FF}.wall .wxi circle.n{fill:#A5D8FF}
+/* ── 앱 안 입력 시트(askSheet, prompt() 대체) ── */
+:root{--ask-sheet:#fff;--ask-line:#DADDEE;--ask-field:#F4F5FB;--ask-t:#1A1A2E;--ask-sub:#5B6396;--ask-pri:#3B55C8;--ask-pri-t:#fff;--ask-err:#C62828;--ask-key:#EEF0FA;--ask-dot:#C5CAE6}
+:root[data-theme=dark]{--ask-sheet:#14182F;--ask-line:rgba(255,255,255,.14);--ask-field:rgba(255,255,255,.06);--ask-t:#ECEEF8;--ask-sub:#A9B1D6;--ask-pri:#818CF8;--ask-pri-t:#0A0E1F;--ask-err:#F87171;--ask-key:rgba(255,255,255,.08);--ask-dot:rgba(255,255,255,.28)}
+.ask-ov{position:fixed;left:0;right:0;top:0;height:100%;z-index:1000;display:flex;justify-content:center;align-items:flex-start;padding:min(10vh,88px) 16px 16px;background:rgba(5,8,20,.55);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+.ask-ov.open{opacity:1;pointer-events:all}
+.ask-ov.ask-pin{align-items:center;padding-top:16px}
+.ask-box{width:100%;max-width:420px;background:var(--ask-sheet);color:var(--ask-t);border:1px solid var(--ask-line);border-radius:24px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);transform:translateY(8px);transition:transform .2s;outline:none}
+.ask-ov.open .ask-box{transform:none}
+.ask-t{font-size:18px;font-weight:700;line-height:1.4}
+.ask-d{font-size:14px;line-height:1.5;color:var(--ask-sub);margin-top:4px;white-space:pre-line}
+.ask-l{display:block;font-size:13px;color:var(--ask-sub);margin:16px 0 4px}
+.ask-in{display:block;width:100%;min-height:48px;margin-top:16px;padding:12px 14px;font-size:16px;line-height:1.5;color:var(--ask-t);background:var(--ask-field);border:1px solid var(--ask-line);border-radius:14px;resize:none}
+.ask-l+.ask-in{margin-top:0}
+.ask-in:focus{border-color:var(--ask-pri)}
+.ask-err{min-height:20px;margin-top:12px;font-size:13px;line-height:1.5;color:var(--ask-err)}
+.ask-act{display:flex;gap:8px;margin-top:8px}
+.ask-act button{flex:1;min-height:48px;border-radius:14px;font-size:15px;font-weight:500;transition:transform .15s,background .15s}
+.ask-act button:active{transform:scale(.97)}
+.ask-ok{background:var(--ask-pri);color:var(--ask-pri-t)}
+.ask-cancel{background:var(--ask-key);color:var(--ask-t)}
+.ask-extra{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ask-ghost{min-height:44px;padding:0 16px;border:1px solid var(--ask-line);border-radius:14px;font-size:14px;color:var(--ask-t)}
+.ask-dots{display:flex;justify-content:center;gap:16px;margin:24px 0}
+.ask-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--ask-dot);transition:background .15s,border-color .15s}
+.ask-dots i.on{background:var(--ask-pri);border-color:var(--ask-pri)}
+.ask-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:300px;margin:0 auto}
+.ask-pad button{height:60px;border-radius:14px;font-size:26px;font-weight:500;color:var(--ask-t);background:var(--ask-key);display:flex;align-items:center;justify-content:center;transition:transform .12s,background .12s}
+.ask-pad button:active{transform:scale(.95);background:var(--ask-line)}
+.ask-pad button:disabled{opacity:.4}
+.ask-box.shake{animation:ask-shake .3s}
+@keyframes ask-shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.ask-ov,.ask-box,.ask-act button,.ask-pad button,.ask-dots i{transition:none}.ask-box.shake{animation:none}}
 </style>
 </head>
 <body>
@@ -1261,6 +1293,110 @@ async function sha256Hex(text){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('fp:'+S.familyCode+':'+text));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+
+/* ── 앱 안 입력 시트 (prompt() 대체) ──
+   render() 와 무관하게 body 에 직접 붙여서 onSnapshot 재렌더에도 입력이 사라지지 않는다. 한 번에 하나만 열고,
+   값(없으면 null=취소)을 돌려준다. 테스트는 window.__askAnswer 큐로 답을 미리 넣는다(null=취소). */
+let _askOpen=false,_pinFails=0,_pinLockUntil=0;
+const _askTest=()=>window.__askAnswer&&window.__askAnswer.length?window.__askAnswer.shift():undefined;
+const ASK_BACK='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z"/><path d="m12 9 5 6m0-6-5 6"/></svg>';
+function _askRun(o,pin){
+  return new Promise(resolve=>{
+    const prev=document.activeElement, fields=pin?[]:(o.fields||[]), extra=o.extra||[];
+    const ov=document.createElement('div'); ov.className='ask-ov'+(pin?' ask-pin':''); ov.id='ask-ov';
+    const fh=fields.map((f,i)=>{
+      const id='ask-f'+i, ph=esc(f.placeholder||''), val=esc(f.value==null?'':f.value);
+      const lab=f.label?`<label class="ask-l" for="${id}">${esc(f.label)}</label>`:'';
+      return lab+(f.type==='textarea'
+        ?`<textarea class="ask-in" id="${id}" rows="3" maxlength="${f.max||200}" placeholder="${ph}">${val}</textarea>`
+        :`<input class="ask-in" id="${id}" type="text"${f.type==='number'?' inputmode="numeric"':''} maxlength="${f.max||40}" value="${val}" placeholder="${ph}" autocomplete="off">`);
+    }).join('');
+    const pad=pin?`<div class="ask-dots" id="ask-dots" role="img" aria-label="입력한 자리 0/4">${'<i></i>'.repeat(4)}</div>
+<div class="ask-pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button type="button" data-k="${n}">${n}</button>`).join('')}<span></span><button type="button" data-k="0">0</button><button type="button" data-k="b" aria-label="지우기">${ASK_BACK}</button></div>`:'';
+    const ex=extra.length?`<div class="ask-extra">${extra.map((x,i)=>`<button type="button" class="ask-ghost" data-x="${i}">${esc(x.label)}</button>`).join('')}</div>`:'';
+    ov.innerHTML=`<div class="ask-box" role="dialog" aria-modal="true" aria-labelledby="ask-t" tabindex="-1">
+<h2 class="ask-t" id="ask-t">${esc(o.title||'')}</h2>${o.desc?`<p class="ask-d">${esc(o.desc)}</p>`:''}${fh}${pad}${ex}
+<div class="ask-err" role="alert" aria-live="polite"></div>
+<div class="ask-act"><button type="button" class="ask-cancel" data-a="c">취소</button>${pin?'':`<button type="button" class="ask-ok" data-a="o">${esc(o.ok||'확인')}</button>`}</div></div>`;
+    const box=ov.firstElementChild, vv=window.visualViewport; let done=false;
+    const fit=()=>{ov.style.height=(vv?vv.height:innerHeight)+'px';ov.style.top=(vv?vv.offsetTop:0)+'px';};
+    const setMsg=m=>{ov.querySelector('.ask-err').textContent=m||'';};
+    const shake=()=>{box.classList.remove('shake');void box.offsetWidth;box.classList.add('shake');};
+    const close=v=>{if(done)return;done=true;document.removeEventListener('keydown',onKey,true);clearTimeout(lockTimer);
+      if(vv){vv.removeEventListener('resize',fit);vv.removeEventListener('scroll',fit);}
+      ov.classList.remove('open');setTimeout(()=>ov.remove(),220);_askOpen=false;try{prev&&prev.focus&&prev.focus();}catch(e){}resolve(v);};
+    const submit=()=>{
+      const out=[];
+      for(let i=0;i<fields.length;i++){
+        const f=fields[i], el=ov.querySelector('#ask-f'+i); let v=el.value; if(f.trim!==false)v=v.trim();
+        const m=(f.required&&!v)?(f.requiredMsg||'내용을 입력해 주세요.'):(f.validate&&f.validate(v))||'';
+        if(m){setMsg(m);shake();el.focus();return;}
+        out.push(v);
+      }
+      close(fields.length===1?out[0]:out);
+    };
+    // PIN 키패드
+    let buf='',first=null,busy=false,lockTimer=null; const desc0=o.desc||'';
+    const lockLeft=()=>Math.max(0,Math.ceil((_pinLockUntil-Date.now())/1000));
+    const dots=()=>{const d=ov.querySelector('#ask-dots'); if(!d)return; [...d.children].forEach((c,i)=>c.classList.toggle('on',i<buf.length)); d.setAttribute('aria-label','입력한 자리 '+buf.length+'/4');};
+    const checkLock=()=>{
+      const s=lockLeft(), keys=ov.querySelectorAll('.ask-pad button'); keys.forEach(b=>{b.disabled=s>0;});
+      if(s>0){setMsg('여러 번 틀렸어요. '+s+'초 뒤에 다시 해 주세요.');clearTimeout(lockTimer);lockTimer=setTimeout(()=>{if(!done){setMsg('');checkLock();}},1000);}
+    };
+    const press=async k=>{
+      if(done||busy||lockLeft()>0)return;
+      if(k==='b'){buf=buf.slice(0,-1);dots();return;}
+      if(buf.length>=4)return; buf+=k; dots(); setMsg('');
+      if(buf.length<4)return;
+      busy=true; await new Promise(r=>setTimeout(r,o.noDelay?0:120));
+      try{
+        if(o.again&&first===null){first=buf;buf='';dots();ov.querySelector('.ask-d').textContent=o.again;}
+        else if(o.again&&buf!==first){first=null;buf='';dots();ov.querySelector('.ask-d').textContent=desc0;setMsg('서로 달라요. 처음부터 다시 입력해 주세요.');shake();}
+        else if(o.verify){
+          const m=await o.verify(buf);
+          if(m){buf='';dots();shake();if(++_pinFails>=5){_pinFails=0;_pinLockUntil=Date.now()+30000;checkLock();}else setMsg(m);}
+          else{_pinFails=0;close(buf);}
+        }else close(buf);
+      }catch(e){buf='';dots();setMsg('처리하지 못했어요. 다시 시도해 주세요.');}
+      busy=false;
+    };
+    function onKey(e){
+      if(e.key==='Escape'){e.preventDefault();close(null);return;}
+      if(pin&&/^\d$/.test(e.key)){e.preventDefault();press(e.key);return;}
+      if(pin&&e.key==='Backspace'){e.preventDefault();press('b');return;}
+      if(!pin&&e.key==='Enter'&&(e.target.tagName!=='TEXTAREA'||e.ctrlKey||e.metaKey)&&!e.target.closest('.ask-act,.ask-extra')){e.preventDefault();submit();return;}
+      if(e.key==='Tab'){
+        const els=[...box.querySelectorAll('button:not([disabled]),input,textarea')]; if(!els.length)return;
+        const i=els.indexOf(document.activeElement);
+        if(e.shiftKey&&i<=0){e.preventDefault();els[els.length-1].focus();}
+        else if(!e.shiftKey&&(i<0||i===els.length-1)){e.preventDefault();els[0].focus();}
+      }
+    }
+    ov.addEventListener('click',e=>{
+      if(e.target===ov){close(null);return;}
+      const b=e.target.closest('button'); if(!b)return;
+      if(b.dataset.a==='c')close(null);
+      else if(b.dataset.a==='o')submit();
+      else if(b.dataset.k!==undefined)press(b.dataset.k);
+      else if(b.dataset.x!==undefined){
+        const x=extra[+b.dataset.x];
+        if(x.resolve!==undefined)close(x.resolve);
+        else if(x.set){const el=ov.querySelector('#ask-f0'); if(el){el.value=x.set();el.focus();}}
+      }
+    });
+    document.addEventListener('keydown',onKey,true);
+    if(vv){vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);}
+    fit(); document.body.appendChild(ov);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.classList.add('open');
+      const f0=ov.querySelector('#ask-f0'); if(f0){f0.focus();try{f0.select();}catch(e){}}else box.focus();}));
+    if(pin)checkLock();
+  });
+}
+// fields:[{type:'text'|'number'|'textarea',label,value,placeholder,max,required,validate(v)→에러문구,trim}], extra:[{label,set()|resolve}]
+async function askSheet(o){const t=_askTest(); if(t!==undefined)return t; if(_askOpen)return null; _askOpen=true; return _askRun(o,false);}
+// {title,desc,again(두 번째 안내 문구),verify(pin)→에러문구|''} → PIN 4자리 문자열 또는 null
+async function askPin(o){const t=_askTest(); if(t!==undefined)return t; if(_askOpen)return null; _askOpen=true; return _askRun(o,true);}
+const askText=(title,o={})=>askSheet({title,desc:o.desc,ok:o.ok,extra:o.extra,fields:[{type:o.type||'text',label:o.label,value:o.value,placeholder:o.placeholder,max:o.max,required:o.required,requiredMsg:o.requiredMsg,validate:o.validate,trim:o.trim}]});
 
 // 부모 PIN 확인. 아이가 스스로 도장을 찍지 못하게 하는 용도 (가족 코드를 아는 사람에겐 완전한 보안이 아님)
 async function parentAuth(){

@@ -208,6 +208,24 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await page.setViewportSize({width:1280,height:800}); await page.waitForTimeout(400);
   ok(await ev(()=>!!document.querySelector('.home-fam')),'다시 가로로 돌리면 가족별 3칸으로 자동 전환');
 
+  console.log('\n[5c] 기능별 배치: 도장은 루틴 아래, 루미 카드는 아래 끝까지 / 머리 오른쪽 아이콘은 화면 모드');
+  await ev(()=>{setHomeLayout('function');setTab('stamp');}); await page.waitForTimeout(300);
+  const gm=await ev(()=>{const R=s=>{const e=document.querySelector(s);return e&&e.getBoundingClientRect();};const cols=[...document.querySelectorAll('.home-cols>*')];
+    const rt=cols.find(c=>/오늘 아침 루틴/.test(c.textContent)&&!c.classList.contains('st-card')), st=document.querySelector('.st-card'), lm=document.querySelector('.lm-card'), wx=document.querySelector('.bf');
+    const a=rt.getBoundingClientRect(), b=st.getBoundingClientRect(), c=lm.getBoundingClientRect(), d=wx.getBoundingClientRect();
+    return{stBelowRt:b.top>=a.bottom-1&&Math.abs(b.left-a.left)<3,lmBottomEqSt:Math.abs(c.bottom-b.bottom)<3,lmUnderWx:c.top>=d.bottom-1&&Math.abs(c.left-d.left)<3,lmTallerThanWx:c.height>d.height,page:document.documentElement.scrollHeight<=innerHeight+2,lmH:Math.round(c.height),wxH:Math.round(d.height)};});
+  ok(gm.stBelowRt,'칭찬 도장 카드가 오늘 아침 루틴 바로 아래(같은 세로줄)에 있음');
+  ok(gm.lmBottomEqSt&&gm.lmUnderWx&&gm.lmTallerThanWx,'루미에게 말해 보세요 카드가 날씨 아래에서 맨 아래 줄 끝까지 길게 이어짐 '+JSON.stringify(gm));
+  ok(gm.page,'기능별 배치도 한 화면에 들어감');
+  await page.screenshot({path:path.join(tmp,'mb_home_function.png')});
+  await ev(()=>{window.__briefN=0;const o=asBrief;window.asBrief=function(){window.__briefN++;return o.apply(this,arguments);};S.theme='auto';applyPrefs();render();});
+  const seq=[]; for(let i=0;i<3;i++){ await page.click('.hh-right .hh-ic:first-child'); await page.waitForTimeout(150); seq.push(await ev(()=>S.theme+'|'+document.querySelector('.hh-right .hh-ic').getAttribute('aria-label'))); }
+  ok(seq[0].startsWith('light|')&&seq[1].startsWith('dark|')&&seq[2].startsWith('auto|'),'머리 오른쪽 아이콘을 누를 때마다 자동 → 라이트 → 다크 → 자동: '+seq.join(' / '));
+  ok(/화면 모드: 자동/.test(seq[2])&&/화면 모드: 라이트/.test(seq[0])&&/화면 모드: 다크/.test(seq[1]),'버튼 이름에 현재 모드가 나옴(aria-label)');
+  ok(await ev(()=>window.__briefN)===0,'그 아이콘은 더 이상 브리핑을 읽지 않음(마이크와 다른 기능)');
+  ok(await ev(()=>/브리핑 듣기/.test(document.querySelector('.bf').textContent)),'브리핑은 날씨 카드의 "브리핑 듣기"로 계속 가능');
+  await ev(()=>{S.theme='auto';applyPrefs();setHomeLayout('family');});
+
   console.log('\n[6] 루미 대화: 한 사람 일정 → 그 사람 목소리, 일정 등록');
   await ev(SEED); await ev(()=>{S.events=S.events.map(e=>e.id==='x1'?{...e,person:'아버지'}:e);});   // 앞 단계가 오래 걸리면 스텁 구독이 일정을 덮어쓰므로 다시 심는다
   await ev(()=>{asSetCfg({wallLayout:'lanes'});asClose();asOpen();});

@@ -1023,6 +1023,23 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 .ask-box.shake{animation:ask-shake .3s}
 @keyframes ask-shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 @media (prefers-reduced-motion:reduce){.ask-ov,.ask-box,.ask-act button,.ask-pad button,.ask-dots i{transition:none}.ask-box.shake{animation:none}}
+
+/* ── 토스트·확인 시트 보조 ── */
+:root{--nt-bg:#1F2540;--nt-t:#fff;--nt-ok:#4ADE80;--nt-info:#A5B4FC;--nt-warn:#FDBA74;--nt-err:#FCA5A5;--ask-danger:#C62828;--ask-danger-t:#fff}
+:root[data-theme=dark]{--nt-bg:#262C4D;--nt-t:#ECEEF8;--ask-danger:#F87171;--ask-danger-t:#0A0E1F}
+#nt-stack{position:fixed;left:0;right:0;bottom:24px;z-index:995;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
+@media (max-width:999px){#nt-stack{bottom:calc(84px + var(--safe-bot))}}
+.nt{pointer-events:auto;display:flex;align-items:center;gap:12px;max-width:min(440px,100%);padding:12px 16px;background:var(--nt-bg);color:var(--nt-t);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 10px 30px rgba(10,12,34,.4);font-size:14px;line-height:1.5;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
+.nt.on{opacity:1;transform:none}
+.nt-i{flex:none}.nt-ok .nt-i{color:var(--nt-ok)}.nt-info .nt-i{color:var(--nt-info)}.nt-warn .nt-i{color:var(--nt-warn)}.nt-error .nt-i{color:var(--nt-err)}
+.nt-t{white-space:pre-line;word-break:keep-all;overflow-wrap:anywhere}
+.nt-x{flex:none;width:44px;height:44px;margin:-10px -12px -10px 0;display:flex;align-items:center;justify-content:center;color:var(--nt-t);opacity:.8}
+.ask-stack{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.ask-stack button{min-height:48px;border-radius:14px;font-size:15px;font-weight:500;transition:transform .15s}
+.ask-stack button:active{transform:scale(.97)}
+.ask-ok.ask-danger{background:var(--ask-danger);color:var(--ask-danger-t)}
+.ask-err.good{color:var(--ask-sub)}
+@media (prefers-reduced-motion:reduce){.nt{transition:none}}
 </style>
 </head>
 <body>
@@ -1294,15 +1311,29 @@ async function sha256Hex(text){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
+/* ── 토스트 (alert() 대체: 화면을 막지 않는 안내) ── */
+const NT_ICO={ok:'<path d="M20 6 9 17l-5-5"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',warn:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',error:'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>'};
+function notify(msg,o={}){
+  const kind=NT_ICO[o.kind]?o.kind:'info', ms=o.ms||{ok:2500,info:3500,warn:5000,error:8000}[kind];
+  let st=document.getElementById('nt-stack'); if(!st){st=document.createElement('div');st.id='nt-stack';document.body.appendChild(st);}
+  while(st.children.length>=3)st.firstElementChild.remove();
+  const el=document.createElement('div'); el.className='nt nt-'+kind; el.setAttribute('role',kind==='error'||kind==='warn'?'alert':'status');
+  el.innerHTML=`<svg class="nt-i" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NT_ICO[kind]}</svg><span class="nt-t">${esc(msg)}</span>${kind==='error'||kind==='warn'?'<button type="button" class="nt-x" aria-label="닫기"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>':''}`;
+  const rm=()=>{clearTimeout(el._t);el.classList.remove('on');setTimeout(()=>el.remove(),200);};
+  const x=el.querySelector('.nt-x'); if(x)x.onclick=rm;
+  st.appendChild(el); requestAnimationFrame(()=>el.classList.add('on')); el._t=setTimeout(rm,ms);
+  return el;
+}
+
 /* ── 앱 안 입력 시트 (prompt() 대체) ──
    render() 와 무관하게 body 에 직접 붙여서 onSnapshot 재렌더에도 입력이 사라지지 않는다. 한 번에 하나만 열고,
    값(없으면 null=취소)을 돌려준다. 테스트는 window.__askAnswer 큐로 답을 미리 넣는다(null=취소). */
 let _askOpen=false,_pinFails=0,_pinLockUntil=0;
-const _askTest=()=>window.__askAnswer&&window.__askAnswer.length?window.__askAnswer.shift():(typeof window.__askAuto==='function'?window.__askAuto():undefined);  // 테스트용: 큐 → 자동 답
+const _askTest=k=>window.__askAnswer&&window.__askAnswer.length?window.__askAnswer.shift():(typeof window.__askAuto==='function'?window.__askAuto(k):undefined);  // 테스트용: 큐 → 자동 답
 const ASK_BACK='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z"/><path d="m12 9 5 6m0-6-5 6"/></svg>';
 function _askRun(o,pin){
   return new Promise(resolve=>{
-    const prev=document.activeElement, fields=pin?[]:(o.fields||[]), extra=o.extra||[];
+    const prev=document.activeElement, choices=o.choices||null, fields=(pin||choices)?[]:(o.fields||[]), extra=o.extra||[], cancelV=o.cancelValue===undefined?null:o.cancelValue;
     const ov=document.createElement('div'); ov.className='ask-ov'+(pin?' ask-pin':''); ov.id='ask-ov';
     const fh=fields.map((f,i)=>{
       const id='ask-f'+i, ph=esc(f.placeholder||''), val=esc(f.value==null?'':f.value);
@@ -1317,10 +1348,14 @@ function _askRun(o,pin){
     ov.innerHTML=`<div class="ask-box" role="dialog" aria-modal="true" aria-labelledby="ask-t" tabindex="-1">
 <h2 class="ask-t" id="ask-t">${esc(o.title||'')}</h2>${o.desc?`<p class="ask-d">${esc(o.desc)}</p>`:''}${fh}${pad}${ex}
 <div class="ask-err" role="alert" aria-live="polite"></div>
-<div class="ask-act"><button type="button" class="ask-cancel" data-a="c">취소</button>${pin?'':`<button type="button" class="ask-ok" data-a="o">${esc(o.ok||'확인')}</button>`}</div></div>`;
+${choices?(o.stack
+  ?`<div class="ask-stack">${choices.map((c,i)=>`<button type="button" class="${c.danger?'ask-ok ask-danger':'ask-ok'}" data-c="${i}">${esc(c.label)}</button>`).join('')}${o.noCancel?'':`<button type="button" class="ask-cancel" data-a="c">${esc(o.cancel||'취소')}</button>`}</div>`
+  :`<div class="ask-act">${o.noCancel?'':`<button type="button" class="ask-cancel" data-a="c">${esc(o.cancel||'취소')}</button>`}${choices.map((c,i)=>`<button type="button" class="${c.danger?'ask-ok ask-danger':'ask-ok'}" data-c="${i}">${esc(c.label)}</button>`).join('')}</div>`)
+  :`<div class="ask-act"><button type="button" class="ask-cancel" data-a="c">취소</button>${pin?'':`<button type="button" class="ask-ok" data-a="o">${esc(o.ok||'확인')}</button>`}</div>`}</div>`;
     const box=ov.firstElementChild, vv=window.visualViewport; let done=false;
     const fit=()=>{ov.style.height=(vv?vv.height:innerHeight)+'px';ov.style.top=(vv?vv.offsetTop:0)+'px';};
-    const setMsg=m=>{ov.querySelector('.ask-err').textContent=m||'';};
+    const setMsg=(m,good)=>{const e=ov.querySelector('.ask-err');e.textContent=m||'';e.classList.toggle('good',!!good);};
+    const cancel=()=>close(cancelV);
     const shake=()=>{box.classList.remove('shake');void box.offsetWidth;box.classList.add('shake');};
     const close=v=>{if(done)return;done=true;document.removeEventListener('keydown',onKey,true);clearTimeout(lockTimer);
       if(vv){vv.removeEventListener('resize',fit);vv.removeEventListener('scroll',fit);}
@@ -1361,7 +1396,7 @@ function _askRun(o,pin){
       busy=false;
     };
     function onKey(e){
-      if(e.key==='Escape'){e.preventDefault();close(null);return;}
+      if(e.key==='Escape'){e.preventDefault();cancel();return;}
       if(pin&&/^\d$/.test(e.key)){e.preventDefault();press(e.key);return;}
       if(pin&&e.key==='Backspace'){e.preventDefault();press('b');return;}
       if(!pin&&e.key==='Enter'&&(e.target.tagName!=='TEXTAREA'||e.ctrlKey||e.metaKey)&&!e.target.closest('.ask-act,.ask-extra')){e.preventDefault();submit();return;}
@@ -1373,14 +1408,16 @@ function _askRun(o,pin){
       }
     }
     ov.addEventListener('click',e=>{
-      if(e.target===ov){close(null);return;}
+      if(e.target===ov){cancel();return;}
       const b=e.target.closest('button'); if(!b)return;
-      if(b.dataset.a==='c')close(null);
+      if(b.dataset.a==='c')cancel();
+      else if(b.dataset.c!==undefined)close(choices[+b.dataset.c].value);
       else if(b.dataset.a==='o')submit();
       else if(b.dataset.k!==undefined)press(b.dataset.k);
       else if(b.dataset.x!==undefined){
         const x=extra[+b.dataset.x];
-        if(x.resolve!==undefined)close(x.resolve);
+        if(x.fn){Promise.resolve(x.fn()).then(r=>{if(typeof r==='string')setMsg(r,true);});}
+        else if(x.resolve!==undefined)close(x.resolve);
         else if(x.set){const el=ov.querySelector('#ask-f0'); if(el){el.value=x.set();el.focus();}}
       }
     });
@@ -1388,14 +1425,33 @@ function _askRun(o,pin){
     if(vv){vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);}
     fit(); document.body.appendChild(ov);
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.classList.add('open');
-      const f0=ov.querySelector('#ask-f0'); if(f0){f0.focus();try{f0.select();}catch(e){}}else box.focus();}));
+      const f0=ov.querySelector('#ask-f0');
+      if(f0){f0.focus();try{f0.select();}catch(e){}}
+      else if(choices){const t=(o.focus==='cancel'||choices.some(c=>c.danger))?ov.querySelector('.ask-cancel')||ov.querySelector('[data-c]'):ov.querySelector('[data-c]');t.focus();}
+      else box.focus();}));
     if(pin)checkLock();
   });
 }
 // fields:[{type:'text'|'number'|'textarea',label,value,placeholder,max,required,validate(v)→에러문구,trim}], extra:[{label,set()|resolve}]
-async function askSheet(o){const t=_askTest(); if(t!==undefined)return t; if(_askOpen)return null; _askOpen=true; return _askRun(o,false);}
+async function askSheet(o){const t=_askTest('text'); if(t!==undefined)return t; if(_askOpen)return null; _askOpen=true; return _askRun(o,false);}
 // {title,desc,again(두 번째 안내 문구),verify(pin)→에러문구|''} → PIN 4자리 문자열 또는 null
-async function askPin(o){const t=_askTest(); if(t!==undefined){if(t!==null&&o.verify&&await o.verify(t))return null; return t;} if(_askOpen)return null; _askOpen=true; return _askRun(o,true);}
+async function askPin(o){const t=_askTest('pin'); if(t!==undefined){if(t!==null&&o.verify&&await o.verify(t))return null; return t;} if(_askOpen)return null; _askOpen=true; return _askRun(o,true);}
+// 확인·선택·안내 모달: 다른 시트가 열려 있으면 순서대로 기다린다(조용히 취소되면 안 되므로)
+let _askQ=Promise.resolve();
+function _askModal(o){
+  const p=_askQ.then(async()=>{while(_askOpen)await new Promise(r=>setTimeout(r,50)); _askOpen=true; return _askRun(o,false);});
+  _askQ=p.catch(()=>{}); return p;
+}
+// 예/아니오 → true/false. danger 이면 기본 포커스가 취소(Enter 로 실수 삭제 방지)
+async function askConfirm(o){const t=_askTest('confirm'); if(t!==undefined)return !!t;
+  return !!(await _askModal({title:o.title,desc:o.desc,cancel:o.cancel,cancelValue:false,choices:[{label:o.ok||'확인',value:true,danger:!!o.danger}]}));}
+// choices:[{label,value,danger}] → 고른 value 또는 null(취소). 세로 버튼
+async function askChoice(o){const t=_askTest('choice'); if(t!==undefined){if(t===null)return null; return o.choices.some(c=>c.value===t)?t:o.choices[0].value;}
+  return _askModal({title:o.title,desc:o.desc,cancel:o.cancel,stack:true,choices:o.choices});}
+// 읽고 닫는 안내. copy 를 주면 복사 버튼이 생긴다
+async function askInfo(o){const t=_askTest('info'); if(t!==undefined)return;
+  const extra=o.copy?[{label:'복사',fn:async()=>{try{await navigator.clipboard.writeText(o.copy);return '복사했어요.';}catch(e){return '복사하지 못했어요. 직접 선택해 주세요.';}}}]:[];
+  await _askModal({title:o.title,desc:o.desc,noCancel:true,cancelValue:true,extra,choices:[{label:'확인',value:true}]});}
 const askText=(title,o={})=>askSheet({title,desc:o.desc,ok:o.ok,extra:o.extra,fields:[{type:o.type||'text',label:o.label,value:o.value,placeholder:o.placeholder,max:o.max,required:o.required,requiredMsg:o.requiredMsg,validate:o.validate,trim:o.trim}]});
 
 // 부모 PIN 확인. 아이가 스스로 도장을 찍지 못하게 하는 용도 (가족 코드를 아는 사람에겐 완전한 보안이 아님)

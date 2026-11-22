@@ -14,7 +14,7 @@ fs.writeFileSync(path.join(tmp,'index.html'),html);
   const errs=[]; const base='file://'+path.join(tmp,'index.html');
   async function open(url,vp,name,fn){
     const ctx=await browser.newContext({viewport:vp,deviceScaleFactor:2});
-    await ctx.addInitScript(()=>{localStorage.setItem('fc','TEST');window.prompt=()=>'1234';window.confirm=()=>true;});
+    await ctx.addInitScript(()=>{localStorage.setItem('fc','TEST');window.prompt=()=>'1234';window.__askAuto=()=>'1234';window.confirm=()=>true;});
     const page=await ctx.newPage();
     page.on('pageerror',e=>errs.push(name+': '+e.message));
     await page.goto(url); await page.waitForTimeout(700); if(fn)await fn(page);

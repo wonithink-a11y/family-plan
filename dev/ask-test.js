@@ -90,6 +90,26 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await ev(()=>{window.__askAnswer=['답1',null,'1234'];});
   ok(await ev(()=>askText('a'))==='답1'&&await ev(()=>askText('b'))===null&&await ev(()=>askPin({}))==='1234','큐에서 순서대로 답하고 null은 취소');
 
+  console.log('\n[8b] 실제 흐름: parentAuth (설정 → 틀림 → 맞음) / changePin');
+  await ev(()=>{S.reward=Object.assign({},S.reward,{pinHash:''});_pinUntil=0;window.__r=undefined;parentAuth().then(v=>{window.__r=v;});}); await page.waitForTimeout(150);
+  ok(await page.locator('.ask-t').textContent()==='부모 PIN 설정','PIN이 없으면 설정 시트');
+  for(const k of '1234')await page.click(`[data-k="${k}"]`); await page.waitForTimeout(250);
+  for(const k of '1234')await page.click(`[data-k="${k}"]`); await page.waitForTimeout(500);
+  ok(await ev(()=>window.__r)===true,'설정 완료 → 인증 통과');
+  const hash=await ev(()=>{const e=Object.entries(window.__store).find(([k])=>k.includes('meta/reward'));return e&&e[1].pinHash;}); ok(hash&&hash.length===64,'PIN 해시가 Firestore(meta/reward)에 저장됨');
+  await ev(async h=>{S.reward=Object.assign({},S.reward,{pinHash:h});_pinUntil=0;window.__r=undefined;parentAuth().then(v=>{window.__r=v;});},hash); await page.waitForTimeout(150);
+  ok(await page.locator('.ask-t').textContent()==='부모 PIN','PIN이 있으면 입력 시트');
+  for(const k of '0000')await page.click(`[data-k="${k}"]`); await page.waitForTimeout(400);
+  ok(await ev(()=>window.__r===undefined&&document.querySelector('.ask-err').textContent.includes('맞지')),'틀린 PIN은 시트 유지');
+  for(const k of '1234')await page.click(`[data-k="${k}"]`); await page.waitForTimeout(500);
+  ok(await ev(()=>window.__r)===true,'맞는 PIN → 통과(5분 유지)');
+  ok(await ev(()=>parentAuth()),'5분 안에는 다시 묻지 않음');
+  await ev(()=>{_pinUntil=0;window.__r=undefined;changePin().then(()=>{window.__r='end';});}); await page.waitForTimeout(150);
+  for(const k of '1234')await page.click(`[data-k="${k}"]`); await page.waitForTimeout(500);
+  ok(await page.locator('.ask-t').textContent()==='새 PIN','현재 PIN 확인 뒤 새 PIN 시트');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+  ok(await ev(()=>window.__r)==='end','새 PIN 입력을 취소하면 아무것도 바꾸지 않고 끝남');
+
   console.log('\n[9] 화면 확인 (가짜 서버 기준 캡처)');
   const shots=[[1138,712,'light'],[1138,712,'dark'],[390,844,'light'],[390,844,'dark']];
   for(const [w,h,th] of shots){

@@ -79,7 +79,7 @@ const MOCK=`
   // 알림·서비스워커
   Object.defineProperty(window,'Notification',{configurable:true,writable:true,value:{permission:'default',requestPermission:async()=>'granted'}});
   Object.defineProperty(navigator,'serviceWorker',{configurable:true,value:{ready:Promise.resolve({}),register:()=>Promise.resolve({})}});
-  window.prompt=()=>'1234';window.confirm=()=>true;
+  window.prompt=()=>'1234';window.__askAuto=()=>'1234';window.confirm=()=>true;
 })();`;
 
 let fails=0; const errs=[];

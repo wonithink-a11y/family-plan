@@ -1298,7 +1298,7 @@ async function sha256Hex(text){
    render() 와 무관하게 body 에 직접 붙여서 onSnapshot 재렌더에도 입력이 사라지지 않는다. 한 번에 하나만 열고,
    값(없으면 null=취소)을 돌려준다. 테스트는 window.__askAnswer 큐로 답을 미리 넣는다(null=취소). */
 let _askOpen=false,_pinFails=0,_pinLockUntil=0;
-const _askTest=()=>window.__askAnswer&&window.__askAnswer.length?window.__askAnswer.shift():undefined;
+const _askTest=()=>window.__askAnswer&&window.__askAnswer.length?window.__askAnswer.shift():(typeof window.__askAuto==='function'?window.__askAuto():undefined);  // 테스트용: 큐 → 자동 답
 const ASK_BACK='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z"/><path d="m12 9 5 6m0-6-5 6"/></svg>';
 function _askRun(o,pin){
   return new Promise(resolve=>{
@@ -1395,7 +1395,7 @@ function _askRun(o,pin){
 // fields:[{type:'text'|'number'|'textarea',label,value,placeholder,max,required,validate(v)→에러문구,trim}], extra:[{label,set()|resolve}]
 async function askSheet(o){const t=_askTest(); if(t!==undefined)return t; if(_askOpen)return null; _askOpen=true; return _askRun(o,false);}
 // {title,desc,again(두 번째 안내 문구),verify(pin)→에러문구|''} → PIN 4자리 문자열 또는 null
-async function askPin(o){const t=_askTest(); if(t!==undefined)return t; if(_askOpen)return null; _askOpen=true; return _askRun(o,true);}
+async function askPin(o){const t=_askTest(); if(t!==undefined){if(t!==null&&o.verify&&await o.verify(t))return null; return t;} if(_askOpen)return null; _askOpen=true; return _askRun(o,true);}
 const askText=(title,o={})=>askSheet({title,desc:o.desc,ok:o.ok,extra:o.extra,fields:[{type:o.type||'text',label:o.label,value:o.value,placeholder:o.placeholder,max:o.max,required:o.required,requiredMsg:o.requiredMsg,validate:o.validate,trim:o.trim}]});
 
 // 부모 PIN 확인. 아이가 스스로 도장을 찍지 못하게 하는 용도 (가족 코드를 아는 사람에겐 완전한 보안이 아님)
@@ -1403,19 +1403,15 @@ async function parentAuth(){
   if(Date.now()<_pinUntil)return true;
   const r=S.reward||{};
   if(!r.pinHash){
-    const p1=prompt('부모 PIN(숫자 4자리)을 처음 설정해요.\n도장 찍기, 구입권 사용, 루틴 편집에 필요해요.');
+    const p1=await askPin({title:'부모 PIN 설정',desc:'숫자 4자리를 정해 주세요.\n도장 찍기, 구입권 사용, 루틴 편집에 필요해요.',again:'확인을 위해 한 번 더 입력해 주세요.'});
     if(p1===null)return false;
-    if(!/^\d{4}$/.test(p1)){alert('숫자 4자리로 입력해 주세요.');return false;}
-    const p2=prompt('PIN을 한 번 더 입력해 주세요.');
-    if(p2!==p1){alert('PIN이 서로 달라요. 다시 시도해 주세요.');return false;}
     try{ await rewardRef().set({pinHash:await sha256Hex(p1)},{merge:true}); }
     catch(e){ alert('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); return false; }
     _pinUntil=Date.now()+5*60*1000;
     return true;
   }
-  const p=prompt('부모 PIN을 입력해 주세요.');
+  const p=await askPin({title:'부모 PIN',desc:'부모님이 입력해 주세요.',verify:async v=>(await sha256Hex(v))===r.pinHash?'':'PIN이 맞지 않아요.'});
   if(p===null)return false;
-  if(await sha256Hex(p)!==r.pinHash){alert('PIN이 맞지 않아요.');return false;}
   _pinUntil=Date.now()+5*60*1000;
   return true;
 }
@@ -1423,9 +1419,8 @@ async function parentAuth(){
 async function changePin(){
   _pinUntil=0;
   if(!(await parentAuth()))return;
-  const p1=prompt('새 PIN(숫자 4자리)을 입력해 주세요.');
+  const p1=await askPin({title:'새 PIN',desc:'바꿀 숫자 4자리를 입력해 주세요.',again:'확인을 위해 한 번 더 입력해 주세요.'});
   if(p1===null)return;
-  if(!/^\d{4}$/.test(p1)){alert('숫자 4자리로 입력해 주세요.');return;}
   try{ await rewardRef().set({pinHash:await sha256Hex(p1)},{merge:true}); alert('PIN을 바꿨어요.'); }
   catch(e){ alert('PIN을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
 }

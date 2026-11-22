@@ -25,7 +25,7 @@
 - AI 비서 호칭은 기본 "루미"(설정에서 변경 가능). 비서가 데이터를 **쓰는** 동작은 항상 확인을 거친 뒤 실행한다. 모델이 혼자 확정하는 경로를 만들지 않는다.
 
 ## 구조
-- 빌드 없음. 단일 `index.html`(바닐라 JS + CSS, 약 4,150줄) + `sw.js`(서비스워커) + `manifest.json`.
+- 빌드 없음. 단일 `index.html`(바닐라 JS + CSS, 약 6,200줄) + `sw.js`(서비스워커) + `manifest.json`.
 - 데이터: Firebase Firestore compat SDK 10.12.2. 프로젝트 `family-plan-11d44`. 가족 코드로 공유 (`families/{코드}/...`).
 - 배포: GitHub Pages. 주소 `https://wonithink-a11y.github.io/family-plan/` (경로에 저장소 이름이 붙는다).
 - `functions/` — FCM 푸시용 Cloud Function(`notifyPrep`). **미배포** (Blaze 요금제 필요).

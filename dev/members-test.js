@@ -162,7 +162,54 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   await page.screenshot({path:path.join(tmp,'mb_wall_portrait.png')});
   await page.setViewportSize({width:1280,height:800});
 
+  console.log('\n[5b] 우리집 탭 가족별 3칸 (가로 태블릿)');
+  await page.goto('file://'+path.join(tmp,'index_mb.html')); await page.waitForTimeout(900);
+  await ev(SEED); await ev(()=>{S.events=S.events.map(e=>e.id==='x1'?{...e,person:'아버지'}:e);setTab('stamp');render();}); await page.waitForTimeout(300);
+  ok(await ev(()=>document.querySelectorAll('.hf-lane').length)===3&&await ev(()=>!document.querySelector('.home-cols')),'가족별 3칸(아빠·엄마·딸), 기능별 칸은 안 나옴');
+  const hl=await ev(()=>[...document.querySelectorAll('.hf-lane')].map(l=>l.textContent));
+  ok(hl[0].includes('아버지')&&hl[0].includes('회의')&&hl[0].includes('출장'),'아빠 칸: 회의·출장');
+  ok(hl[1].includes('엄마')&&hl[1].includes('치과'),'엄마 칸: 치과');
+  ok(['서연','오늘 아침 루틴','수행평가','준비물 요청','칭찬 도장','도장 찍기'].every(k=>hl[2].includes(k)),'딸 칸: 루틴·수행평가·준비물·칭찬 도장(도장 찍기)');
+  ok(await ev(()=>{const t=document.querySelector('.hf-top');return !!t&&t.textContent.includes('가족 외식')&&!!t.querySelector('.orb')&&/브리핑 듣기/.test(t.textContent);}),'위 띠: 날씨·브리핑, 온 가족 일정, 루미 구슬');
+  const hfit=await ev(()=>({page:document.documentElement.scrollHeight<=innerHeight+2,over:[...document.querySelectorAll('.hf-col')].map(c=>c.scrollHeight-c.clientHeight)}));
+  ok(hfit.page&&hfit.over.every(o=>o<=2),'1280x800 한 화면에 잘림 없이 들어감 '+JSON.stringify(hfit));
+  await page.screenshot({path:path.join(tmp,'mb_home_lanes.png')});
+  await page.setViewportSize({width:1138,height:712}); await page.waitForTimeout(300);
+  const hfit2=await ev(()=>({page:document.documentElement.scrollHeight<=innerHeight+2,over:[...document.querySelectorAll('.hf-col')].map(c=>c.scrollHeight-c.clientHeight)}));
+  ok(hfit2.page&&hfit2.over.every(o=>o<=2),'1138x712(갤럭시 탭 S8+ 가로)에도 잘림 없이 들어감 '+JSON.stringify(hfit2));
+  await page.setViewportSize({width:1138,height:640}); await page.waitForTimeout(300);
+  const hfit3=await ev(()=>({strip:!!document.querySelector('.hf-top')&&getComputedStyle(document.querySelector('.hf-top')).display!=='none',over:[...document.querySelectorAll('.hf-col')].map(c=>c.scrollHeight-c.clientHeight)}));
+  ok(!hfit3.strip&&hfit3.over.every(o=>o<=2),'높이 640(주소창 있음)에서는 위 띠를 접어 딸 칸이 잘리지 않음 '+JSON.stringify(hfit3));
+  await page.setViewportSize({width:1280,height:800}); await page.waitForTimeout(300);
+  // 칸 안에서 조작
+  const d0=await ev(()=>Object.keys(S.routineDay.done||{}).length);
+  await page.click('.hf-kid .rt-row:not(.on)'); await page.waitForTimeout(400);
+  ok(await ev(()=>Object.keys(S.routineDay.done||{}).length)===d0+1,'딸 칸에서 루틴 항목을 누르면 체크됨');
+  await ev(()=>{window.__ttsVoices.length=0;});
+  await page.click('.hf-lane:nth-of-type(2) .hf-lh .hf-ib:first-child'); await page.waitForFunction(()=>window.__ttsVoices.length>=1,null,{timeout:8000});
+  ok(await ev(()=>window.__ttsVoices[0])==='Puck','아빠 칸 스피커 버튼 → 아빠 목소리로 읽음'); await ev(()=>{asStopSpeak();});
+  await page.click('.hf-lane:nth-of-type(2) .hf-lh .hf-ib:last-child'); await page.waitForTimeout(300);
+  ok(await ev(()=>S.evtOverlay==='form'&&S.evtForm.person==='아버지'&&(document.getElementById('ef-person')||{}).value==='아버지'),'아빠 칸의 ＋ 버튼 → 일정 등록 폼에 담당 가족(아버지)이 채워짐');
+  await ev(()=>closeEvtOverlay()); await page.waitForTimeout(300);
+  ok(await ev(()=>{const b=document.querySelector('.hf-kid .hf-cp');return !!b&&/구입권 \d+장/.test(b.textContent)&&b.getBoundingClientRect().height>=36;}),'딸 칸 머리에 책 구입권 개수(누르면 구입권 보기)');
+  ok(await ev(()=>[...document.querySelectorAll('.hf-lane button')].every(b=>b.getBoundingClientRect().height>=36)),'칸 안 버튼 높이 36px 이상(머리 버튼·도장 버튼은 44px)');
+  ok(await ev(()=>[...document.querySelectorAll('.hf-ib:not(.sm)')].every(b=>b.getBoundingClientRect().width>=44&&b.getAttribute('aria-label'))),'칸 머리 버튼은 44px 이상 + aria-label');
+  // 설정에서 기능별로 되돌리기, 폰·세로 화면은 예전 배치
+  await ev(()=>setTab('backup')); await page.waitForTimeout(250);
+  ok(await ev(()=>/가족별 3칸/.test(document.body.innerText)&&/기능별/.test(document.body.innerText)),'설정 탭에 "우리집 배치"(가족별 3칸/기능별) 선택이 있음');
+  await ev(()=>{setHomeLayout('function');setTab('stamp');}); await page.waitForTimeout(250);
+  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')&&JSON.parse(localStorage.getItem('fp_assist_cfg')).homeLayout==='function'),'"기능별"로 바꾸면 예전 배치(이 기기에만 저장)');
+  await ev(()=>setHomeLayout('family')); await page.waitForTimeout(250);
+  ok(await ev(()=>!!document.querySelector('.home-fam')),'다시 "가족별 3칸"');
+  await page.setViewportSize({width:390,height:844}); await page.waitForTimeout(400);
+  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')),'폰(390px)은 예전 1열 배치');
+  await page.setViewportSize({width:820,height:1180}); await page.waitForTimeout(400);
+  ok(await ev(()=>!!document.querySelector('.home-cols')&&!document.querySelector('.home-fam')),'세로 태블릿도 예전 배치');
+  await page.setViewportSize({width:1280,height:800}); await page.waitForTimeout(400);
+  ok(await ev(()=>!!document.querySelector('.home-fam')),'다시 가로로 돌리면 가족별 3칸으로 자동 전환');
+
   console.log('\n[6] 루미 대화: 한 사람 일정 → 그 사람 목소리, 일정 등록');
+  await ev(SEED); await ev(()=>{S.events=S.events.map(e=>e.id==='x1'?{...e,person:'아버지'}:e);});   // 앞 단계가 오래 걸리면 스텁 구독이 일정을 덮어쓰므로 다시 심는다
   await ev(()=>{asSetCfg({wallLayout:'lanes'});asClose();asOpen();});
   const send=async t=>{await page.fill('#lm-in',t);await page.press('#lm-in','Enter');await page.waitForFunction(()=>!A.busy&&A.stat==='',null,{timeout:8000});await page.waitForTimeout(80);};
   await send('아빠 일정 알려줘');

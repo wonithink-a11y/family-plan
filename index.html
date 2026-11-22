@@ -1079,6 +1079,54 @@ mark{background:#FFE08A;color:#222;border-radius:3px;padding:0 1px}
 .w-lane-ic{color:#ECEEF8}   /* 벽걸이는 항상 어두운 바탕이라 테마와 상관없이 밝은 선 */
 .w-lane-ic .ui-i,.as-mb-ic .ui-i{vertical-align:baseline}
 .w-exit,.w-layout{display:flex;align-items:center}
+/* ── 우리집 가족별 3칸 (가로 태블릿) ── */
+.home-fam{display:grid;grid-template-columns:1fr 1fr 2.2fr;grid-template-rows:auto minmax(0,1fr);gap:10px;flex:1;min-height:0;width:100%}
+.home-fam>*{margin:0!important;min-height:0;min-width:0}
+.home-fit .hf-top{grid-column:1 / -1;flex-direction:row;align-items:center;gap:18px;padding:6px 18px!important;overflow:hidden}
+.hf-wx{display:flex;align-items:center;gap:14px;flex:1.35;min-width:0}
+.hf-wx-ic{display:flex}.hf-wx-ic .wxi{width:42px;height:42px}
+.hf-wx-t{font-size:28px;font-weight:300;line-height:1.1;color:var(--text)}
+.hf-wx-t small{font-size:13px;color:var(--muted);margin-left:8px;font-weight:500}
+.hf-wx-s{font-size:12px;color:var(--muted);margin-top:2px}
+.hf-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.hf-shared{flex:1;min-width:0;padding-left:18px;border-left:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.hf-h{font-size:11px;letter-spacing:1px;color:var(--muted);font-weight:700;margin:2px 0 4px}
+.hf-h .ui-i{margin-right:4px}
+.hf-sh{display:flex;align-items:center;gap:8px;min-height:28px;text-align:left;font-size:13px;font-weight:600;color:var(--text);min-width:0}
+.hf-sh i{font-style:normal;font-size:11px;font-weight:800;color:#fff;border-radius:8px;padding:3px 7px;flex:none}
+.hf-sh span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hf-none{font-size:12px;color:var(--muted)}
+.hf-lumi{display:flex;align-items:center;gap:12px;flex:1.1;min-width:0;padding-left:18px;border-left:1px solid var(--border)}
+.hf-lumi .orb{width:56px;height:56px;flex:none}.hf-lumi .orb::after{inset:7px}.hf-lumi .orb-core{inset:13px}.hf-lumi .orb-core svg{width:26px;height:15px}
+.hf-lumi .lm-t{font-size:15px;font-weight:700}.hf-lumi .lm-act{margin-top:6px}
+.home-fit .hf-lane{border-top:3px solid var(--mc);padding:12px 16px!important;overflow:hidden}
+.hf-lh{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hf-lh b{font-size:20px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hf-cp{min-height:36px;padding:0 14px;border-radius:18px;background:rgba(129,140,248,.2);color:#C7D0FF;font-size:13px;font-weight:700;flex:none;white-space:nowrap}
+:root:not([data-theme=dark]) .hf-cp{background:#E8EBFF;color:#3B55C8}
+.hf-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text);flex:none}
+.hf-lh-act{display:flex;gap:6px;flex:none}
+.hf-ib{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(127,135,170,.14);color:var(--text)}
+.hf-ib:active{transform:scale(.95)}
+.hf-col{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:auto;scrollbar-width:none}
+.hf-col::-webkit-scrollbar{display:none}
+.hf-lane .as-row{padding:8px 0}
+.hf-kid-in{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.hf-pe{display:flex;align-items:center;gap:6px}
+.hf-ib.sm{width:36px;height:36px;border-radius:12px}
+.hf-stamp{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px 8px 12px;border:1px solid var(--border);border-radius:16px;background:rgba(127,135,170,.10);flex:none}
+.hf-st-open{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--text)}
+.hf-st-t{font-size:12px;font-weight:700;display:flex;align-items:baseline;gap:8px;color:var(--muted);white-space:nowrap;min-width:0}
+.hf-st-t b{font-size:15px;color:var(--text)}.hf-st-t em{font-style:normal;font-size:11px;font-weight:600;flex:1;min-width:0;text-align:right;overflow:hidden;text-overflow:ellipsis}
+.hf-stamp .st-btn{padding:10px 14px;font-size:13px;white-space:nowrap;flex:none}
+.hf-lane .rt-row{padding:4px 2px}
+.hf-lane .as-row{padding:5px 0}
+.hf-kid .rt-prog{display:none}
+.hf-lane .prep-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hf-lane .prep-i{min-width:0}
+.hf-lane .sec-btn{min-height:36px}.hf-lane .mini-btn{min-height:40px;padding-left:12px;padding-right:12px}
+.hf-lumi .lm-act button{min-height:40px;padding:0 14px;font-size:13px}
+@media (max-height:680px){.home-fit .hf-top{display:none}}   /* 주소창이 있는 낮은 화면: 위 띠를 접어 딸 칸이 안 잘리게(브리핑·루미는 위 오른쪽 버튼으로) */
 </style>
 </head>
 <body>
@@ -1878,6 +1926,42 @@ function routineProgress(){
 }
 
 function couponTicket(c){return `<div class="ticket${c.usedAt?' used':''}"><div class="ticket-l"><b>${c.no}</b><small>TICKET</small></div><div class="ticket-b"><div class="ticket-i"><div class="ticket-t">${esc(c.title)}</div><div class="ticket-s">${c.usedAt?'사용 '+fmtTs(c.usedAt):'발급 '+fmtTs(c.issuedAt)}</div></div>${c.usedAt?'':`<button class="use-btn" onclick="useCoupon('${esc(c.id)}')">사용하기</button>`}</div></div>`;}
+function prepRowHtml(p){const d=getDays(p.date);const act=d!==null&&d>=0&&!p.done;return`<div class="prep-row${p.done?' done':''}"><div class="prep-dd" style="background:${act?ddColor(d,'#5B7FFF'):'#C5C9DD'}">${act?ddLabel(d):p.done?'완료':'지남'}</div><div class="prep-i"><div class="prep-t">${esc(p.text)}</div><div class="prep-s">${fmt(p.date)}</div></div><button class="mini-btn" style="background:#E3F7EE;color:#0F9D6B" onclick="togglePrep('${esc(p.id)}')">${p.done?'되돌리기':'챙김'}</button><button class="mini-btn" style="background:#F3F4FA;color:#9AA0BD" onclick="deletePrep('${esc(p.id)}')">삭제</button></div>`;}
+/* ── 우리집 가족별 3칸 (가로 태블릿 1000px↑, 설정 "우리집 배치"에서 기능별로 되돌릴 수 있다) ── */
+const isHomeWide=()=>!!(window.matchMedia&&matchMedia('(min-width:1000px) and (orientation:landscape)').matches);
+function setHomeLayout(v){asSetCfg({homeLayout:v==='function'?'function':'family'});render();}
+function homeEvRow(x){return`<div class="as-row" onclick="openEvtDetail('${esc(x.id)}','${esc(x.from)}')"><span class="as-dd" style="background:${ddColor(x.d,x.color)}">${x.d===0&&x.time?esc(x.time):ddLabel(x.d)}</span><div class="as-ri"><div class="as-rt">${esc(x.title)}</div></div></div>`;}
+function homeTopStrip(){
+  const w=S.wx, nm=asName(), wake=!!asCfg().wakeWord, shared=mbEvents('all',7).slice(0,2);
+  const wx=w?`<div class="hf-wx"><span class="hf-wx-ic" aria-hidden="true">${wxIcon(w.now.icon)}</span><div><div class="hf-wx-t">${w.now.temp}°<small>${esc(w.now.label)}</small></div><div class="hf-wx-s">${w.min!==null?w.min+'° ~ '+w.max+'° · ':''}강수 ${w.popMax||0}%</div></div><div class="hf-chips"><span class="bf-chip">${esc(wxOutfit(w))}</span>${wxUmbrella(w)?'<span class="bf-chip rain">우산 챙기기</span>':''}</div><button class="sec-btn" onclick="asBrief()">브리핑 듣기</button></div>`
+    :`<div class="hf-wx"><div class="hf-wx-s">${esc(wxLine(null))}</div><button class="sec-btn" onclick="asBrief()">브리핑 듣기</button></div>`;
+  const sh=`<div class="hf-shared"><div class="hf-h">${uiIco('users',14)} 온 가족</div>${shared.length?shared.map(x=>`<button class="hf-sh" onclick="openEvtDetail('${esc(x.id)}','${esc(x.from)}')"><i style="background:${ddColor(x.d,x.color)}">${x.d===0&&x.time?esc(x.time):ddLabel(x.d)}</i><span>${esc(x.title)}</span></button>`).join(''):'<div class="hf-none">함께하는 일정이 없어요</div>'}</div>`;
+  const lm=`<div class="hf-lumi"><button class="orb" onclick="asOpen('listen')" aria-label="${esc(nm)}에게 말하기"><span class="orb-core"><svg aria-hidden="true" width="46" height="26" viewBox="0 0 70 40" fill="currentColor"><rect x="4" y="16" width="6" height="8" rx="3"/><rect x="15" y="9" width="6" height="22" rx="3"/><rect x="26" y="3" width="6" height="34" rx="3"/><rect x="37" y="11" width="6" height="18" rx="3"/><rect x="48" y="6" width="6" height="28" rx="3"/><rect x="59" y="14" width="6" height="12" rx="3"/></svg></span></button><div class="lm-body"><div class="lm-t">${wake?'“'+esc(nm)+'야” 하고 불러 보세요':esc(nm)+'에게 말해 보세요'}</div><div class="lm-act"><button onclick="asOpen()">질문하기</button><button onclick="asOpenExam(false)">문제은행</button></div></div></div>`;
+  return`<div class="sec hf-top">${wx}${sh}${lm}</div>`;
+}
+function homeStampRow(cnt,total,open){
+  const dots=Array.from({length:STAMPS_PER_COUPON},(_,i)=>`<i class="st-dot${i<cnt?' on':''}"></i>`).join('');
+  return`<div class="hf-stamp"><button class="hf-st-open" onclick="openCoupons()" aria-label="칭찬 도장 ${STAMPS_PER_COUPON}개 중 ${cnt}개, 누적 ${total}개, 책 구입권 ${open.length}장. 눌러서 구입권 보기"><span class="hf-st-t">칭찬 도장 <b>${cnt} / ${STAMPS_PER_COUPON}</b></span><span class="st-dots" aria-hidden="true">${dots}</span></button><button class="st-btn" onclick="stampFlow()">도장 찍기</button></div>`;
+}
+function buildHomeFamily(c){
+  const ms=members(), g=asAssessGroups();
+  const head=m=>`<div class="hf-lh"><span class="hf-ic" style="background:${m.color}33">${mbIcon(m,22)}</span><b>${esc(m.name)}</b>${m.id==='kid'&&c.open.length?`<button class="hf-cp" onclick="openCoupons()" aria-label="책 구입권 ${c.open.length}장, 눌러서 보기">구입권 ${c.open.length}장</button>`:''}<span class="hf-lh-act"><button class="hf-ib" onclick="asSpeakMember('${m.id}')" aria-label="${esc(m.name)} 일정 듣기">${uiIco('speaker',18)}</button><button class="hf-ib" onclick="openEvtAdd('${esc(m.name)}')" aria-label="${esc(m.name)} 일정 추가">${uiIco('plus',18)}</button></span></div>`;
+  const lane=m=>{
+    const evs=mbEvents(m.id,14);
+    if(m.id!=='kid')return`<div class="sec hf-lane" style="--mc:${m.color}">${head(m)}<div class="hf-h">오늘 · 다가오는 일정</div><div class="hf-col">${evs.length?evs.slice(0,8).map(homeEvRow).join(''):'<div class="no-data">예정된 일정이 없어요</div>'}</div></div>`;
+    const asRows=[...g.today,...g.soon,...g.late].slice(0,4);
+    return`<div class="sec hf-lane hf-kid" style="--mc:${m.color}">${head(m)}<div class="hf-kid-in">
+<div class="hf-col"><div class="sec-h"><div class="sec-t">오늘 아침 루틴</div><span class="hf-pe"><span class="sec-pill${c.rp.all?' ok':''}">${c.rp.n}/${c.rp.total}${c.rp.all?' 완료':''}</span><button class="hf-ib sm" onclick="editRoutine()" aria-label="루틴 항목 편집">${uiIco('edit',16)}</button></span></div>
+<div class="rt-prog"><div class="rt-prog-fill" style="width:${c.rp.total?Math.round(c.rp.n/c.rp.total*100):0}%"></div></div>${c.rtRows}
+${homeStampRow(c.cnt,c.total,c.open)}</div>
+<div class="hf-col"><div class="sec-h"><div class="sec-t">수행평가</div><button class="sec-btn" onclick="asOpen('listen')">${uiIco('mic',16)} 말로 등록</button></div>
+${asRows.length?asRows.map(asRowHtml).join(''):'<div class="no-data">마감이 다가오는 수행평가가 없어요</div>'}
+<div class="sec-h" style="margin-top:10px"><div class="sec-t">준비물 요청</div><button class="sec-btn" onclick="openPrep()">＋ 요청하기</button></div>
+${c.preps.length?c.preps.slice(0,4).map(prepRowHtml).join(''):'<div class="no-data">필요한 준비물을 날짜와 함께 요청해 보세요</div>'}</div>
+</div></div>`;
+  };
+  return`<div class="home-fam">${homeTopStrip()}${ms.map(lane).join('')}</div>`;
+}
 function buildStampView(){
   const r=S.reward||{};
   const total=r.stampCount||0;
@@ -1887,13 +1971,14 @@ function buildStampView(){
   const open=(S.coupons||[]).filter(c=>!c.usedAt);
   const today=todayStr();
   const preps=(S.preps||[]).filter(p=>p.date>=today||!p.done).sort((a,b)=>(a.done-b.done)||a.date.localeCompare(b.date)).slice(0,12);
-  const prepRow=p=>{const d=getDays(p.date);const act=d!==null&&d>=0&&!p.done;return`<div class="prep-row${p.done?' done':''}"><div class="prep-dd" style="background:${act?ddColor(d,'#5B7FFF'):'#C5C9DD'}">${act?ddLabel(d):p.done?'완료':'지남'}</div><div class="prep-i"><div class="prep-t">${esc(p.text)}</div><div class="prep-s">${fmt(p.date)}</div></div><button class="mini-btn" style="background:#E3F7EE;color:#0F9D6B" onclick="togglePrep('${esc(p.id)}')">${p.done?'되돌리기':'챙김'}</button><button class="mini-btn" style="background:#F3F4FA;color:#9AA0BD" onclick="deletePrep('${esc(p.id)}')">삭제</button></div>`;};
+  const prepRow=prepRowHtml;
   const log=(S.stamps||[]).slice(0,10).map(s=>`<div class="log-row"><span>${esc(s.reason)||'칭찬 도장'}</span><span>${fmt(s.date)}</span></div>`).join('');
+  const fam=asCfg().homeLayout!=='function'&&isHomeWide();
   return`
 ${buildClockHeader()}
 <div class="screen home-fit">
   ${S.rewardErr?`<div class="welcome-err" style="margin:0 0 14px">${esc(S.rewardErr)}</div>`:''}
-  <div class="home-cols">
+  ${fam?buildHomeFamily({rp,rtRows,cnt,total,open,preps}):`<div class="home-cols">
   ${buildBriefCard()}
   ${buildAssessCard()}
   ${buildLumiCard()}
@@ -1914,7 +1999,7 @@ ${buildClockHeader()}
     <div class="sec-h"><div class="sec-t">최근 도장</div></div>
     ${log||'<div class="no-data">아직 찍은 도장이 없어요</div>'}
   </div>
-  </div>
+  </div>`}
 </div>`;
 }
 
@@ -1959,7 +2044,7 @@ function buildWallView(){
 const AS_CFG_KEY='fp_assist_cfg';
 const AS_EXAM_ART='https://claude.ai/artifact/3WLAoQshgPRiSaFZXvAUR2'; // 아이가 쓰는 문제은행(AI 선생님 포함)
 const AS_EXAM_PUB='https://wonithink-a11y.github.io/exam/';
-const AS_CFG_DEF={name:'',voice:'Kore',ttsMode:'auto',autoBrief:true,briefTime:'07:40',weekdaysOnly:true,leave:'08:00',awakeMode:'window',awakeFrom:'07:40',awakeTo:'08:30',kmaKey:'',geminiKey:'',examUrl:'',asName:'루미',speed:1.15,agent:true,wakeWord:false,liveModel:'',push:false,vapid:'',deviceLabel:'',wallLayout:'lanes',multiVoice:true,lumiMode:'full'};
+const AS_CFG_DEF={name:'',voice:'Kore',ttsMode:'auto',autoBrief:true,briefTime:'07:40',weekdaysOnly:true,leave:'08:00',awakeMode:'window',awakeFrom:'07:40',awakeTo:'08:30',kmaKey:'',geminiKey:'',examUrl:'',asName:'루미',speed:1.15,agent:true,wakeWord:false,liveModel:'',push:false,vapid:'',deviceLabel:'',wallLayout:'lanes',multiVoice:true,lumiMode:'full',homeLayout:'family'};
 const AS_VOICES=[['Kore','Kore · 여성'],['Aoede','Aoede · 여성'],['Leda','Leda · 여성'],['Sulafat','Sulafat · 여성'],['Vindemiatrix','Vindemiatrix · 여성'],['Zephyr','Zephyr · 여성'],['Callirrhoe','Callirrhoe · 여성'],['Despina','Despina · 여성'],['Charon','Charon · 남성'],['Puck','Puck · 남성'],['Fenrir','Fenrir · 남성'],['Orus','Orus · 남성'],['Iapetus','Iapetus · 남성'],['Achird','Achird · 남성'],['Algenib','Algenib · 남성'],['Schedar','Schedar · 남성']];
 const WX_LAT=35.0226, WX_LON=126.7895; // 나주 빛가람동 (가든 앱과 같은 좌표)
 const AS_DOW='일월화수목금토';
@@ -3514,9 +3599,10 @@ function fpClockTick(){
   const l=document.getElementById('fp-leave'); if(l){const lv=asLeaveText(now); if(l.textContent!==lv)l.textContent=lv;}
 }
 setInterval(fpClockTick,10000);
+function asRowHtml(a){const c=getColor(a.subject);const b=dBadge(a.d,a.done,c);return`<div class="as-row${a.done?' done':''}" onclick="openDetail('${esc(a.id)}')"><span class="as-dd" style="background:${b.c}">${b.t}</span><div class="as-ri"><div class="as-rt"><i style="background:${c.accent}"></i>${esc(a.subject)} 수행평가</div><div class="as-rs">${a.left?esc(a.left)+' · ':''}${a.n}/${a.total} 완료 · ${fmt(a.date)}</div></div></div>`;}
 function buildAssessCard(){
   const g=asAssessGroups();
-  const row=a=>{const c=getColor(a.subject);const b=dBadge(a.d,a.done,c);return`<div class="as-row${a.done?' done':''}" onclick="openDetail('${esc(a.id)}')"><span class="as-dd" style="background:${b.c}">${b.t}</span><div class="as-ri"><div class="as-rt"><i style="background:${c.accent}"></i>${esc(a.subject)} 수행평가</div><div class="as-rs">${a.left?esc(a.left)+' · ':''}${a.n}/${a.total} 완료 · ${fmt(a.date)}</div></div></div>`;};
+  const row=asRowHtml;
   const rows=[...g.today,...g.soon,...g.late];
   return`<div class="sec">
   <div class="sec-h"><div class="sec-t">수행평가</div><button class="sec-btn" onclick="asOpen('listen')">${uiIco('mic',16)} 말로 등록</button></div>
@@ -4366,6 +4452,7 @@ function applyPrefs(){
 function setTheme(v){S.theme=v;try{localStorage.setItem('theme',v);}catch(e){}applyPrefs();render();}
 function setFs(v){S.fs=v;try{localStorage.setItem('fs',v);}catch(e){}applyPrefs();render();}
 if(window.matchMedia)matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(S.theme==='auto')applyPrefs();});
+if(window.matchMedia)matchMedia('(min-width:1000px) and (orientation:landscape)').addEventListener?.('change',()=>{if(S.tab==='stamp')render();});   // 우리집 배치(가족별 3칸/기능별 한 화면)가 화면 방향에 따라 바뀜
 applyPrefs();
 // 항목별 알림 on/off (가족 전체 기기에 동기화)
 function toggleItemAlarm(id){
@@ -4394,7 +4481,7 @@ function dBadge(days,allDone,sc){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // 인라인 핸들러에 문자열을 넣지 않고 함수로 호출 (따옴표 주입 방지)
 function showSyncError(){askInfo({title:'동기화 오류',desc:S.syncError||'오류가 발생했습니다.',copy:S.syncError||''});}
-const APP_VER='v4.25';
+const APP_VER='v4.26';
 function syncBadge(){
   const m={synced:['sync-ok',(sdot('ok')+' 동기화')],connecting:['sync-conn',(uiIco('refresh',16)+' 연결중')],
     offline:['sync-off',(uiIco('wifiOff',16)+' 오프라인')],error:['sync-err',(sdot('err')+' 오류')]};
@@ -4875,8 +4962,8 @@ function buildEvtFormSheet(){
 }
 
 function openEvtDetail(id,date){S.evtOverlay='detail';S.activeEvtId=id;S.activeEvtDate=date||null;renderEvtOverlay();}
-function openEvtAdd(){
-  S.evtForm={title:'',startDate:todayStr(),endDate:todayStr(),allDay:true,startTime:'',endTime:'',category:'일반',person:S.personFilter||'',color:'#FF6B8A',memo:''};
+function openEvtAdd(person){
+  S.evtForm={title:'',startDate:todayStr(),endDate:todayStr(),allDay:true,startTime:'',endTime:'',category:'일반',person:(typeof person==='string'?person:(S.personFilter||'')),color:'#FF6B8A',memo:''};
   S.evtOverlay='form';renderEvtOverlay();
 }
 function openEvtEdit(id){
@@ -5351,6 +5438,8 @@ function buildBackupView(){
     <div class="seg">${[['auto','자동'],['light','라이트'],['dark','다크']].map(([v,l])=>`<button class="${S.theme===v?'sel':''}" onclick="setTheme('${v}')">${l}</button>`).join('')}</div>
     <div class="f-label">글자 크기</div>
     <div class="seg">${[['sm','작게'],['md','보통'],['lg','크게'],['xl','아주 크게']].map(([v,l])=>`<button class="${S.fs===v?'sel':''}" onclick="setFs('${v}')">${l}</button>`).join('')}</div>
+    <div class="f-label">우리집 배치 <span style="font-size:calc(10px*var(--fs));font-weight:400;color:var(--muted)">(가로 태블릿에서만)</span></div>
+    <div class="seg">${[['family','가족별 3칸'],['function','기능별']].map(([v,l])=>`<button class="${(asCfg().homeLayout==='function'?'function':'family')===v?'sel':''}" onclick="setHomeLayout('${v}')">${l}</button>`).join('')}</div>
   </div>
   <div class="bk-section">
     <div class="bk-title">${uiIco('bell',16)} 알림</div>

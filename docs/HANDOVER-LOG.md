@@ -369,3 +369,10 @@
 - 캡처로 찾아 고친 것: 가이드 "전과목 공통" 카드의 별이 크림색 타일 위에서 안 보여 주황으로 지정. 설정 제목 아이콘 크기 불일치(위 크기 규칙).
 - 테스트: `dev/ask-test.js` [8l] — 우리집·일정(달력·목록)·수행평가(목록·통계·성적)·가이드·설정, 루미 시트 3종, 벽걸이(주소 `?view=wall`)에서 이모지와 `<svg` 글자가 보이는지 검사(하단 메뉴 `.nav-ico` 제외). 가짜 서버 기준.
 
+## 우리집 탭 가족별 3칸 (v4.26, 캐시 v35, 2026-11-22)
+- 선택: 후속 후보(자녀별 프로필·보상 상점·3칸·실기기 점검표) 중 허남원님이 "우리집 탭 가족별 3칸"을 골랐다. 되돌릴 수 있게 설정 항목을 두었다.
+- 구조: `buildStampView`가 `asCfg().homeLayout!=='function'&&isHomeWide()`이면 `buildHomeFamily`(`.home-fam` 그리드 `1fr 1fr 2.2fr`, 행 `auto 1fr`)를, 아니면 예전 `.home-cols`를 그린다. `isHomeWide()`는 `matchMedia('(min-width:1000px) and (orientation:landscape)')`이고 변경 리스너가 우리집 탭을 다시 그린다(CSS만으로 못 하는 이유: 두 배치의 DOM이 다름). 기존 `.home-cols>:nth-child(n)` 그리드 규칙과 겹치지 않게 다른 컨테이너(`.home-fam`)를 쓴다.
+- 재사용: 행 마크업을 `asRowHtml`(수행평가)·`prepRowHtml`(준비물)로 분리해 두 배치가 같이 쓴다. 새 조각: `homeTopStrip`(날씨·브리핑 / 온 가족 `mbEvents('all',7)` 2개 / 루미 구슬), `homeEvRow`(칸 안 일정 행, 눌러서 `openEvtDetail`), `homeStampRow`(도장 점 + 도장 찍기, `buildStampCard`의 한 줄 버전). 칸 머리는 `mbIcon` + 이름 + 스피커(`asSpeakMember`) + ＋(`openEvtAdd(이름)`, 담당 가족 미리 채움 — `openEvtAdd`에 선택 인자 추가).
+- 크기 맞추기: 1138×712에서 딸 칸이 넘쳐서 위 띠 높이를 줄이고(온 가족 2개), 루틴 진행 막대·루틴 편집 버튼(→ 연필 아이콘)·도장 카드(→ 한 줄)를 줄였다. 준비물 글자는 한 줄(말줄임). 높이 680px 이하는 위 띠를 접는다(`@media (max-height:680px)`). 처음에 `.home-fit .sec{display:flex;flex-direction:column}`이 `.hf-top`의 가로 배치를 덮어서 띠가 세로로 길어졌고, 선택자를 `.home-fit .hf-top`으로 올려 해결했다.
+- 테스트: `dev/members-test.js` [5b](3칸 구성·내용, 1280×800·1138×712·1138×640 잘림 없음, 칸에서 루틴 체크·아빠 목소리 읽기·＋로 담당 가족 채운 폼, 버튼 크기·aria, 설정 전환·저장, 폰·세로는 예전 배치, 가로로 돌리면 자동 전환). `assist-test`의 날씨 카드 검사는 가족별 위 띠도 허용하도록 고쳤다. 가짜 서버 기준. 참고: `members-test`의 `SEED`는 메모리에만 심겨서 앞 단계가 오래 걸리면 스텁 구독이 일정을 덮어쓰므로 [6] 시작에서 다시 심는다.
+

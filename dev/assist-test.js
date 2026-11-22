@@ -165,6 +165,8 @@ const ok=(c,m)=>{console.log((c?'  ✓ ':'  ✗ ')+m);if(!c)fails++;};
   console.log('\n[5] 브리핑 문장');
   const brief=await page.evaluate(()=>asBriefing()); console.log(brief.split('\n').map(l=>'     '+l).join('\n'));
   ok(/우산/.test(brief)&&/영어/.test(brief)&&/수학/.test(brief)&&/리코더/.test(brief),'날씨·우산·오늘/곧 마감 수행평가·내일 준비물이 모두 들어감');
+  ok(!/좋은 (아침|저녁|오후)|안녕하세요|파이팅|화이팅/.test(brief)&&/^(.{1,8}[,] )?오늘은 \d+월 \d+일 .요일이에요\./.test(brief.split('\n')[0]),'브리핑에 인사·응원 문구가 없고 날짜로 바로 시작: '+brief.split('\n')[0]);
+  ok(!/좋은 (아침|저녁)이에요|오늘도 파이팅이에요/.test(require('fs').readFileSync(path.join(root,'index.html'),'utf8')),'소스에도 브리핑 인사·응원 문구가 남아 있지 않음');
 
   console.log('\n[6] 화면');
   await page.evaluate(()=>setTab('stamp')); await page.waitForTimeout(300);
